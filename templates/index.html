@@ -3,10 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motor Pool Management System</title>
+    <title>Motor Pool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <h1>Welcome to the Motor Pool Management System</h1>
-    <p>This is the home page.</p>
+
+    <div class="container">
+
+        <!-- Logo -->
+        <div class="logo">
+            LOGO
+        </div>
+
+
+        <!-- Title -->
+        <h1 class="title">MOTOR POOL</h1>
+        <p class="subtitle">A Web-Based Inventory and Record Management System for Motor Pool</p>
+
+        <!-- Buttons Section -->
+        <div class="button-container">
+            
+            <!-- Inventory Button -->
+            <a href="inventory.html" class="menu-button">
+                <div class="icon">🚗</div>
+                <div class="label">INVENTORY</div>
+            </a>
+
+            <!-- Record Management Button -->
+            <a href="records.html" class="menu-button">
+                <div class="icon">📁</div>
+                <div class="label">RECORD MANAGEMENT</div>
+            </a>
+
+        </div>
+
+    </div>
+
 </body>
 </html>
