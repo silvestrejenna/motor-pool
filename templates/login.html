@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUP Motor Pool Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+    <div class="main-container">
+        <div class="left-section"></div>
+
+        <div class="right-section">
+            <header class="top-header">
+                <div class="logo-area">
+                    <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" alt="Motor Pool Section Logo" class="logo">
+                    <span class="header-text">TRANSPORTATION AND MOTOR POOL SECTION</span>
+                </div>
+            </header>
+
+            <div class="form-wrapper">
+                <div class="login-card">
+                    <h2>WELCOME TO MOTOR POOL!</h2>
+                    
+                    <form>
+                        <div class="input-group">
+                            <input type="email" placeholder="Email" required>
+                        </div>
+                        <div class="input-group">
+                            <input type="password" placeholder="Password" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-signin">Sign In</button>
+                        <button type="button" class="btn btn-create">Create Account</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
