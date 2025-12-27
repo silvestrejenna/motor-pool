@@ -1,55 +1,41 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 import os
 import psycopg2
 
 app = Flask(__name__)
+app.secret_key = "motorpool_secret_key"
 
-# --- DATABASE CONNECTION ---
+# --- CONNECT TO SUPABASE ---
 def get_db_connection():
+    # PASTE YOUR UPDATED URI HERE
+    DB_URI = "postgresql://postgres.nudeyxdtkmgrfbepsluf:motorpool_db.312@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
     try:
-        conn = psycopg2.connect(
-            host="localhost",
-            database="motorpool_database",
-            user="postgres",
-            password="motorpool_db"
-        )
+        conn = psycopg2.connect(DB_URI)
         return conn
     except Exception as e:
-        print(f"Database connection failed: {e}")
+        print(f"Connection failed: {e}")
         return None
 
-# --- ASSIGN AND SYNC USER ---
+# --- SYNC ADMIN USER ---
 def sync_assigned_user():
-    # 1. You assign the user here
-    assigned_email = "motorpool@pup.edu.ph"
+    assigned_email = "motorpooladmin@pup.edu.ph"
     assigned_password = "tmps.123"
+    assigned_name = "Admin" # New Column
+    assigned_position = "Student" # New Column
 
     conn = get_db_connection()
     if conn:
         cur = conn.cursor()
-        # 2. Check if this specific user already exists in the DB
         cur.execute("SELECT email FROM users WHERE email = %s", (assigned_email,))
-        exists = cur.fetchone()
-
-        if not exists:
-            # 3. If they don't exist, insert them into the database
-            cur.execute("INSERT INTO users (email, password) VALUES (%s, %s)", 
-                        (assigned_email, assigned_password))
+        if not cur.fetchone():
+            cur.execute("""
+                INSERT INTO users (email, password, full_name, position) 
+                VALUES (%s, %s, %s, %s)
+            """, (assigned_email, assigned_password, assigned_name, assigned_position))
             conn.commit()
-            print(f"Assigned user {assigned_email} has been added to the database.")
-        else:
-            print(f"User {assigned_email} is already in the database.")
-            
+            print("Cloud Admin Synced!")
         cur.close()
         conn.close()
-
-@app.route('/')
-def index():
-    return render_template('login.html')
-
-@app.route('/home')
-def home():
-    return render_template('homepage.html')
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -59,22 +45,31 @@ def login():
     conn = get_db_connection()
     if conn:
         cur = conn.cursor()
-        # Check if the credentials entered match ANY user in the database
         cur.execute('SELECT * FROM users WHERE email = %s AND password = %s', (email, password))
         user = cur.fetchone()
         cur.close()
         conn.close()
 
         if user:
-            print(f"Welcome, {email}! Access Granted.")
+            # Store everything in session: user[3] is Name, user[4] is Position
+            session['user_name'] = user[3]
+            session['user_position'] = user[4]
             return redirect(url_for('home'))
         else:
-            return "Invalid credentials. User does not exist in the database."
-    return "Database connection error."
+            flash("Invalid credentials!")
+            return redirect(url_for('index'))
+    return redirect(url_for('index'))
+
+@app.route('/')
+def index():
+    return render_template('login.html')
+
+@app.route('/home')
+def home():
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+    return render_template('index.html')
 
 if __name__ == '__main__':
-    # Run the sync function before starting the server
-    sync_assigned_user() 
-    
-    port = int(os.getenv('PORT', 5055))
-    app.run(debug=True, port=port)
+    sync_assigned_user()
+    app.run(debug=True, port=5055)
