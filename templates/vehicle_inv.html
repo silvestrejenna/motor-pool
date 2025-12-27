@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vehicle Inventory | Motor Pool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/vehicle_inv.css') }}">
+</head>
+<body>
+    <div class="main-container">
+        <nav class="sidebar">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" alt="Logo">
+            </div>
+            <ul>
+                <li class="active">VEHICLES</li>
+                <li>GASOLINE & RFID</li>
+                <li>MAINTENANCE & PMS LOG</li>
+                <li>TOOLS & EQUIPMENT</li>
+                <li>PARTS & SUPPLIES</li>
+                <li>REPORTS</li>
+            </ul>
+        </nav>
+
+        <div class="content">
+            <header class="top-nav">
+                <div class="nav-links">
+                    <a href="{{ url_for('home') }}">HOME</a>
+                    <a href="#" class="active">INVENTORY</a>
+                    <a href="#">RECORD</a>
+                </div>
+                <div class="user-profile">
+                    <span class="icon">🔔</span>
+                    <div class="profile-circle"></div>
+                </div>
+            </header>
+
+            <section class="inventory-section">
+                <div class="section-header">
+                    <div>
+                        <h1>VEHICLE INVENTORY</h1>
+                        <p>Monitor and manage the status and availability of all vehicles</p>
+                    </div>
+                    <button class="btn-add" onclick="toggleModal()">Add Vehicle Record</button>
+                </div>
+
+                <div class="table-card">
+                    <h3>Fuel Records</h3>
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Vehicle ID</th>
+                                <th>Name</th>
+                                <th>Plate Number</th>
+                                <th>Color</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Mileage</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                       <tbody>
+    {% for vehicle in vehicles %}
+    <tr id="row-{{ vehicle[0] }}"> <td>V00{{ vehicle[0] }}</td>
+        <td class="v-name">
+            <a href="{{ url_for('inventory') }}" style="color: #800000; font-weight: bold; text-decoration: none;">
+                {{ vehicle[1] }}
+            </a>
+        </td>
+        <td class="v-plate">{{ vehicle[2] }}</td> <td class="v-color">{{ vehicle[3] }}</td> <td class="v-type">{{ vehicle[4] }}</td>  <td><span class="status-pill {{ vehicle[5]|lower }} v-status">{{ vehicle[5] }}</span></td>
+        <td class="v-mileage">{{ vehicle[6] }} km</td> <td class="actions">
+            <div class="action-buttons">
+                <button class="btn-edit" onclick="editRow('{{ vehicle[0] }}')">Edit</button>
+                <button class="btn-update" id="upd-{{ vehicle[0] }}" style="display:none;" onclick="updateRow('{{ vehicle[0] }}')">Update</button>
+                <a href="{{ url_for('delete_vehicle', id=vehicle[0]) }}" class="btn-delete" onclick="return confirm('Delete this record?')">Delete</a>
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+                     
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div id="addModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn" onclick="toggleModal()">&times;</span>
+            <h2>New Vehicle Records</h2>
+            <form action="{{ url_for('add_vehicle') }}" method="POST">
+                <label>Vehicle Name</label>
+                <input type="text" name="name" placeholder="e.g., Toyota Hiace" required>
+                
+                <label>Plate Number</label>
+                <input type="text" name="plate_number" placeholder="e.g., (ABC-1234)" required>
+
+                <label>Color</label>
+                <input type="text" name="color" placeholder="e.g., Red, Blue, Black">
+                
+                <label>Type</label>
+                <input type="text" name="type" placeholder="e.g., Van, Truck, Sedan">
+                
+                <label>Status</label>
+                <textarea name="status" placeholder="Describe the status..."></textarea>
+                
+                <label>Mileage</label>
+                <input type="number" name="mileage" placeholder="e.g., 45,320">
+                
+                <button type="submit" class="btn-save">Save Record</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    function toggleModal() {
+        const modal = document.getElementById('addModal');
+        modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function editRow(id) {
+        const row = document.getElementById(`row-${id}`);
+        if (!row) return;
+
+        const nameCell = row.querySelector('.v-name');
+        const plate = row.querySelector('.v-plate');
+        const color = row.querySelector('.v-color');
+        const type = row.querySelector('.v-type');
+        const status = row.querySelector('.v-status');
+        const mileage = row.querySelector('.v-mileage');
+
+        // Transform text into inputs
+        nameCell.innerHTML = `<input type="text" id="edit-name-${id}" value="${nameCell.innerText.trim()}" style="width:100px">`;
+        plate.innerHTML = `<input type="text" id="edit-plate-${id}" value="${plate.innerText.trim()}" style="width:80px">`;
+        color.innerHTML = `<input type="text" id="edit-color-${id}" value="${color.innerText.trim()}" style="width:70px">`;
+        type.innerHTML = `<input type="text" id="edit-type-${id}" value="${type.innerText.trim()}" style="width:80px">`;
+        
+        // Status handling
+        const statusText = status.innerText.trim();
+        status.parentElement.innerHTML = `<input type="text" id="edit-status-${id}" value="${statusText}" style="width:80px">`;
+        
+        // Mileage handling (remove " km" to get the number)
+        const mileageValue = parseInt(mileage.innerText) || 0;
+        mileage.innerHTML = `<input type="number" id="edit-mileage-${id}" value="${mileageValue}" style="width:70px">`;
+
+        // Toggle Buttons
+        row.querySelector('.btn-edit').style.display = 'none';
+        document.getElementById(`upd-${id}`).style.display = 'inline-block';
+    }
+
+    function updateRow(id) {
+        // Create a hidden form and submit it to the Flask route
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/update_vehicle/${id}`;
+
+        // List of fields to collect from the inputs we created in editRow
+        const fields = ['name', 'plate', 'color', 'type', 'status', 'mileage'];
+        
+        fields.forEach(field => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = field;
+            input.value = document.getElementById(`edit-${field}-${id}`).value;
+            form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+</script>
+</body>
+</html>
