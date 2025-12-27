@@ -49,7 +49,7 @@ def index():
 
 @app.route('/home')
 def home():
-    return render_template('index.html')
+    return render_template('homepage.html')
 
 @app.route('/login', methods=['POST'])
 def login():
