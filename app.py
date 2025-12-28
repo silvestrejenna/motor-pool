@@ -70,6 +70,24 @@ def home():
         return redirect(url_for('index'))
     return render_template('index.html')
 
+@app.route('/auth/user')
+def auth_user():
+    if 'user_name' not in session:
+        return {}, 401
+
+    return {
+        "full_name": session.get("user_name"),
+        "email": session.get("user_email", "motorpool@pup.edu.ph")
+    }
+
+@app.route('/inventory')
+def inventory():
+    return "<h1>Inventory Page (Under Development)</h1>"
+
+@app.route('/records')
+def records():
+    return "<h1>Records Page (Under Development)</h1>"
+
 if __name__ == '__main__':
     sync_assigned_user()
     app.run(debug=True, port=5055)
