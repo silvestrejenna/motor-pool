@@ -130,17 +130,58 @@ body {
 
 /* FOOTER */
 .footer {
-  background: #2e2e2e;
-  color: white;
-  padding: 30px 20px;
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
+  background: #f3f0ee;
+  padding: 40px 60px 20px;
+  color: #333;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.footer-logo {
+  width: 55px;
+  margin-bottom: 10px;
+}
+
+.footer-desc {
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.footer-center h4,
+.footer-right h4 {
+  margin-bottom: 12px;
+  font-weight: bold;
+}
+
+.footer-center a {
+  display: block;
+  color: #333;
+  text-decoration: none;
+  margin-bottom: 8px;
+}
+
+.footer-center a:hover {
+  color: #7b0000;
+}
+
+.footer-right p {
+  margin-bottom: 8px;
+}
+
+.footer-divider {
+  margin: 25px 0 15px;
+  border: none;
+  border-top: 1px solid #ccc;
 }
 
 .footer-bottom {
-  width: 100%;
-  text-align: center;
-  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
   font-size: 13px;
+  color: #555;
 }
