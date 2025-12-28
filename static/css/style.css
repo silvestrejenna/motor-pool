@@ -63,6 +63,7 @@ body {
 
 .profile-dropdown {
   position: absolute;
+  text-align: center;
   right: 0;
   top: 35px;
   background: #fff;
@@ -122,11 +123,11 @@ body {
 
 .card:hover {
   transform: translateY(-6px);
+  background-color: #7a0c0c;
+  color: #ffffff;
 }
 
-.card h3 {
-  color: #7b0000;
-}
+
 
 /* FOOTER */
 .footer {
