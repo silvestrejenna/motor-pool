@@ -5,7 +5,6 @@
     <title>PUP Motor Pool | Home</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- MAIN CSS -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style.css') }}"
@@ -40,7 +39,6 @@
             <p class="name" id="profileName">Loading...</p>
             <p class="email" id="profileEmail"></p>
             <hr />
-
             <a href="#">Activity</a>
             <a href="#">Change Password</a>
             <a href="#" onclick="logout()" class="logout">Log Out</a>
@@ -49,11 +47,10 @@
       </div>
     </header>
 
-    <!-- ================= HERO SECTION ================= -->
+    <!-- ================= HERO ================= -->
     <section class="hero">
       <img
         src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-        alt="Motor Pool Logo"
         class="hero-logo"
       />
 
@@ -100,21 +97,14 @@
     <!-- ================= SCRIPT ================= -->
     <script>
       async function loadUserProfile() {
-        try {
-          const response = await fetch("/auth/user");
-
-          if (!response.ok) {
-            window.location.href = "{{ url_for('index') }}";
-            return;
-          }
-
-          const user = await response.json();
-
-          document.getElementById("profileName").textContent = user.full_name;
-          document.getElementById("profileEmail").textContent = user.email;
-        } catch (error) {
-          window.location.href = "{{ url_for('index') }}";
+        const res = await fetch("/auth/user");
+        if (!res.ok) {
+          window.location.href = "/";
+          return;
         }
+        const user = await res.json();
+        document.getElementById("profileName").textContent = user.full_name;
+        document.getElementById("profileEmail").textContent = user.email;
       }
 
       loadUserProfile();
@@ -123,18 +113,9 @@
         document.getElementById("profileDropdown").classList.toggle("show");
       }
 
-      window.onclick = function (event) {
-        if (!event.target.matches(".icon")) {
-          const dropdown = document.getElementById("profileDropdown");
-          if (dropdown.classList.contains("show")) {
-            dropdown.classList.remove("show");
-          }
-        }
-      };
-
       async function logout() {
         await fetch("/logout", { method: "POST" });
-        window.location.href = "{{ url_for('index') }}";
+        window.location.href = "/";
       }
     </script>
   </body>

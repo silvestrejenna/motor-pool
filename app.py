@@ -7,10 +7,10 @@ app.secret_key = "motorpool_secret_key"
 
 # --- CONNECT TO SUPABASE ---
 def get_db_connection():
-    # PASTE YOUR UPDATED URI HERE
     DB_URI = "postgresql://postgres.nudeyxdtkmgrfbepsluf:motorpool_db.312@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
     try:
         conn = psycopg2.connect(DB_URI)
+        print("Connected to the database successfully.")
         return conn
     except Exception as e:
         print(f"Connection failed: {e}")
@@ -20,8 +20,8 @@ def get_db_connection():
 def sync_assigned_user():
     assigned_email = "motorpooladmin@pup.edu.ph"
     assigned_password = "tmps.123"
-    assigned_name = "Admin" # New Column
-    assigned_position = "Student" # New Column
+    assigned_name = "Admin"  # New Column
+    assigned_position = "Student"  # New Column
 
     conn = get_db_connection()
     if conn:
@@ -51,7 +51,6 @@ def login():
         conn.close()
 
         if user:
-            # Store everything in session: user[3] is Name, user[4] is Position
             session['user_name'] = user[3]
             session['user_position'] = user[4]
             return redirect(url_for('home'))
@@ -70,22 +69,123 @@ def home():
         return redirect(url_for('index'))
     return render_template('index.html')
 
-@app.route('/auth/user')
-def auth_user():
-    if 'user_name' not in session:
-        return {}, 401
 
-    return {
-        "full_name": session.get("user_name"),
-        "email": session.get("user_email", "motorpool@pup.edu.ph")
-    }
+# =======================================================
+# 🚗 VEHICLE INVENTORY - NEW CODE STARTS HERE
+# =======================================================
 
 @app.route('/inventory')
 def inventory():
-    return "<h1>Inventory Page (Under Development)</h1>"
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    conn = get_db_connection()
+    vehicles = []
+    
+    if conn:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT vehicle_id, name, plate_number, color, type, status, mileage 
+            FROM vehicle 
+            ORDER BY vehicle_id ASC
+        """)
+        vehicles = cur.fetchall()
+        cur.close()
+        conn.close()
+
+    return render_template("vehicle_inv.html", vehicles=vehicles)
+
+
+@app.route('/add_vehicle', methods=['POST'])
+def add_vehicle():
+    name = request.form['name']
+    plate_number = request.form['plate_number']
+    color = request.form.get('color')
+    type = request.form['type']
+    status = request.form['status']
+    mileage = request.form['mileage']
+
+    conn = get_db_connection()
+    if conn:
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO vehicle (name, plate_number, color, type, status, mileage)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (name, plate_number, color, type, status, mileage))
+        conn.commit()
+        cur.close()
+        conn.close()
+
+    flash("Vehicle record added successfully!")
+    return redirect(url_for('inventory'))
+
+
+@app.route('/delete_vehicle/<int:id>')
+def delete_vehicle(id):
+    conn = get_db_connection()
+    if conn:
+        try:
+            cur = conn.cursor()
+            # This matches the vehicle_id in your Supabase table
+            cur.execute("DELETE FROM vehicle WHERE vehicle_id = %s", (id,))
+            conn.commit()
+            flash("Vehicle deleted successfully!")
+            cur.close()
+        except Exception as e:
+            print(f"Delete error: {e}")
+            flash("Error deleting record.")
+            conn.rollback()
+        finally:
+            conn.close()
+    
+    return redirect(url_for('inventory'))
+
+
+@app.route('/update_vehicle/<int:id>', methods=['POST'])
+def update_vehicle(id):
+    name = request.form.get('name')
+    plate = request.form.get('plate')
+    color = request.form.get('color')
+    v_type = request.form.get('type')
+    status = request.form.get('status')
+    
+    # Ensure mileage is an integer
+    mileage_raw = request.form.get('mileage', '0')
+    try:
+        mileage = int(mileage_raw)
+    except (ValueError, TypeError):
+        mileage = 0
+
+    conn = get_db_connection()
+    if conn:
+        try:
+            cur = conn.cursor()
+            cur.execute("""
+                UPDATE vehicle 
+                SET name=%s, plate_number=%s, color=%s, type=%s, status=%s, mileage=%s 
+                WHERE vehicle_id=%s
+            """, (name, plate, color, v_type, status, mileage, id))
+            conn.commit()
+            cur.close()
+            flash("Vehicle updated successfully!")
+        except Exception as e:
+            print(f"Update error: {e}")
+            conn.rollback()
+            flash("Failed to update record.")
+        finally:
+            conn.close()
+    
+    return redirect(url_for('inventory'))
+
+# =======================================================
+# 🚗 VEHICLE INVENTORY - NEW CODE ENDS HERE
+# =======================================================
 
 @app.route('/records')
 def records():
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
     return "<h1>Records Page (Under Development)</h1>"
 
 if __name__ == '__main__':

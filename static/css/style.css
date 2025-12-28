@@ -54,10 +54,9 @@ body {
 
 .icon {
   cursor: pointer;
-  font-size: 18px;
 }
 
-/* PROFILE DROPDOWN */
+/* PROFILE */
 .profile {
   position: relative;
 }
@@ -78,39 +77,15 @@ body {
   display: block;
 }
 
-.profile-dropdown .name {
-  font-weight: bold;
-}
-
-.profile-dropdown .email {
-  font-size: 13px;
-  color: gray;
-}
-
-.profile-dropdown a {
-  display: block;
-  padding: 8px;
-  text-decoration: none;
-  color: #333;
-  border-radius: 4px;
-}
-
-.profile-dropdown a:hover {
-  background: #f2f2f2;
-}
-
-.logout {
-  color: #7b0000;
-  font-weight: bold;
-}
-
-/* HERO SECTION */
+/* HERO */
 .hero {
   text-align: center;
-  padding: 60px 20px;
-  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
-    url("images/hero-bg.jpg") center/cover;
-  color: #fff;
+  padding: 80px 20px;
+  background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
+    url("../images/pup-img.jpg");
+  background-size: cover;
+  background-position: center;
+  color: white;
 }
 
 .hero-logo {
@@ -120,7 +95,6 @@ body {
 
 .hero h1 {
   font-size: 42px;
-  margin-bottom: 10px;
 }
 
 .hero p {
@@ -134,11 +108,10 @@ body {
   justify-content: center;
   gap: 30px;
   margin-top: 40px;
-  flex-wrap: wrap;
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.9);
+  background: white;
   color: #333;
   width: 260px;
   padding: 25px;
@@ -149,43 +122,25 @@ body {
 
 .card:hover {
   transform: translateY(-6px);
-  background: #fff;
 }
 
 .card h3 {
   color: #7b0000;
-  margin-bottom: 10px;
 }
 
 /* FOOTER */
 .footer {
   background: #2e2e2e;
-  color: #fff;
+  color: white;
   padding: 30px 20px;
   display: flex;
-  flex-wrap: wrap;
   justify-content: space-between;
-}
-
-.footer-section h4 {
-  margin-bottom: 10px;
-}
-
-.footer-section a {
-  display: block;
-  color: #ccc;
-  text-decoration: none;
-  margin-bottom: 6px;
-}
-
-.footer-section a:hover {
-  color: #fff;
+  flex-wrap: wrap;
 }
 
 .footer-bottom {
   width: 100%;
   text-align: center;
-  margin-top: 20px;
+  margin-top: 15px;
   font-size: 13px;
-  color: #aaa;
 }
