@@ -181,6 +181,27 @@ def update_vehicle(id):
 # 🚗 VEHICLE INVENTORY - NEW CODE ENDS HERE
 # =======================================================
 
+@app.route('/records')
+def records():
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    return "<h1>Records Page (Under Development)</h1>"
+
+@app.route('/auth/user')
+def auth_user():
+    if 'user_name' not in session:
+        return {}, 401
+
+    return {
+        "full_name": session.get("user_name"),
+        "email": "motorpooladmin@pup.edu.ph"
+    }
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.clear()
+    return '', 204
 
 if __name__ == '__main__':
     sync_assigned_user()
