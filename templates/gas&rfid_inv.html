@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gasoline & RFID | Motor Pool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/vehicle_inv.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gas&rfid_inv.css') }}">
+</head>
+<body>
+    <div class="main-container">
+        <nav class="sidebar">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" alt="Logo">
+            </div>
+            <ul class="inventory-selection">
+                <li><a href="{{ url_for('inventory') }}">VEHICLES</a></li>
+                <li class="active">GASOLINE & RFID</a></li>
+                <li>MAINTENANCE & PMS LOG</li>
+                <li>TOOLS & EQUIPMENT</li>
+                <li>PARTS & SUPPLIES</li>
+                <li>REPORTS</li>
+            </ul>
+        </nav>
+
+        <div class="content">
+            <header class="top-nav">
+                <div class="nav-links">
+                    <a href="{{ url_for('home') }}">HOME</a>
+                    <a href="{{ url_for('inventory') }}" class="active">INVENTORY</a>
+                    <a href="{{ url_for('records') }}">RECORDS</a>
+                </div>
+                <div class="user-profile">
+                    <span class="icon">🔔</span>
+
+
+                    <div class="profile">
+                    <span class="icon" onclick="toggleProfile()">👤</span>
+
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <p class="name" id="profileName">Loading...</p>
+                        <p class="email" id="profileEmail"></p>
+                        <hr />
+                        <a href="#">Activity</a><br/>
+                        <a href="#">Change Password</a><br/>
+                        <a href="#" onclick="logout()" class="logout">Log Out</a>
+                    </div>
+                    </div>
+                </div>
+            </header>
+
+            <section class="inventory-section">
+                <div class="section-header">
+                    <h1>GASOLINE & RFID CONSUMPTION</h1>
+                    <button class="btn-add" onclick="toggleFuelModal()">Add Fuel Record</button>
+                </div>
+
+                <div class="summary-container">
+                    <div class="summary-card"><h4>Total This Month</h4><p>{{ summary.total_fuel }}</p></div>
+                    <div class="summary-card"><h4>Average Per Vehicle</h4><p>{{ summary.avg_fuel }}</p></div>
+                    <div class="summary-card"><h4>Total RFID Easy Trip</h4><p>{{ summary.easytrip }}</p></div>
+                    <div class="summary-card"><h4>Total RFID Auto Sweep</h4><p>{{ summary.autosweep }}</p></div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-wrapper">
+                        <table class="inventory-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th><th>Vehicle</th><th>Date</th><th>Driver</th>
+                                    <th>Gas Bal</th><th>Purchased</th><th>After Trip</th>
+                                    <th>KM Start</th><th>KM End</th><th>KM Used</th>
+                                    <th>EasyTrip</th><th>AutoSweep</th>
+                                    <th class="sticky-action">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in records %}
+                                <tr id="row-{{ row[0] }}">
+                                    <td>F00{{ row[0] }}</td>
+                                    <td class="v-name">{{ row[13] }}</td>
+                                    <td>{{ row[2] }}</td>
+                                    <td>{{ row[3] }}</td>
+                                    <td>{{ row[4] }}L</td>
+                                    <td>{{ row[5] }}L</td>
+                                    <td>{{ row[6] }}L</td>
+                                    <td>{{ row[7] }}</td>
+                                    <td>{{ row[8] }}</td>
+                                    <td>{{ row[9] }}</td>
+                                    <td>₱{{ row[10] }}</td>
+                                    <td>₱{{ row[11] }}</td>
+                                    <td class="sticky-action">
+                                        <button class="btn-edit" onclick="editFuel('{{ row[0] }}')">Edit</button>
+                                        <button class="btn-delete">Delete</button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div id="fuelModal" class="modal-overlay">
+        <div class="modal-content scrollable-modal">
+            <span class="close-btn" onclick="toggleFuelModal()">&times;</span>
+            <h2>New Fuel Record</h2>
+            <form action="{{ url_for('add_fuel') }}" method="POST">
+                <div class="form-grid">
+                    <label>Vehicle</label>
+                    <select name="v_name" required>
+                        <option value="" disabled selected>Select Vehicle</option>
+                        {% for v in vehicles %}
+                        <option value="{{ v[0] }}">{{ v[0] }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <label>Date</label><input type="date" name="date" required>
+                    <label>Driver</label><input type="text" name="driver" required>
+                    <label>Gas Balance (Tank)</label><input type="number" step="0.01" name="gas_bal_tank">
+                    <label>Purchased During Trip</label><input type="number" step="0.01" name="purchased_trip">
+                    <label>Balance After Trip</label><input type="number" step="0.01" name="bal_after_trip">
+                    <label>KM Beginning</label><input type="number" name="km_beginning">
+                    <label>KM End</label><input type="number" name="km_end">
+                    <label>KM Used</label><input type="number" name="km_used">
+                    <label>RFID EasyTrip</label><input type="number" step="0.01" name="easy_rfid_bal">
+                    <label>RFID AutoSweep</label><input type="number" step="0.01" name="auto_rfid_bal">
+                    <label>Remarks</label><textarea name="remarks"></textarea>
+                </div>
+                <button type="submit" class="btn-save">Save Record</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="footer">
+      <div class="footer-content">
+        <!-- LEFT -->
+        <div class="footer-left">
+          <img
+            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+            alt="Motor Pool Logo"
+            class="footer-logo"
+          />
+          <p class="footer-desc">
+            A Web-Based Inventory and Record Management System for
+            <strong>Motor Pool</strong>
+          </p>
+        </div>
+
+        <!-- CENTER -->
+        <div class="footer-center">
+          <h4>MENU</h4>
+          <a href="{{ url_for('home') }}">Home</a>
+          <a href="{{ url_for('inventory') }}">Inventory</a>
+          <a href="{{ url_for('records') }}">Record Management</a>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="footer-right">
+          <h4>CONTACT US</h4>
+          <p>📧 motorpool@pup.edu.ph</p>
+          <p>📞 (02) 5335-1787</p>
+        </div>
+      </div>
+
+      <hr class="footer-divider" />
+
+      <div class="footer-bottom">
+        <span
+          >© 2025 Polytechnic University of the Philippines. Under
+          G.A.S.S.</span
+        >
+        <span>Terms of Services and Privacy Policy</span>
+      </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/gas&rfid_inv.js') }}"></script>
+</body>
+</html>

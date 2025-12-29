@@ -11,13 +11,18 @@ body {
 
 .main-container { 
     display: flex; 
+    min-width: 100%;
     min-height: 100vh; 
 }
 
 /* Sidebar */
 .sidebar {
      width: 250px; 
-     background: var(--pup-red); 
+     min-width: 250px;
+     background: var(--pup-red);
+     position: sticky;
+     top: 0;
+     height: 100vh;
      color: white; 
      padding: 20px 0; 
     }
@@ -41,7 +46,7 @@ body {
     cursor: pointer; 
     font-size: 14px; 
     font-weight: bold; 
-    border-bottom: 1px solid rgba(255,255,255,0.1); 
+    border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
 .sidebar li.active { 
@@ -89,9 +94,6 @@ body {
   cursor: pointer;
 }
 
-.inventory-selection:hover {
-  color: black;
-}
 
 /* PROFILE */
 .profile {
@@ -250,6 +252,9 @@ body {
 /*footer*/
 /* FOOTER */
 .footer {
+  margin-top: auto;
+  width: 100%;
+  padding: 20ppx;
   background: #f3f0ee;
   padding: 40px 60px 20px;
   color: #333;
