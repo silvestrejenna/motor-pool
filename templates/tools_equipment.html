@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PUP Motor Pool | Tools & Equipment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/tools_equipment.css') }}"
+    />
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+
+  <body>
+    <header class="navbar">
+      <div class="nav-left">
+        <span class="nav-title">PUP Motor Pool Under GASS</span>
+      </div>
+      <nav class="nav-center">
+        <a href="{{ url_for('index') }}">HOME</a>
+        <a class="active">INVENTORY</a>
+        <a href="{{ url_for('records') }}">RECORD</a>
+      </nav>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <a class="active">TOOLS & EQUIPMENT</a>
+      </aside>
+
+      <main class="content">
+        <div class="page-header">
+          <div>
+            <h1>TOOLS & EQUIPMENT</h1>
+            <p class="subtitle">
+              Manage workshop tools and equipment inventory
+            </p>
+          </div>
+          <button class="primary-btn" onclick="openAddModal()">Add Tool</button>
+        </div>
+
+        <section class="table-box">
+          <table>
+            <thead>
+              <tr>
+                <th>Item Code</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Quantity</th>
+                <th>Condition</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="toolsTable"></tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal" id="toolModal">
+      <div class="modal-content">
+        <h2 id="modalTitle"></h2>
+
+        <input type="hidden" id="tool_id" />
+
+        <label>Name</label>
+        <input id="name" />
+
+        <label>Category</label>
+        <input id="category" />
+
+        <label>Quantity</label>
+        <input type="number" id="quantity" />
+
+        <label>Condition</label>
+        <select id="condition">
+          <option>Excellent</option>
+          <option>Good</option>
+          <option>Fair</option>
+          <option>Damaged</option>
+        </select>
+
+        <div class="modal-actions">
+          <button onclick="saveTool()">Save</button>
+          <button onclick="deleteTool()">Delete</button>
+          <button onclick="closeModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const supabase = window.supabase.createClient(
+        "YOUR_SUPABASE_URL",
+        "YOUR_ANON_PUBLIC_KEY"
+      );
+
+      let editingId = null;
+
+      async function checkAuth() {
+        const { data } = await supabase.auth.getUser();
+        if (!data.user) window.location.href = "/login";
+      }
+
+      async function loadTools() {
+        const { data } = await supabase
+          .from("tools_equipment")
+          .select("*")
+          .order("created_at");
+
+        const tbody = document.getElementById("toolsTable");
+        tbody.innerHTML = "";
+
+        data.forEach((t) => {
+          tbody.innerHTML += `
+        <tr>
+          <td>${t.item_code}</td>
+          <td>${t.name}</td>
+          <td>${t.category}</td>
+          <td>${t.quantity}</td>
+          <td>${t.condition}</td>
+          <td><a href="#" onclick="openEditModal('${t.id}')">View Details</a></td>
+        </tr>`;
+        });
+      }
+
+      function openAddModal() {
+        editingId = null;
+        modalTitle.innerText = "Add Tool";
+        name.value = "";
+        category.value = "";
+        quantity.value = 1;
+        condition.value = "Good";
+        toolModal.style.display = "flex";
+      }
+
+      async function openEditModal(id) {
+        editingId = id;
+        const { data } = await supabase
+          .from("tools_equipment")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+        modalTitle.innerText = "Edit Tool";
+        name.value = data.name;
+        category.value = data.category;
+        quantity.value = data.quantity;
+        condition.value = data.condition;
+        toolModal.style.display = "flex";
+      }
+
+      async function saveTool() {
+        const payload = {
+          name: name.value,
+          category: category.value,
+          quantity: quantity.value,
+          condition: condition.value,
+        };
+
+        if (editingId) {
+          await supabase
+            .from("tools_equipment")
+            .update(payload)
+            .eq("id", editingId);
+        } else {
+          await supabase.from("tools_equipment").insert(payload);
+        }
+
+        closeModal();
+        loadTools();
+      }
+
+      async function deleteTool() {
+        if (!editingId) return;
+        if (!confirm("Delete this tool?")) return;
+
+        await supabase.from("tools_equipment").delete().eq("id", editingId);
+
+        closeModal();
+        loadTools();
+      }
+
+      function closeModal() {
+        toolModal.style.display = "none";
+      }
+
+      checkAuth();
+      loadTools();
+    </script>
+  </body>
+</html>
