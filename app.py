@@ -181,6 +181,12 @@ def update_vehicle(id):
 # 🚗 VEHICLE INVENTORY - NEW CODE ENDS HERE
 # =======================================================
 
+@app.route('/tools-equipment')
+def tools_equipment():
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+    return render_template("tools_equipment.html")
+
 @app.route('/records')
 def records():
     if 'user_name' not in session:
