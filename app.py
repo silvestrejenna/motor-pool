@@ -181,11 +181,93 @@ def update_vehicle(id):
 # 🚗 VEHICLE INVENTORY - NEW CODE ENDS HERE
 # =======================================================
 
+# ================================
+# 🧰 TOOLS & EQUIPMENT
+# ================================
+
 @app.route('/tools-equipment')
 def tools_equipment():
     if 'user_name' not in session:
         return redirect(url_for('index'))
-    return render_template("tools_equipment.html")
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, item_code, name, category, quantity, condition
+        FROM tools_equipment
+        ORDER BY id ASC
+    """)
+    tools = cur.fetchall()
+
+    cur.execute("SELECT COUNT(*) FROM tools_equipment")
+    total = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM tools_equipment WHERE condition='Excellent'")
+    excellent = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM tools_equipment WHERE condition='Good'")
+    good = cur.fetchone()[0]
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        "tools_equipment.html",
+        tools=tools,
+        total=total,
+        excellent=excellent,
+        good=good
+    )
+
+
+@app.route('/save_tool', methods=['POST'])
+def save_tool():
+    tool_id = request.form.get('id')
+    name = request.form['name']
+    category = request.form['category']
+    quantity = request.form['quantity']
+    condition = request.form['condition']
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    if tool_id:
+        cur.execute("""
+            UPDATE tools_equipment
+            SET name=%s, category=%s, quantity=%s, condition=%s
+            WHERE id=%s
+        """, (name, category, quantity, condition, tool_id))
+    else:
+        cur.execute("SELECT COUNT(*) FROM tools_equipment")
+        count = cur.fetchone()[0] + 1
+        item_code = f"T-{count:04d}"
+
+        cur.execute("""
+            INSERT INTO tools_equipment (item_code, name, category, quantity, condition)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (item_code, name, category, quantity, condition))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return redirect(url_for('tools_equipment'))
+
+
+@app.route('/delete_tool/<int:id>')
+def delete_tool(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM tools_equipment WHERE id=%s", (id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return redirect(url_for('tools_equipment'))
+
+# =======================================================
+# 🧰 END TOOLS & EQUIPMENT
+# =======================================================
 
 @app.route('/records')
 def records():

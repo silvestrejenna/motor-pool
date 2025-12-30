@@ -18,36 +18,32 @@
         <div class="logo-section">
           <img
             src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-            alt="Logo"
           />
         </div>
         <ul>
           <li><a href="{{ url_for('inventory') }}">VEHICLES</a></li>
-          <li><a href="#">GASOLINE & RFID</a></li>
-          <li><a href="#">MAINTENANCE & PMS LOG</a></li>
+          <li>GASOLINE & RFID</li>
+          <li>MAINTENANCE & PMS LOG</li>
           <li class="active">TOOLS & EQUIPMENT</li>
-          <li><a href="#">PARTS & SUPPLIES</a></li>
+          <li>PARTS & SUPPLIES</li>
           <li><a href="{{ url_for('records') }}">RECORDS</a></li>
         </ul>
       </aside>
 
-      <!-- MAIN CONTENT -->
+      <!-- CONTENT -->
       <div class="content">
         <!-- TOP NAV -->
         <header class="top-nav">
           <div class="nav-links">
             <a href="{{ url_for('home') }}">HOME</a>
-            <a href="{{ url_for('inventory') }}" class="active">INVENTORY</a>
+            <a href="{{ url_for('inventory') }}">INVENTORY</a>
             <a href="{{ url_for('records') }}">RECORD</a>
-          </div>
-          <div class="user-profile">
-            <span class="icon">🔔</span>
-            <div class="profile-circle"></div>
           </div>
         </header>
 
-        <!-- PAGE CONTENT -->
+        <!-- PAGE -->
         <section class="tools-section">
+          <!-- HEADER + BUTTON -->
           <div class="page-header">
             <div>
               <h1>TOOLS & EQUIPMENT</h1>
@@ -56,7 +52,7 @@
               </p>
             </div>
             <button class="primary-btn" onclick="openAddModal()">
-              Add Tool
+              Add Tools & Equipment Record
             </button>
           </div>
 
@@ -64,17 +60,15 @@
           <div class="summary-cards">
             <div class="summary-card">
               <h3>Total Items</h3>
-              <h2 id="totalCount">0</h2>
+              <h2>{{ total }}</h2>
             </div>
-
             <div class="summary-card success">
               <h3>Excellent</h3>
-              <h2 id="excellentCount">0</h2>
+              <h2>{{ excellent }}</h2>
             </div>
-
             <div class="summary-card info">
               <h3>Good</h3>
-              <h2 id="goodCount">0</h2>
+              <h2>{{ good }}</h2>
             </div>
           </div>
 
@@ -86,12 +80,40 @@
                   <th>Item Code</th>
                   <th>Name</th>
                   <th>Category</th>
-                  <th>Quantity</th>
+                  <th>Qty</th>
                   <th>Condition</th>
                   <th>Action</th>
                 </tr>
               </thead>
-              <tbody id="toolsTable"></tbody>
+              <tbody>
+                {% for t in tools %}
+                <tr>
+                  <td>{{ t[1] }}</td>
+                  <td>{{ t[2] }}</td>
+                  <td>{{ t[3] }}</td>
+                  <td>{{ t[4] }}</td>
+                  <td>
+                    <span class="badge {{ t[5]|lower }}">{{ t[5] }}</span>
+                  </td>
+                  <td class="action-buttons">
+                    <button
+                      class="btn-edit"
+                      onclick="openEditModal('{{ t[0] }}','{{ t[2] }}','{{ t[3] }}','{{ t[4] }}','{{ t[5] }}')"
+                    >
+                      Edit
+                    </button>
+
+                    <a
+                      href="/delete_tool/{{ t[0] }}"
+                      class="btn-delete"
+                      onclick="return confirm('Delete this record?')"
+                    >
+                      Delete
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
             </table>
           </div>
         </section>
@@ -103,166 +125,59 @@
       <div class="modal-content">
         <h2 id="modalTitle">Add Tool</h2>
 
-        <label>Name</label>
-        <input type="text" id="name" />
+        <form method="POST" action="/save_tool">
+          <input type="hidden" name="id" id="toolId" />
 
-        <label>Category</label>
-        <input type="text" id="category" />
+          <label>Tools & Equipment Name</label>
+          <input type="text" name="name" id="name" required />
 
-        <label>Quantity</label>
-        <input type="number" id="quantity" min="1" />
+          <label>Category</label>
+          <input type="text" name="category" id="category" required />
 
-        <label>Condition</label>
-        <select id="condition">
-          <option>Excellent</option>
-          <option>Good</option>
-          <option>Fair</option>
-          <option>Damaged</option>
-        </select>
+          <label>Quantity</label>
+          <input type="number" name="quantity" id="quantity" min="1" required />
 
-        <div class="modal-actions">
-          <button class="btn-save" onclick="saveTool()">Save</button>
-          <button class="btn-delete" onclick="deleteTool()">Delete</button>
-          <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-        </div>
+          <label>Condition</label>
+          <select name="condition" id="condition">
+            <option value="Excellent">Excellent</option>
+            <option value="Good">Good</option>
+            <option value="Fair">Fair</option>
+            <option value="Damaged">Damaged</option>
+          </select>
+
+          <button type="submit" class="btn-save">Save Record</button>
+          <button type="button" class="btn-cancel" onclick="closeModal()">
+            Cancel
+          </button>
+        </form>
       </div>
     </div>
 
-    <!-- SUPABASE -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+    <!-- JS -->
     <script>
-      const supabase = window.supabase.createClient(
-        "https://nudeyxdtkmgrfbepsluf.supabase.co",
-        "sb_publishable_NxmNv5aH5qVq3OxSLC0N-Q_5CtdK6Ws"
-      );
-
-      let editingId = null;
-
-      async function loadTools() {
-        const { data, error } = await supabase
-          .from("tools_equipment")
-          .select("*")
-          .order("created_at", { ascending: true });
-
-        if (error) {
-          console.error(error);
-          return;
-        }
-
-        const tbody = document.getElementById("toolsTable");
-        tbody.innerHTML = "";
-
-        let excellent = 0;
-        let good = 0;
-
-        data.forEach((tool) => {
-          if (tool.condition === "Excellent") excellent++;
-          if (tool.condition === "Good") good++;
-
-          tbody.innerHTML += `
-            <tr>
-              <td>${tool.item_code}</td>
-              <td>${tool.name}</td>
-              <td>${tool.category}</td>
-              <td>${tool.quantity}</td>
-              <td>
-                <span class="badge ${tool.condition.toLowerCase()}">
-                  ${tool.condition}
-                </span>
-              </td>
-              <td>
-                <a href="#" onclick="openEditModal('${tool.id}')">View</a>
-              </td>
-            </tr>
-          `;
-        });
-
-        document.getElementById("totalCount").innerText = data.length;
-        document.getElementById("excellentCount").innerText = excellent;
-        document.getElementById("goodCount").innerText = good;
-      }
-
       function openAddModal() {
-        editingId = null;
-        modalTitle.innerText = "Add Tool";
-        name.value = "";
-        category.value = "";
-        quantity.value = 1;
-        condition.value = "Good";
-        toolModal.style.display = "flex";
+        document.getElementById("modalTitle").innerText = "Add Tool";
+        document.getElementById("toolId").value = "";
+        document.getElementById("name").value = "";
+        document.getElementById("category").value = "";
+        document.getElementById("quantity").value = "";
+        document.getElementById("condition").value = "Good";
+        document.getElementById("toolModal").style.display = "flex";
       }
 
-      async function openEditModal(id) {
-        editingId = id;
-
-        const { data } = await supabase
-          .from("tools_equipment")
-          .select("*")
-          .eq("id", id)
-          .single();
-
-        modalTitle.innerText = "Edit Tool";
-        name.value = data.name;
-        category.value = data.category;
-        quantity.value = data.quantity;
-        condition.value = data.condition;
-        toolModal.style.display = "flex";
-      }
-
-      async function saveTool() {
-        const payload = {
-          name: name.value,
-          category: category.value,
-          quantity: quantity.value,
-          condition: condition.value,
-        };
-
-        let result;
-
-        if (editingId) {
-          result = await supabase
-            .from("tools_equipment")
-            .update(payload)
-            .eq("id", editingId);
-        } else {
-          result = await supabase.from("tools_equipment").insert(payload);
-        }
-
-        if (result.error) {
-          alert("Error saving tool");
-          console.error(result.error);
-          return;
-        }
-
-        closeModal();
-        loadTools();
-      }
-
-      async function deleteTool() {
-        if (!editingId) return;
-        if (!confirm("Delete this tool?")) return;
-
-        const { error } = await supabase
-          .from("tools_equipment")
-          .delete()
-          .eq("id", editingId);
-
-        if (error) {
-          alert("Error deleting tool");
-          console.error(error);
-          return;
-        }
-
-        closeModal();
-        loadTools();
+      function openEditModal(id, name, category, quantity, condition) {
+        document.getElementById("modalTitle").innerText = "Edit Tool";
+        document.getElementById("toolId").value = id;
+        document.getElementById("name").value = name;
+        document.getElementById("category").value = category;
+        document.getElementById("quantity").value = quantity;
+        document.getElementById("condition").value = condition;
+        document.getElementById("toolModal").style.display = "flex";
       }
 
       function closeModal() {
-        toolModal.style.display = "none";
+        document.getElementById("toolModal").style.display = "none";
       }
-
-      loadTools();
     </script>
   </body>
 </html>

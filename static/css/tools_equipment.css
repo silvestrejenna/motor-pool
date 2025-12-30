@@ -285,3 +285,20 @@ body {
   cursor: pointer;
   font-weight: bold;
 }
+
+/* CANCEL BUTTON (MATCH SAVE STYLE) */
+.btn-cancel {
+  width: 100%;
+  background: #dc3545; /* red but different from save */
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.btn-cancel:hover {
+  background: #b02a37;
+}
