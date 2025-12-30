@@ -1,0 +1,287 @@
+:root {
+  --pup-red: #800000;
+  --bg-gray: #f5f5f5;
+}
+
+/* GLOBAL */
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: var(--bg-gray);
+}
+
+/* LAYOUT */
+.layout,
+.main-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* SIDEBAR (MATCH VEHICLE_INV) */
+.sidebar {
+  width: 250px;
+  background: var(--pup-red);
+  color: white;
+  padding: 20px 0;
+}
+
+.logo-section {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.logo-section img {
+  width: 80px;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
+  padding: 15px 25px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar li a {
+  color: inherit;
+  text-decoration: none;
+  display: block;
+}
+
+.sidebar li.active {
+  background: white;
+  color: var(--pup-red);
+}
+
+/* CONTENT */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* TOP NAV (MATCH VEHICLE_INV) */
+.top-nav {
+  background: white;
+  padding: 15px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--pup-red);
+}
+
+.nav-links a {
+  margin-right: 30px;
+  text-decoration: none;
+  color: var(--pup-red);
+  font-weight: bold;
+}
+
+/* PAGE CONTENT */
+.tools-section {
+  padding: 30px 40px;
+}
+
+/* HEADER */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.page-header h1 {
+  margin: 0;
+  color: var(--pup-red);
+}
+
+.subtitle {
+  color: #666;
+  margin-top: 5px;
+}
+
+/* PRIMARY BUTTON */
+.primary-btn {
+  background: var(--pup-red);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* SUMMARY CARDS */
+.summary-cards {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  flex: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.summary-card h3 {
+  margin: 0;
+  color: #777;
+  font-size: 14px;
+}
+
+.summary-card h2 {
+  margin-top: 8px;
+  font-size: 28px;
+}
+
+.summary-card.success h2 {
+  color: #2e7d32;
+}
+
+.summary-card.info h2 {
+  color: #1565c0;
+}
+
+/* TABLE */
+.table-card {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.table-header input {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.inventory-table th {
+  text-align: left;
+  color: #888;
+  font-size: 13px;
+  padding-bottom: 15px;
+}
+
+.inventory-table td {
+  padding: 15px 0;
+  border-top: 1px solid #eee;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* CONDITION BADGES */
+.badge {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.badge.good {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.badge.excellent {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.badge.fair {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+/* ACTION BUTTONS */
+.action-buttons button,
+.btn-delete {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-right: 5px;
+}
+
+.btn-edit {
+  background: #ffc107;
+  color: black;
+}
+
+.btn-update {
+  background: #28a745;
+  color: white;
+}
+
+.btn-delete {
+  background: #dc3545;
+  color: white;
+}
+
+/* MODAL (MATCH VEHICLE STYLE) */
+.modal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  justify-content: flex-end;
+  z-index: 1000;
+}
+
+.modal-content {
+  width: 350px;
+  background: white;
+  height: 100%;
+  padding: 40px 30px;
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content label {
+  display: block;
+  margin-top: 12px;
+  font-weight: bold;
+}
+
+.modal-content input,
+.modal-content select {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.btn-save {
+  width: 100%;
+  background: var(--pup-red);
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
