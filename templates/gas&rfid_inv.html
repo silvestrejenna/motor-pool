@@ -77,20 +77,82 @@
                                 {% for row in records %}
                                 <tr id="row-{{ row[0] }}">
                                     <td>F00{{ row[0] }}</td>
-                                    <td class="v-name">{{ row[13] }}</td>
-                                    <td>{{ row[2] }}</td>
-                                    <td>{{ row[3] }}</td>
-                                    <td>{{ row[4] }}L</td>
-                                    <td>{{ row[5] }}L</td>
-                                    <td>{{ row[6] }}L</td>
-                                    <td>{{ row[7] }}</td>
-                                    <td>{{ row[8] }}</td>
-                                    <td>{{ row[9] }}</td>
-                                    <td>₱{{ row[10] }}</td>
-                                    <td>₱{{ row[11] }}</td>
+                                    
+                                    <td>
+                                        <span class="view-mode">{{ row[13] }}</span>
+                                        <select class="edit-mode edit-input" name="v_name" style="display:none;">
+                                            {% for v in vehicles %}
+                                            <option value="{{ v[0] }}" {% if v[0] == row[13] %}selected{% endif %}>{{ v[0] }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+
+                                    <td>
+                                        <span class="view-mode">{{ row[2] }}</span>
+                                        <input type="date" class="edit-mode edit-input" name="date" value="{{ row[2] }}" style="display:none;">
+                                    </td>
+
+                                    <td>
+                                        <span class="view-mode">{{ row[3] }}</span>
+                                        <input type="text" class="edit-mode edit-input" name="driver" value="{{ row[3] }}" style="display:none;">
+                                    </td>
+
+                                    <td>
+                                        <span class="view-mode">{{ row[4] }}L</span>
+                                        <input type="number" step="0.01" class="edit-mode edit-input" name="gas_bal_tank" value="{{ row[4] }}" style="display:none;">
+                                    </td>
+
+                                    <td>
+                                        <span class="view-mode">{{ row[5] }}L</span>
+                                        <input type="number" step="0.01" class="edit-mode edit-input" name="purchased_trip" value="{{ row[5] }}" style="display:none;">
+                                    </td>
+
+                                    <td>
+                                        <span class="view-mode">{{ row[6] }}L</span>
+                                        <input type="number" step="0.01" class="edit-mode edit-input" name="bal_after_trip" value="{{ row[6] }}" style="display:none;">
+                                    </td>
+
+                                    <td>
+                                        <span class="view-mode">{{ row[7] }}</span>
+                                        <input type="number" class="edit-mode edit-input" name="km_beginning" 
+                                                value="{{ row[7] }}" style="display:none;"
+                                                oninput="calcEditKM('{{ row[0] }}')">
+                                    </td>
+
+                                    <td>
+                                        <span class="view-mode">{{ row[8] }}</span>
+                                        <input type="number" class="edit-mode edit-input" name="km_end" 
+                                                value="{{ row[8] }}" style="display:none;"
+                                                oninput="calcEditKM('{{ row[0] }}')">
+                                    </td>
+
+                                    <td>
+                                        <span class="view-mode">{{ row[9] }}</span>
+                                        <input type="number" class="edit-mode edit-input" name="km_used" 
+                                                value="{{ row[9] }}" style="display:none;" readonly>
+                                    </td>
+
+                                    <td>
+                                        <span class="view-mode">₱{{ row[10] }}</span>
+                                        <input type="number" step="0.01" class="edit-mode edit-input" name="easy_rfid_bal" value="{{ row[10] }}" style="display:none;">
+                                    </td>
+
+                                    <td>
+                                        <span class="view-mode">₱{{ row[11] }}</span>
+                                        <input type="number" step="0.01" class="edit-mode edit-input" name="auto_rfid_bal" value="{{ row[11] }}" style="display:none;">
+                                    </td>
+
                                     <td class="sticky-action">
-                                        <button class="btn-edit" onclick="editFuel('{{ row[0] }}')">Edit</button>
-                                        <button class="btn-delete">Delete</button>
+                                        <div class="view-btns-{{ row[0] }}">
+                                            <button class="btn-edit" onclick="toggleEdit('{{ row[0] }}')">Edit</button>
+                                            <button class="btn-delete" onclick="deleteFuel('{{ row[0] }}')">Delete</button>
+                                        </div>
+
+                                        <div class="edit-btns-{{ row[0] }}" style="display:none;">
+                                            <button class="btn-update" onclick="saveUpdate('{{ row[0] }}')">Update</button>
+                                            <button class="btn-cancel" onclick="toggleEdit('{{ row[0] }}')">Cancel</button>
+                                            <button class="btn-delete" onclick="deleteFuel('{{ row[0] }}')">Delete</button>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -104,7 +166,7 @@
 
     <div id="fuelModal" class="modal-overlay">
         <div class="modal-content scrollable-modal">
-            <span class="close-btn" onclick="toggleFuelModal()">&times;</span>
+            <span class="icon" class="close-btn" onclick="toggleFuelModal()">&times;</span>
             <h2>New Fuel Record</h2>
             <form action="{{ url_for('add_fuel') }}" method="POST">
                 <div class="form-grid">
@@ -121,9 +183,9 @@
                     <label>Gas Balance (Tank)</label><input type="number" step="0.01" name="gas_bal_tank">
                     <label>Purchased During Trip</label><input type="number" step="0.01" name="purchased_trip">
                     <label>Balance After Trip</label><input type="number" step="0.01" name="bal_after_trip">
-                    <label>KM Beginning</label><input type="number" name="km_beginning">
-                    <label>KM End</label><input type="number" name="km_end">
-                    <label>KM Used</label><input type="number" name="km_used">
+                    <label>KM Beginning</label><input type="number" name="km_beginning" id="add_km_start"  oninput="calcAddKM()">
+                    <label>KM End</label><input type="number" name="km_end" id="add_km_end" oninput="calcAddKM()">
+                    <label>KM Used</label><input type="number" name="km_used" id="add_km_used" readonly placeholder="0">
                     <label>RFID EasyTrip</label><input type="number" step="0.01" name="easy_rfid_bal">
                     <label>RFID AutoSweep</label><input type="number" step="0.01" name="auto_rfid_bal">
                     <label>Remarks</label><textarea name="remarks"></textarea>

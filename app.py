@@ -205,7 +205,7 @@ def gas_rfid():
                 SELECT f.*, v.plate_number 
                 FROM gas_rfid f 
                 LEFT JOIN vehicle v ON f.v_name = v.name 
-                ORDER BY f."gasRfid_id" DESC
+                ORDER BY f."gasRfid_id" ASC
             """)
             records = cur.fetchall()
 
@@ -250,6 +250,58 @@ def add_fuel():
         conn.commit()
         cur.close()
         conn.close()
+    return redirect(url_for('gas_rfid'))
+
+from flask import jsonify # Ensure jsonify is imported at the top
+
+@app.route('/update_fuel', methods=['POST'])
+def update_fuel():
+    data = request.get_json()
+    record_id = data.get('id')
+    
+    conn = get_db_connection()
+    if conn:
+        try:
+            cur = conn.cursor()
+            # We use the double quotes because gasRfid_id is case-sensitive in Supabase
+            query = """
+                UPDATE gas_rfid 
+                SET v_name = %s, date = %s, driver = %s, 
+                    gas_bal_tank = %s, purchased_trip = %s, bal_after_trip = %s, 
+                    km_beginning = %s, km_end = %s, km_used = %s, 
+                    easy_rfid_bal = %s, auto_rfid_bal = %s
+                WHERE "gasRfid_id" = %s
+            """
+            cur.execute(query, (
+                data['v_name'], data['date'], data['driver'],
+                data['gas_bal_tank'], data['purchased_trip'], data['bal_after_trip'],
+                data['km_beginning'], data['km_end'], data['km_used'],
+                data['easy_rfid_bal'], data['auto_rfid_bal'], record_id
+            ))
+            conn.commit()
+            cur.close()
+            return jsonify({"status": "success"}), 200
+        except Exception as e:
+            print(f"Update Error: {e}")
+            return jsonify({"status": "error", "message": str(e)}), 400
+        finally:
+            conn.close()
+    return jsonify({"status": "error", "message": "No DB connection"}), 500
+
+
+@app.route('/delete_fuel/<int:id>')
+def delete_fuel(id):
+    conn = get_db_connection()
+    if conn:
+        try:
+            cur = conn.cursor()
+            cur.execute('DELETE FROM gas_rfid WHERE "gasRfid_id" = %s', (id,))
+            conn.commit()
+            cur.close()
+        except Exception as e:
+            print(f"Delete Error: {e}")
+        finally:
+            conn.close()
     return redirect(url_for('gas_rfid'))
 
 # --- END OF GASOLINE & RFID ROUTES ---

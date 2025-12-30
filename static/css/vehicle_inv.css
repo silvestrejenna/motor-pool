@@ -41,6 +41,17 @@ body {
      padding: 0; 
     }
 
+  .sidebar ul.inventory-selection li a {
+    color: white;           /* Or whatever color your sidebar text uses */
+    text-decoration: none;  /* Removes the underline */
+    display: block;         /* Makes the entire menu item clickable */
+    width: 100%;
+}
+
+.sidebar ul.inventory-selection li a:hover {
+    color: #ffc107; 
+}
+
 .sidebar li { 
     padding: 15px 25px; 
     cursor: pointer; 
@@ -67,22 +78,22 @@ body {
      display: flex; 
      justify-content: space-between; 
      align-items: center; 
-     border-bottom: 2px solid var(--pup-red); 
+     border-bottom: 2px solid var(--pup-red);
     }
 
 .nav-links a {
      margin-right: 30px; 
      text-decoration: none; 
-     color: var(--pup-red); 
      font-weight: bold;
+     color: #333;
     }
     
 .nav-links a.active {
-     text-decoration: underline;
+      color: var(--pup-red); 
 
     }
 .nav-links a:hover {
-  text-decoration: underline;
+   color: var(--pup-red); 
 }
 
 .user-profile {
@@ -212,6 +223,19 @@ body {
 .btn-delete {
     background: #dc3545; 
     color: white; 
+}
+.btn-cancel {
+    background-color: #6c757d; /* Gray color */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.btn-cancel:hover {
+    background-color: #5a6268;
 }
 
 /* Modal Styles */
