@@ -84,6 +84,7 @@
             <div class="action-buttons">
                 <button class="btn-edit" onclick="editRow('{{ vehicle[0] }}')">Edit</button>
                 <button class="btn-update" id="upd-{{ vehicle[0] }}" style="display:none;" onclick="updateRow('{{ vehicle[0] }}')">Update</button>
+                <button class="btn-cancel" id="cancel-{{ vehicle[0] }}" style="display:none;" onclick="cancelUpdate('{{ vehicle[0] }}')">Cancel</button>
                 <a href="{{ url_for('delete_vehicle', id=vehicle[0]) }}" class="btn-delete" onclick="return confirm('Delete this record?')">Delete</a>
             </div>
         </td>
