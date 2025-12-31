@@ -34,6 +34,7 @@ function editRow(id) {
     // Toggle Buttons
     row.querySelector('.btn-edit').style.display = 'none';
     document.getElementById(`upd-${id}`).style.display = 'inline-block';
+    document.getElementById(`cancel-${id}`).style.display = 'inline-block';
 }
 
 function updateRow(id) {
@@ -58,4 +59,43 @@ function updateRow(id) {
 
     document.body.appendChild(form); 
     form.submit();
+}
+
+async function loadUserProfile() {
+        const res = await fetch("/auth/user");
+        if (!res.ok) {
+          window.location.href = "/";
+          return;
+        }
+        const user = await res.json();
+        document.getElementById("profileName").textContent = user.full_name;
+        document.getElementById("profileEmail").textContent = user.email;
+      }
+
+      loadUserProfile();
+
+      function toggleProfile() {
+        document.getElementById("profileDropdown").classList.toggle("show");
+      }
+
+      async function logout() {
+        await fetch("/logout", { method: "POST" });
+        window.location.href = "/";
+      }
+
+     function cancelUpdate(id) {
+    const row = document.getElementById(`row-${id}`);
+    
+    // 1. Hide the Update and Cancel buttons
+    document.getElementById(`upd-${id}`).style.display = 'none';
+    document.getElementById(`cancel-${id}`).style.display = 'none';
+    
+    // 2. Show the Edit and Delete buttons (or whatever was there)
+    row.querySelector('.btn-edit').style.display = 'inline-block';
+    row.querySelector('.btn-delete').style.display = 'inline-block';
+
+    // 3. Turn inputs back into text
+    // We assume your editRow turned text into inputs; this refreshes the page 
+    // to discard any changes the user typed, which is the safest "Cancel".
+    location.reload(); 
 }

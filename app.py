@@ -181,6 +181,131 @@ def update_vehicle(id):
 # 🚗 VEHICLE INVENTORY - NEW CODE ENDS HERE
 # =======================================================
 
+# --- GASOLINE & RFID ROUTES ---
+
+@app.route('/gas_rfid')
+def gas_rfid():
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    conn = get_db_connection()
+    records = []
+    vehicles = [] 
+    summary = {"total_fuel": "0L", "avg_fuel": "0L", "easytrip": "₱0", "autosweep": "₱0"}
+    
+    if conn:
+        try:
+            cur = conn.cursor()
+            # Fetch vehicles for dropdown
+            cur.execute("SELECT name FROM vehicle ORDER BY name ASC")
+            vehicles = cur.fetchall()
+
+            # FIX: Added double quotes to "gasRfid_id" and fixed plate_number
+            cur.execute("""
+                SELECT f.*, v.plate_number 
+                FROM gas_rfid f 
+                LEFT JOIN vehicle v ON f.v_name = v.name 
+                ORDER BY f."gasRfid_id" ASC
+            """)
+            records = cur.fetchall()
+
+            # FIX: Changed purchased_trip to purchased_tri to match your DB schema
+            cur.execute("""
+                SELECT SUM(purchased_trip), AVG(purchased_trip), 
+                       SUM(easy_rfid_bal), SUM(auto_rfid_bal) 
+                FROM gas_rfid
+            """)
+            row = cur.fetchone()
+            if row and row[0] is not None:
+                summary = {
+                    "total_fuel": f"{row[0]:,.1f}L",
+                    "avg_fuel": f"{row[1]:,.1f}L",
+                    "easytrip": f"₱{row[2]:,.2f}",
+                    "autosweep": f"₱{row[3]:,.2f}"
+                }
+            cur.close()
+        except Exception as e:
+            print(f"Query Error: {e}")
+        finally:
+            conn.close()
+
+    return render_template("gas&rfid_inv.html", records=records, vehicles=vehicles, summary=summary)
+
+@app.route('/add_fuel', methods=['POST'])
+def add_fuel():
+    # Make sure your form uses name="v_name" for the vehicle selection
+    data = (
+        request.form['v_name'], request.form['date'], request.form['driver'],
+        request.form['gas_bal_tank'], request.form['purchased_trip'], request.form['bal_after_trip'],
+        request.form['km_beginning'], request.form['km_end'], request.form['km_used'],
+        request.form['easy_rfid_bal'], request.form['auto_rfid_bal'], request.form['remarks']
+    )
+    conn = get_db_connection()
+    if conn:
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO gas_rfid (v_name, date, driver, gas_bal_tank, purchased_trip, bal_after_trip, km_beginning, km_end, km_used, easy_rfid_bal, auto_rfid_bal, remarks)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, data)
+        conn.commit()
+        cur.close()
+        conn.close()
+    return redirect(url_for('gas_rfid'))
+
+from flask import jsonify # Ensure jsonify is imported at the top
+
+@app.route('/update_fuel', methods=['POST'])
+def update_fuel():
+    data = request.get_json()
+    record_id = data.get('id')
+    
+    conn = get_db_connection()
+    if conn:
+        try:
+            cur = conn.cursor()
+            # We use the double quotes because gasRfid_id is case-sensitive in Supabase
+            query = """
+                UPDATE gas_rfid 
+                SET v_name = %s, date = %s, driver = %s, 
+                    gas_bal_tank = %s, purchased_trip = %s, bal_after_trip = %s, 
+                    km_beginning = %s, km_end = %s, km_used = %s, 
+                    easy_rfid_bal = %s, auto_rfid_bal = %s
+                WHERE "gasRfid_id" = %s
+            """
+            cur.execute(query, (
+                data['v_name'], data['date'], data['driver'],
+                data['gas_bal_tank'], data['purchased_trip'], data['bal_after_trip'],
+                data['km_beginning'], data['km_end'], data['km_used'],
+                data['easy_rfid_bal'], data['auto_rfid_bal'], record_id
+            ))
+            conn.commit()
+            cur.close()
+            return jsonify({"status": "success"}), 200
+        except Exception as e:
+            print(f"Update Error: {e}")
+            return jsonify({"status": "error", "message": str(e)}), 400
+        finally:
+            conn.close()
+    return jsonify({"status": "error", "message": "No DB connection"}), 500
+
+
+@app.route('/delete_fuel/<int:id>')
+def delete_fuel(id):
+    conn = get_db_connection()
+    if conn:
+        try:
+            cur = conn.cursor()
+            cur.execute('DELETE FROM gas_rfid WHERE "gasRfid_id" = %s', (id,))
+            conn.commit()
+            cur.close()
+        except Exception as e:
+            print(f"Delete Error: {e}")
+        finally:
+            conn.close()
+    return redirect(url_for('gas_rfid'))
+
+# --- END OF GASOLINE & RFID ROUTES ---
+
 # ================================
 # 🧰 TOOLS & EQUIPMENT
 # ================================

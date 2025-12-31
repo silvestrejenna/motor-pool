@@ -1,0 +1,105 @@
+
+
+/* Summary Cards */
+.summary-container {
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px; 
+    margin: 20px 0; 
+}
+.summary-card { 
+    background: #fff; 
+    padding: 15px; 
+    border-radius: 10px; 
+    border-left: 5px solid #800000; 
+}
+
+/* Sticky Table Logic */
+.table-wrapper { 
+    overflow-x: auto;
+    max-width: 100%; 
+    border-radius: 10px;
+}
+
+.inventory-table { 
+    width: 100%; 
+    min-width: 1400px; 
+    border-collapse: collapse; 
+}
+
+.sticky-action {
+    position: sticky;
+    right: 0;
+    background: white !important;
+    z-index: 10;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    display: inline-block;
+}
+
+/* Scrollable Modal Logic */
+.scrollable-modal {
+    max-height: 80vh; /* Takes 80% of screen height */
+    overflow-y: auto; /* Enables vertical scroll */
+    width: 500px;
+}
+
+.form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 10px; /* Space for scrollbar */
+}
+
+/* Container for the buttons to keep them aligned */
+.sticky-action div {
+    display: flex;
+    gap: 8px; /* Space between buttons */
+    justify-content: center;
+}
+
+/* Base button styles */
+.sticky-action button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: none; 
+    display: inline-block; 
+    margin-bottom: 5px; 
+}
+
+/* Specific Colors for each action */
+.btn-edit {
+    background-color: #ffc107; /* Warning Yellow */
+    color: #000;
+}
+
+.btn-save {
+    background-color: #28a745; /* Success Green */
+    color: white;
+}
+
+.btn-cancel {
+    background-color: #6c757d; /* Secondary Gray */
+    color: white;
+}
+
+.btn-delete {
+    background-color: #dc3545; /* Danger Red */
+    color: white;
+}
+
+.close-btn {
+    cursor: pointer;
+}
+/* Hover Effects */
+.btn-edit:hover { background-color: #e0a800; }
+.btn-update:hover { background-color: #218838; }
+.btn-cancel:hover { background-color: #5a6268; }
+.btn-delete:hover { background-color: #c82333; }
+
+/* Active (Click) Effect */
+.sticky-action button:active {
+    transform: scale(0.95);
+}
