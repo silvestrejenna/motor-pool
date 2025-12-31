@@ -153,7 +153,31 @@
       </div>
     </div>
 
-     <!-- RIGHT -->
+    <!-- ================= FOOTER ================= -->
+    <footer class="footer">
+      <div class="footer-content">
+        <!-- LEFT -->
+        <div class="footer-left">
+          <img
+            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+            alt="Motor Pool Logo"
+            class="footer-logo"
+          />
+          <p class="footer-desc">
+            A Web-Based Inventory and Record Management System for
+            <strong>Motor Pool</strong>
+          </p>
+        </div>
+
+        <!-- CENTER -->
+        <div class="footer-center">
+          <h4>MENU</h4>
+          <a href="{{ url_for('home') }}">Home</a>
+          <a href="{{ url_for('inventory') }}">Inventory</a>
+          <a href="{{ url_for('records') }}">Record Management</a>
+        </div>
+
+        <!-- RIGHT -->
         <div class="footer-right">
           <h4>CONTACT US</h4>
           <p>📧 motorpool@pup.edu.ph</p>
@@ -171,7 +195,6 @@
         <span>Terms of Services and Privacy Policy</span>
       </div>
     </footer>
-
     <!-- JS -->
     <script>
       function openAddModal() {
