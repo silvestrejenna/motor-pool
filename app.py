@@ -394,6 +394,128 @@ def delete_tool(id):
 # 🧰 END TOOLS & EQUIPMENT
 # =======================================================
 
+# --- maintenance & pms ---
+@app.route('/maintenance_pms')
+def maintenance_pms():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    try:
+        # 1. Fetch Vehicles for the dropdown selectors in your modals
+        # Note: Your table is named 'vehicle' (singular) based on your sidebar screenshot
+        cur.execute('SELECT vehicle_id, name FROM vehicle')
+        vehicles = cur.fetchall()
+        
+        # 2. Fetch Maintenance Logs (Matches your 'maintenance_log' Supabase table)
+        cur.execute('SELECT * FROM maintenance_log ORDER BY date DESC')
+        m_records = cur.fetchall()
+        
+        # 3. Fetch PMS Logs (Matches your 'pms_log' Supabase table)
+        cur.execute('SELECT * FROM pms_log ORDER BY last_pms_date DESC')
+        p_records = cur.fetchall()
+        
+        # 4. Calculate Stats for the UI Cards
+        # Total Monthly Maintenance Cost
+        cur.execute("SELECT SUM(cost) FROM maintenance_log WHERE date >= date_trunc('month', CURRENT_DATE)")
+        cost_res = cur.fetchone()
+        total_m_cost = cost_res[0] if cost_res and cost_res[0] else 0
+        
+        # Total Records this month
+        cur.execute("SELECT COUNT(*) FROM maintenance_log WHERE date >= date_trunc('month', CURRENT_DATE)")
+        m_count = cur.fetchone()[0]
+        
+        # Total PMS Scheduled (Count of records in PMS table)
+        pms_scheduled_count = len(p_records)
+
+        return render_template('maintenance_pms.html', 
+                               vehicles=vehicles, 
+                               m_records=m_records, 
+                               p_records=p_records,
+                               total_m_cost=total_m_cost,
+                               m_count=m_count,
+                               pms_count=pms_scheduled_count)
+                               
+    except Exception as e:
+        print(f"Error connecting to Maintenance/PMS: {e}")
+        return f"Database Error: {e}", 500
+    finally:
+        cur.close()
+        conn.close()
+
+# Route to save a new Maintenance Record
+@app.route('/add_maintenance', methods=['POST'])
+def add_maintenance():
+    # Mapping HTML form names to your Supabase columns
+    date = request.form.get('date')
+    v_name = request.form.get('vehicle_name') # Matches your column 'vehicle_name'
+    prob = request.form.get('problem')
+    action = request.form.get('action_taken')
+    cost = request.form.get('cost')
+    mech = request.form.get('mechanic')
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('''INSERT INTO maintenance_log (date, vehicle_name, problem, action_taken, cost, mechanic) 
+                    VALUES (%s, %s, %s, %s, %s, %s)''', 
+                (date, v_name, prob, action, cost, mech))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return redirect(url_for('maintenance_pms'))
+
+#--pms--#
+# --- ROUTE TO ADD PMS RECORD ---
+@app.route('/add_pms', methods=['POST'])
+def add_pms():
+    # Fetching data from the form (matches your expected modal fields)
+    v_name = request.form.get('vehicle_name')
+    last_pms = request.form.get('last_pms_date')
+    km = request.form.get('km')
+    oil = request.form.get('oil_liters')
+    next_pms = request.form.get('next_pms_date')
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        # Note: 'next_pms_date' matches your database schema
+        cur.execute('''
+            INSERT INTO pms_log (vehicle_name, last_pms_date, km, oil_liters, next_pms_date)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (v_name, last_pms, km, oil, next_pms))
+        conn.commit()
+    except Exception as e:
+        print(f"Error adding PMS record: {e}")
+    finally:
+        cur.close()
+        conn.close()
+    
+    return redirect(url_for('maintenance_pms'))
+
+# --- ACTION BUTTON FUNCTIONS (DELETE) ---
+@app.route('/delete_maintenance/<int:id>')
+def delete_maintenance(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM maintenance_log WHERE id = %s', (id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return redirect(url_for('maintenance_pms'))
+
+@app.route('/delete_pms/<int:id>')
+def delete_pms(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM pms_log WHERE id = %s', (id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return redirect(url_for('maintenance_pms'))
+
+# --- END maintenance & pms ---
+
+
+
 @app.route('/records')
 def records():
     if 'user_name' not in session:
