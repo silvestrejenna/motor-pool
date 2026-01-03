@@ -1,0 +1,197 @@
+
+.m_content {
+    padding: 30px;
+    background: #f9f9f9;
+    min-height: 100vh;
+}
+
+/* --- TAB TOGGLE SYSTEM --- */
+.toggle-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.toggle-switch {
+    display: flex;
+    border: 1px solid #ccc;
+    border-radius: 25px;
+    background: white;
+    overflow: hidden;
+}
+
+.toggle-switch button {
+    padding: 10px 35px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+    font-size: 14px;
+}
+
+/* Active State for Maintenance (Maroon) */
+#m-btn.active {
+    background: #800000;
+    color: white;
+}
+
+/* Active State for PMS (Yellow) */
+#p-btn.active {
+    background: #800000;;
+    color: white;
+}
+
+/* --- STATISTICS CARDS --- */
+.stats-cards {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.card {
+    background: white;
+    flex: 1;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    
+}
+
+#pms-section .card {
+    border-left: 5px solid #800000; /* Maroon accent for PMS section */
+}
+
+.card h3 {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.card .val {
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+/* --- TABLE CARD --- */
+.table-card {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.header-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header-area h1 {
+    font-size: 22px;
+    color: #333;
+    margin: 0;
+}
+
+.btn-add-maroon {
+    background: #800000;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* --- TABLE STYLING --- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+    color: #888;
+    font-size: 13px;
+    padding: 15px;
+    border-bottom: 2px solid #f4f4f4;
+}
+
+td {
+    padding: 15px;
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+}
+
+/* --- SIDE MODAL (New Maintenance Record) --- */
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 1000; 
+    right: 0; 
+    top: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0,0,0,0.4); 
+}
+
+.modal-content {
+    background: white;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 350px;
+    height: 100%;
+    padding: 30px;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+.modal-content h2 {
+    font-size: 20px;
+    margin-bottom: 25px;
+    color: #333;
+}
+
+.modal-content input, 
+.modal-content select, 
+.modal-content textarea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.save-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    width: 100%;
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.cancel-btn {
+    background: #f4f4f4;
+    color: #666;
+    border: none;
+    width: 100%;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+}
