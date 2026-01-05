@@ -23,11 +23,15 @@
         <ul class="inventory-selection">
           <li class="active">VEHICLES</li>
           <li><a href="{{ url_for('gas_rfid') }}">GASOLINE & RFID</a></li>
-          <li><a href="{{ url_for('maintenance_pms') }}">MAINTENANCE & PMS LOG</a></li>
+          <li>
+            <a href="{{ url_for('maintenance_pms') }}">MAINTENANCE & PMS LOG</a>
+          </li>
           <li>
             <a href="{{ url_for('tools_equipment') }}">TOOLS & EQUIPMENT</a>
           </li>
-          <li>PARTS & SUPPLIES</li>
+          <li>
+            <a href="{{ url_for('parts_supplies') }}">PARTS & SUPPLIES</a>
+          </li>
           <li>REPORTS</li>
         </ul>
       </nav>

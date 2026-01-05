@@ -2,12 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>PUP Motor Pool | Tools & Equipment</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+    <title>Parts & Supplies</title>
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='css/tools_equipment.css') }}"
+      href="{{ url_for('static', filename='css/parts_supplies.css') }}"
     />
   </head>
 
@@ -22,16 +20,16 @@
           />
         </div>
 
-        <ul>
+        <ul class="inventory-selection">
           <li><a href="{{ url_for('inventory') }}">VEHICLES</a></li>
           <li><a href="{{ url_for('gas_rfid') }}">GASOLINE & RFID</a></li>
           <li>
             <a href="{{ url_for('maintenance_pms') }}">MAINTENANCE & PMS LOG</a>
           </li>
-          <li class="active">
+          <li>
             <a href="{{ url_for('tools_equipment') }}">TOOLS & EQUIPMENT</a>
           </li>
-          <li>
+          <li class="active">
             <a href="{{ url_for('parts_supplies') }}">PARTS & SUPPLIES</a>
           </li>
           <li><a href="#">REPORTS</a></li>
@@ -44,17 +42,16 @@
         <header class="top-nav">
           <div class="nav-links">
             <a href="{{ url_for('home') }}">HOME</a>
-            <a href="{{ url_for('inventory') }}">INVENTORY</a>
+            <a href="{{ url_for('inventory') }}" class="active">INVENTORY</a>
             <a href="{{ url_for('records') }}">RECORDS</a>
           </div>
 
           <div class="user-profile">
             <span class="icon">🔔</span>
-
             <div class="profile">
               <span class="icon" onclick="toggleProfile()">👤</span>
               <div class="profile-dropdown" id="profileDropdown">
-                <p class="name" id="profileName">User</p>
+                <p id="profileName">User</p>
                 <hr />
                 <a href="#">Activity</a>
                 <a href="#">Change Password</a>
@@ -65,18 +62,13 @@
         </header>
 
         <!-- ================= PAGE ================= -->
-        <section class="tools-section">
-          <div class="page-header">
+        <section class="inventory-section">
+          <div class="section-header">
             <div>
-              <h1>TOOLS & EQUIPMENT</h1>
-              <p class="subtitle">
-                Manage workshop tools and equipment inventory
-              </p>
+              <h1>PARTS & SUPPLIES</h1>
+              <p class="subtitle">Track spare parts and supply inventory</p>
             </div>
-
-            <button class="primary-btn" onclick="openAddModal()">
-              Add Tools & Equipment Record
-            </button>
+            <button class="btn-add" onclick="openAddModal()">Add Part</button>
           </div>
 
           <!-- ================= SUMMARY ================= -->
@@ -86,12 +78,12 @@
               <h2>{{ total }}</h2>
             </div>
             <div class="summary-card success">
-              <h3>Excellent</h3>
-              <h2>{{ excellent }}</h2>
+              <h3>In Stock</h3>
+              <h2>{{ in_stock }}</h2>
             </div>
             <div class="summary-card info">
-              <h3>Good</h3>
-              <h2>{{ good }}</h2>
+              <h3>Low Stock</h3>
+              <h2>{{ low_stock }}</h2>
             </div>
           </div>
 
@@ -100,39 +92,45 @@
             <table class="inventory-table">
               <thead>
                 <tr>
-                  <th>Item Code</th>
+                  <th>Code</th>
                   <th>Name</th>
                   <th>Category</th>
-                  <th>Qty</th>
-                  <th>Condition</th>
+                  <th>Stock</th>
+                  <th>Min</th>
+                  <th>Unit</th>
+                  <th>Status</th>
                   <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {% for t in tools %}
+                {% for p in parts %}
                 <tr>
-                  <td>{{ t[1] }}</td>
-                  <td>{{ t[2] }}</td>
-                  <td>{{ t[3] }}</td>
-                  <td>{{ t[4] }}</td>
+                  <td>{{ p[1] }}</td>
+                  <td>{{ p[2] }}</td>
+                  <td>{{ p[3] }}</td>
+                  <td>{{ p[4] }}</td>
+                  <td>{{ p[5] }}</td>
+                  <td>{{ p[6] }}</td>
                   <td>
-                    <span class="badge {{ t[5]|lower }}">{{ t[5] }}</span>
+                    <span class="badge {{ p[7]|lower|replace(' ','-') }}">
+                      {{ p[7] }}
+                    </span>
                   </td>
                   <td class="action-buttons">
                     <button
                       class="btn-edit"
-                      onclick="openEditModal('{{ t[0] }}','{{ t[2] }}','{{ t[3] }}','{{ t[4] }}','{{ t[5] }}')"
+                      onclick="openUpdateModal('{{ p[0] }}','{{ p[2] }}','{{ p[4] }}','{{ p[5] }}')"
                     >
-                      Edit
+                      Update
                     </button>
 
-                    <a
-                      href="/delete_tool/{{ t[0] }}"
-                      class="btn-delete"
-                      onclick="return confirm('Delete this record?')"
+                    <form
+                      method="POST"
+                      action="{{ url_for('delete_part', part_id=p[0]) }}"
+                      onsubmit="return confirmDelete('{{ p[2] }}')"
                     >
-                      Delete
-                    </a>
+                      <button class="btn-delete">Delete</button>
+                    </form>
                   </td>
                 </tr>
                 {% endfor %}
@@ -172,66 +170,75 @@
       </div>
     </div>
 
-    <!-- ================= MODAL ================= -->
-    <div class="modal" id="toolModal">
-      <div class="modal-content">
-        <h2 id="modalTitle">Add Tool</h2>
+    <!-- ================= ADD MODAL ================= -->
+    <div class="modal-overlay" id="addModal">
+      <div class="modal-box">
+        <h3>Add Part</h3>
+        <form method="POST" action="{{ url_for('add_part') }}">
+          <input name="name" placeholder="Part Name" required />
+          <input name="category" placeholder="Category" required />
 
-        <form method="POST" action="/save_tool">
-          <input type="hidden" name="id" id="toolId" />
+          <div class="row">
+            <input type="number" name="stock" placeholder="Stock" required />
+            <input
+              type="number"
+              name="min_stock"
+              placeholder="Min Stock"
+              required
+            />
+          </div>
 
-          <label>Name</label>
-          <input type="text" name="name" id="name" required />
-
-          <label>Category</label>
-          <input type="text" name="category" id="category" required />
-
-          <label>Quantity</label>
-          <input type="number" name="quantity" id="quantity" required />
-
-          <label>Condition</label>
-          <select name="condition" id="condition">
-            <option>Excellent</option>
-            <option>Good</option>
-            <option>Fair</option>
-            <option>Damaged</option>
-          </select>
-
-          <button type="submit" class="btn-save">Save</button>
-          <button type="button" class="btn-cancel" onclick="closeModal()">
+          <input name="unit" placeholder="Unit" required />
+          <button class="btn-save">Save</button>
+          <button type="button" class="btn-cancel" onclick="closeAddModal()">
             Cancel
           </button>
         </form>
       </div>
     </div>
 
-    <!-- ================= JS ================= -->
+    <!-- ================= UPDATE MODAL ================= -->
+    <div class="modal-overlay" id="updateModal">
+      <div class="modal-box">
+        <h3 id="updateTitle">Update Part</h3>
+        <form method="POST" id="updateForm">
+          <input type="number" name="stock" id="uStock" required />
+          <input type="number" name="min_stock" id="uMin" required />
+          <button class="btn-save">Update</button>
+          <button type="button" class="btn-cancel" onclick="closeUpdateModal()">
+            Cancel
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ================= SCRIPT ================= -->
     <script>
       function openAddModal() {
-        document.getElementById("modalTitle").innerText = "Add Tool";
-        document.getElementById("toolModal").style.display = "flex";
+        document.getElementById("addModal").style.display = "flex";
+      }
+      function closeAddModal() {
+        document.getElementById("addModal").style.display = "none";
       }
 
-      function openEditModal(id, name, category, qty, condition) {
-        document.getElementById("modalTitle").innerText = "Edit Tool";
-        document.getElementById("toolId").value = id;
-        document.getElementById("name").value = name;
-        document.getElementById("category").value = category;
-        document.getElementById("quantity").value = qty;
-        document.getElementById("condition").value = condition;
-        document.getElementById("toolModal").style.display = "flex";
+      function openUpdateModal(id, name, stock, min) {
+        document.getElementById("updateTitle").innerText =
+          "Update Part: " + name;
+        document.getElementById("uStock").value = stock;
+        document.getElementById("uMin").value = min;
+        document.getElementById("updateForm").action = "/update-part/" + id;
+        document.getElementById("updateModal").style.display = "flex";
+      }
+      function closeUpdateModal() {
+        document.getElementById("updateModal").style.display = "none";
       }
 
-      function closeModal() {
-        document.getElementById("toolModal").style.display = "none";
+      function confirmDelete(name) {
+        return confirm("Delete this part?\n\n" + name);
       }
 
       function toggleProfile() {
         document.getElementById("profileDropdown").classList.toggle("show");
-      }
-
-      function logout() {
-        window.location.href = "/logout";
       }
     </script>
   </body>
