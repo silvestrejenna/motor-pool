@@ -514,7 +514,171 @@ def delete_pms(id):
 
 # --- END maintenance & pms ---
 
+# =======================================================
+# 🧰 PARTS & SUPPLIES
+# =======================================================
 
+@app.route('/parts-supplies')
+def parts_supplies():
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    conn = get_db_connection()
+    parts = []
+    total = in_stock = low_stock = out_stock = 0
+
+    if conn:
+        cur = conn.cursor()
+
+        # IMPORTANT: use part_id (not id)
+        cur.execute("SELECT * FROM parts_supplies ORDER BY part_id ASC")
+        parts = cur.fetchall()
+
+        cur.execute("SELECT COUNT(*) FROM parts_supplies")
+        total = cur.fetchone()[0]
+
+        cur.execute("SELECT COUNT(*) FROM parts_supplies WHERE stock > min_stock")
+        in_stock = cur.fetchone()[0]
+
+        cur.execute("""
+            SELECT COUNT(*) 
+            FROM parts_supplies 
+            WHERE stock <= min_stock AND stock > 0
+        """)
+        low_stock = cur.fetchone()[0]
+
+        cur.execute("SELECT COUNT(*) FROM parts_supplies WHERE stock = 0")
+        out_stock = cur.fetchone()[0]
+
+        cur.close()
+        conn.close()
+
+    return render_template(
+        "parts_supplies.html",
+        parts=parts,
+        total=total,
+        in_stock=in_stock,
+        low_stock=low_stock,
+        out_stock=out_stock
+    )
+
+
+# ===============================
+# ➕ ADD PART
+# ===============================
+@app.route('/add-part', methods=['POST'])
+def add_part():
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    name = request.form['name']
+    category = request.form['category']
+    stock = int(request.form['stock'])
+    min_stock = int(request.form['min_stock'])
+    unit = request.form['unit']
+
+    # ===============================
+    # AUTO PART CODE GENERATION
+    # ===============================
+    conn = get_db_connection()
+    if not conn:
+        return redirect(url_for('parts_supplies'))
+
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT part_code
+        FROM parts_supplies
+        ORDER BY part_id DESC
+        LIMIT 1
+    """)
+    last_code = cur.fetchone()
+
+    if last_code:
+        last_num = int(last_code[0][1:])  # remove 'P'
+        new_code = f"P{last_num + 1:03d}"
+    else:
+        new_code = "P001"
+
+    # AUTO STATUS
+    if stock == 0:
+        status = "Out of Stock"
+    elif stock <= min_stock:
+        status = "Low Stock"
+    else:
+        status = "In Stock"
+
+    cur.execute("""
+        INSERT INTO parts_supplies
+        (part_code, name, category, stock, min_stock, unit, status)
+        VALUES (%s,%s,%s,%s,%s,%s,%s)
+    """, (new_code, name, category, stock, min_stock, unit, status))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return redirect(url_for('parts_supplies'))
+
+# ===============================
+# ✏️ UPDATE PART
+# ===============================
+@app.route('/update-part/<int:part_id>', methods=['POST'])
+def update_part(part_id):
+    stock = int(request.form['stock'])
+    min_stock = int(request.form['min_stock'])
+
+    # AUTO STATUS
+    if stock == 0:
+        status = "Out of Stock"
+    elif stock <= min_stock:
+        status = "Low Stock"
+    else:
+        status = "In Stock"
+
+    conn = get_db_connection()
+    if conn:
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE parts_supplies
+            SET stock=%s, min_stock=%s, status=%s
+            WHERE part_id=%s
+        """, (stock, min_stock, status, part_id))
+        conn.commit()
+        cur.close()
+        conn.close()
+
+    return redirect(url_for('parts_supplies'))
+
+# ===============================
+# 🗑️ DELETE PART
+# ===============================
+@app.route('/delete-part/<int:part_id>', methods=['POST'])
+def delete_part(part_id):
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    conn = get_db_connection()
+    if conn:
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                "DELETE FROM parts_supplies WHERE part_id = %s",
+                (part_id,)
+            )
+            conn.commit()
+            cur.close()
+        except Exception as e:
+            print(f"Delete error: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
+    return redirect(url_for('parts_supplies'))
+
+# =======================================================
+# 🧰 PARTS & SUPPLIES -- END
+# =======================================================
 
 @app.route('/records')
 def records():
