@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 import os
 import psycopg2
+from docx import Document
+
 
 app = Flask(__name__)
 app.secret_key = "motorpool_secret_key"
@@ -680,6 +682,274 @@ def delete_part(part_id):
 # 🧰 PARTS & SUPPLIES -- END
 # =======================================================
 
+# =======================================================
+# REPORTS START
+# =======================================================
+@app.route("/reports", methods=["GET"])
+def reports():
+    if "user_name" not in session:
+        return redirect(url_for("login"))
+    return render_template("reports.html")
+
+
+
+def load_report_template():
+    doc = Document("report_template/gas&rfid_temp.docx")
+    return doc
+
+def insert_test_table_row(doc):
+    table = doc.tables[0]  # first (and only) table in the template
+
+    row = table.add_row().cells
+
+    row[0].text = "2025-10-25"
+    row[1].text = "R. Evasco"
+    row[2].text = "23"
+    row[3].text = "32.42"
+    row[4].text = "38"
+    row[5].text = "45226"
+    row[6].text = "45367"
+    row[7].text = "141"
+    row[8].text = "998"
+    row[9].text = "1540"
+    row[10].text = "Test entry"
+    row[11].text = ""  # Signature column
+
+def fill_report_placeholders(doc, month_name, year, summary):
+    month_year = f"{month_name} {year}"
+
+    placeholders = {
+        "{{month_year}}": month_year,
+        "{{total_gas}}": f"{summary['total_gas']}",
+        "{{avg_gas}}": f"{summary['avg_gas']}",
+        "{{total_autosweep}}": f"{summary['total_autosweep']}",
+        "{{total_easytrip}}": f"{summary['total_easytrip']}",
+    }
+
+    for paragraph in doc.paragraphs:
+        for key, value in placeholders.items():
+            if key in paragraph.text:
+                paragraph.text = paragraph.text.replace(key, value)
+
+
+def insert_gas_rfid_rows(doc, month, year):
+    table = doc.tables[0]
+
+    conn = get_db_connection()
+    if not conn:
+        return
+
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT 
+            date,
+            v_name,
+            driver,
+            gas_bal_tank,
+            purchased_trip,
+            bal_after_trip,
+            km_beginning,
+            km_end,
+            km_used,
+            easy_rfid_bal,
+            auto_rfid_bal,
+            remarks
+        FROM gas_rfid
+        WHERE 
+            date >= make_date(%s, %s, 1)
+            AND date < (make_date(%s, %s, 1) + interval '1 month')
+        ORDER BY date
+    """, (year, month, year, month))
+
+    records = cur.fetchall()
+
+    for r in records:
+        row = table.add_row().cells
+
+        row[0].text = str(r[0])
+        row[1].text = str(r[1])
+        row[2].text = str(r[2])
+        row[3].text = str(r[3])
+        row[4].text = str(r[4])
+        row[5].text = str(r[5])
+        row[6].text = str(r[6])
+        row[7].text = str(r[7])
+        row[8].text = str(r[8])
+        row[9].text = str(r[9])
+        row[10].text = str(r[10])
+        row[11].text = str(r[11] or "")
+        row[12].text = ""  # Signature column
+
+    cur.close()
+    conn.close()    
+
+
+#STEP 9: TEST REPORT ROUTE
+
+def calculate_gas_rfid_summary(month, year):
+    conn = get_db_connection()
+    if not conn:
+        return {}
+
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            SUM(purchased_trip) AS total_gas,
+            AVG(purchased_trip) AS avg_gas,
+            SUM(auto_rfid_bal) AS total_autosweep,
+            SUM(easy_rfid_bal) AS total_easytrip
+        FROM gas_rfid
+        WHERE
+            date >= make_date(%s, %s, 1)
+            AND date < (make_date(%s, %s, 1) + INTERVAL '1 month')
+    """, (year, month, year, month))
+
+    result = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    return {
+        "total_gas": round(result[0] or 0, 2),
+        "avg_gas": round(result[1] or 0, 2),
+        "total_autosweep": round(result[2] or 0, 2),
+        "total_easytrip": round(result[3] or 0, 2),
+    }
+
+
+def replace_placeholder(doc, key, value):
+    for paragraph in doc.paragraphs:
+        if key in paragraph.text:
+            paragraph.text = paragraph.text.replace(key, value)
+
+def fetch_gas_rfid_rows(month, year):
+    conn = get_db_connection()
+    if not conn:
+        return []
+
+    cur = conn.cursor()
+
+    query = """
+        SELECT
+            date,
+            v_name,
+            driver,
+            gas_bal_tank,
+            purchased_trip,
+            bal_after_trip,
+            km_beginning,
+            km_end,
+            km_used,
+            easy_rfid_bal,
+            auto_rfid_bal,
+            remarks
+        FROM gas_rfid
+        WHERE EXTRACT(MONTH FROM date) = %s
+          AND EXTRACT(YEAR FROM date) = %s
+        ORDER BY date ASC
+    """
+
+    cur.execute(query, (month, year))
+    rows = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return rows
+
+def insert_gas_rfid_rows(doc, rows):
+    table = doc.tables[0]  # first table in the template
+
+    for row in rows:
+        cells = table.add_row().cells
+
+        cells[0].text = str(row[0])   # date
+        cells[1].text = str(row[1])   # vehicle name
+        cells[2].text = str(row[2])   # driver
+        cells[3].text = str(row[3])   # gas balance in tank
+        cells[4].text = str(row[4])   # purchased during trip
+        cells[5].text = str(row[5])   # balance after trip
+        cells[6].text = str(row[6])   # KM beginning
+        cells[7].text = str(row[7])   # KM end
+        cells[8].text = str(row[8])   # KM used
+        cells[9].text = str(row[9])   # RFID EasyTrip
+        cells[10].text = str(row[10]) # RFID AutoSweep
+        cells[11].text = ""            # remarks
+        cells[12].text = ""            # signature
+
+
+
+#==find STEP 10: PRODUCTION REPORT ROUTE==
+
+@app.route("/generate_report", methods=["POST"])
+def generate_report():
+    
+
+    report_type = request.form.get("report_type")
+    month = request.form.get("month")
+    year = request.form.get("year")
+
+    rows = fetch_gas_rfid_rows(month, year)
+
+    import calendar
+    month_name = calendar.month_name[int(month)]
+
+    print("Generating report:", report_type, month, year)
+
+    # TEMP: hardcode file name for now
+    output_filename = f"{report_type}_{month}_{year}.docx"
+    output_path = os.path.join("reports_output", output_filename)
+
+    # Make sure folder exists
+    os.makedirs("reports_output", exist_ok=True)
+
+    # Load your template
+    doc = Document("report_template/gas&rfid_temp.docx")
+
+    month_year = f"{month_name} {year}"
+    replace_placeholder(doc, "{{month_year}}", month_year)
+
+    # STEP 2.2 — insert table rows
+    insert_gas_rfid_rows(doc, rows)
+
+    summary = calculate_gas_rfid_summary(month, year)
+
+    replace_placeholder(doc, "{{total_gas}}", str(summary["total_gas"]))
+    replace_placeholder(doc, "{{avg_gas}}", str(summary["avg_gas"]))
+    replace_placeholder(doc, "{{total_autosweep}}", str(summary["total_autosweep"]))
+    replace_placeholder(doc, "{{total_easytrip}}", str(summary["total_easytrip"]))
+
+
+    # TEMP: just save it (we already tested filling earlier)
+    doc.save(output_path)
+
+    print("Report saved at:", output_path)
+
+    return redirect(url_for("reports"))
+
+
+
+#========ROUTES==========================================
+
+@app.route("/test-report")
+def test_report_template():
+    doc = load_report_template()
+
+    month = 12
+    year = 2025
+    month_name = "December"
+
+    summary = calculate_gas_rfid_summary(month, year)
+    
+    fill_report_placeholders(doc, month_name, year, summary)
+    insert_gas_rfid_rows(doc, month, year)
+
+    doc.save("test_output.docx")
+    return "Template filled and Supabase data added successfully"
+
+
 @app.route('/records')
 def records():
     if 'user_name' not in session:
@@ -701,6 +971,7 @@ def auth_user():
 def logout():
     session.clear()
     return '', 204
+
 
 if __name__ == '__main__':
     sync_assigned_user()
