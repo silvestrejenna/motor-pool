@@ -333,10 +333,10 @@ def tools_equipment():
     cur.execute("SELECT COUNT(*) FROM tools_equipment")
     total = cur.fetchone()[0]
 
-    cur.execute("SELECT COUNT(*) FROM tools_equipment WHERE condition='Excellent'")
+    cur.execute("SELECT COUNT(*) FROM tools_equipment WHERE condition = 'Excellent'")
     excellent = cur.fetchone()[0]
 
-    cur.execute("SELECT COUNT(*) FROM tools_equipment WHERE condition='Good'")
+    cur.execute("SELECT COUNT(*) FROM tools_equipment WHERE condition = 'Good'")
     good = cur.fetchone()[0]
 
     cur.close()
@@ -351,48 +351,92 @@ def tools_equipment():
     )
 
 
-@app.route('/save_tool', methods=['POST'])
+# ================================
+# ➕ SAVE TOOL
+# ================================
+@app.route("/save_tool", methods=["POST"])
 def save_tool():
-    tool_id = request.form.get('id')
-    name = request.form['name']
-    category = request.form['category']
-    quantity = request.form['quantity']
-    condition = request.form['condition']
-
     conn = get_db_connection()
     cur = conn.cursor()
 
-    if tool_id:
-        cur.execute("""
-            UPDATE tools_equipment
-            SET name=%s, category=%s, quantity=%s, condition=%s
-            WHERE id=%s
-        """, (name, category, quantity, condition, tool_id))
-    else:
-        cur.execute("SELECT COUNT(*) FROM tools_equipment")
-        count = cur.fetchone()[0] + 1
-        item_code = f"T-{count:04d}"
+    name = request.form["name"]
+    category = request.form["category"]
+    quantity = request.form["quantity"]
+    condition = request.form["condition"]
 
-        cur.execute("""
-            INSERT INTO tools_equipment (item_code, name, category, quantity, condition)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (item_code, name, category, quantity, condition))
+    # 1️⃣ Get the last item_code number (T001 → 1)
+    cur.execute("""
+        SELECT COALESCE(
+            MAX(CAST(SUBSTRING(item_code FROM 2) AS INTEGER)),
+            0
+        )
+        FROM tools_equipment
+    """)
+    last_number = cur.fetchone()[0]
+
+    # 2️⃣ Generate next code
+    next_number = last_number + 1
+    item_code = f"T{next_number:03d}"   # T001, T002, T003
+
+    # 3️⃣ Insert with generated item_code
+    cur.execute("""
+        INSERT INTO tools_equipment (item_code, name, category, quantity, condition)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (item_code, name, category, quantity, condition))
 
     conn.commit()
     cur.close()
     conn.close()
 
-    return redirect(url_for('tools_equipment'))
+    return redirect(url_for("tools_equipment"))
+
+# ================================
+# ✏️ UPDATE TOOL (INLINE EDIT)
+# ================================
+@app.route("/update_tool", methods=["POST"])
+def update_tool():
+    data = request.get_json()
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE tools_equipment
+        SET
+            name = %s,
+            category = %s,
+            quantity = %s,
+            condition = %s
+        WHERE id = %s
+    """, (
+        data["name"],
+        data["category"],
+        data["quantity"],
+        data["condition"],
+        data["id"]
+    ))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return "", 204
 
 
+# ================================
+# 🗑️ DELETE TOOL
+# ================================
 @app.route('/delete_tool/<int:id>')
 def delete_tool(id):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("DELETE FROM tools_equipment WHERE id=%s", (id,))
+
+    cur.execute("DELETE FROM tools_equipment WHERE id = %s", (id,))
     conn.commit()
+
     cur.close()
     conn.close()
+
     return redirect(url_for('tools_equipment'))
 
 # =======================================================

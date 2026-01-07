@@ -1,99 +1,97 @@
 :root {
-    --pup-red: #800000;
-    --bg-gray: #f5f5f5;
+  --pup-red: #800000;
+  --bg-gray: #f5f5f5;
 }
 
-body { 
-    margin: 0; 
-    font-family: 'Segoe UI', sans-serif; 
-    background: var(--bg-gray); 
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: var(--bg-gray);
 }
 
-.main-container { 
-    display: flex; 
-    min-width: 100%;
-    min-height: 100vh; 
+.main-container {
+  display: flex;
+  min-width: 100%;
+  min-height: 100vh;
 }
 
 /* Sidebar */
 .sidebar {
-     width: 250px; 
-     min-width: 250px;
-     background: var(--pup-red);
-     position: sticky;
-     top: 0;
-     height: 100vh;
-     color: white; 
-     padding: 20px 0; 
-    }
+  width: 250px;
+  min-width: 250px;
+  background: var(--pup-red);
+  top: 0;
+  height: 100vh;
+  color: white;
+  padding: 20px 0;
+}
 
-.logo-section { 
-    text-align: center; 
-    margin-bottom: 30px; 
+.logo-section {
+  text-align: center;
+  margin-bottom: 25px;
 }
 
 .logo-section img {
-     width: 80px; 
-    }
+  width: 80px;
+}
 
 .sidebar ul {
-     list-style: none; 
-     padding: 0; 
-    }
+  list-style: none;
+  padding: 0;
+}
 
-  .sidebar ul.inventory-selection li a {
-    color: white;           /* Or whatever color your sidebar text uses */
-    text-decoration: none;  /* Removes the underline */
-    display: block;         /* Makes the entire menu item clickable */
-    width: 100%;
+.sidebar ul.inventory-selection li a {
+  color: white; /* Or whatever color your sidebar text uses */
+  text-decoration: none; /* Removes the underline */
+  display: block; /* Makes the entire menu item clickable */
+  width: 100%;
 }
 
 .sidebar ul.inventory-selection li a:hover {
-    color: #ffc107; 
+  color: #ffc107;
 }
 
-.sidebar li { 
-    padding: 15px 25px; 
-    cursor: pointer; 
-    font-size: 14px; 
-    font-weight: bold; 
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+.sidebar li {
+  padding: 15px 25px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.sidebar li.active { 
-    background: white; 
-    color: var(--pup-red); 
+.sidebar li.active {
+  background: white;
+  color: var(--pup-red);
 }
 
 /* Main Content */
-.content { 
-    flex: 1; 
-    display: flex; 
-    flex-direction: column; 
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-.top-nav { 
-    background: white;
-     padding: 15px 40px; 
-     display: flex; 
-     justify-content: space-between; 
-     align-items: center; 
-     border-bottom: 2px solid var(--pup-red);
-    }
+.top-nav {
+  background: white;
+  padding: 15px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--pup-red);
+}
 
 .nav-links a {
-     margin-right: 30px; 
-     text-decoration: none; 
-     font-weight: bold;
-     color: #333;
-    }
-    
-.nav-links a.active {
-      color: var(--pup-red); 
+  margin-right: 30px;
+  text-decoration: none;
+  font-weight: bold;
+  color: #333;
+}
 
-    }
+.nav-links a.active {
+  color: var(--pup-red);
+}
 .nav-links a:hover {
-   color: var(--pup-red); 
+  color: var(--pup-red);
 }
 
 .user-profile {
@@ -104,7 +102,6 @@ body {
 .icon {
   cursor: pointer;
 }
-
 
 /* PROFILE */
 .profile {
@@ -128,50 +125,51 @@ body {
   display: block;
 }
 
-.inventory-section { 
-    padding: 30px 40px; 
+.inventory-section {
+  padding: 30px 40px;
 }
 
 .section-header {
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    margin-bottom: 30px; 
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
 }
 
 .btn-add {
-    background: var(--pup-red); 
-    color: white; border: none; 
-    padding: 12px 24px; 
-    border-radius: 8px; 
-    cursor: pointer; 
+  background: var(--pup-red);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 /* Table Styling */
 .table-card {
-    background: white;
-    padding: 25px; 
-    border-radius: 15px; 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.inventory-table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    margin-top: 20px; 
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
 }
-.inventory-table th { 
-    text-align: left; 
-    color: #888; 
-    font-size: 13px; 
-    padding-bottom: 15px; 
+.inventory-table th {
+  text-align: left;
+  color: #888;
+  font-size: 13px;
+  padding-bottom: 15px;
 }
 
-.inventory-table td { 
-    padding: 15px 0; 
-    border-top: 1px solid #eee; 
-    font-size: 14px; 
-    font-weight: 500; 
+.inventory-table td {
+  padding: 15px 0;
+  border-top: 1px solid #eee;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .v-name:hover {
@@ -179,98 +177,105 @@ body {
 }
 
 .status-pill {
-    padding: 6px 16px; 
-    border-radius: 20px; 
-    color: white; 
-    font-size: 12px; 
+  padding: 6px 16px;
+  border-radius: 20px;
+  color: white;
+  font-size: 12px;
 }
 
 .status-pill.active {
-    background: blue; 
+  background: blue;
 }
 
 .status-pill.inactive {
-    background: red; 
+  background: red;
 }
 
 .status-pill.maintenance {
-    background: #ccc; 
-    color: #333; 
+  background: #ccc;
+  color: #333;
 }
 
 /* Action Buttons */
-.action-buttons button, .btn-delete {
-    border: none; 
-    padding: 6px 12px; 
-    border-radius: 5px; 
-    cursor: pointer; 
-    font-size: 12px; 
-    text-decoration: none; 
-    display: inline-block; 
-    margin-bottom: 5px; 
+.action-buttons button,
+.btn-delete {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 5px;
 }
 
-.btn-edit { 
-    background: #ffc107; 
-    color: black; 
+.btn-edit {
+  background: #ffc107;
+  color: black;
 }
 
-.btn-update { 
-    background: #28a745; 
-    color: white; 
+.btn-update {
+  background: #28a745;
+  color: white;
 }
 
 .btn-delete {
-    background: #dc3545; 
-    color: white; 
+  background: #dc3545;
+  color: white;
 }
 .btn-cancel {
-    background-color: #6c757d; /* Gray color */
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-left: 5px;
+  background-color: #6c757d; /* Gray color */
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 5px;
 }
 
 .btn-cancel:hover {
-    background-color: #5a6268;
+  background-color: #5a6268;
 }
 
 /* Modal Styles */
-.modal-overlay { 
-    position: fixed; 
-    top: 0; right: 0; width: 100%; 
-    height: 100%; background: rgba(0,0,0,0.5); 
-    display: none; 
-    justify-content: flex-end; 
-    z-index: 1000; 
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  justify-content: flex-end;
+  z-index: 1000;
 }
 
 .modal-content {
-    width: 350px; 
-    background: white; 
-    height: 100%; 
-    padding: 40px 30px; 
-    box-shadow: -5px 0 15px rgba(0,0,0,0.2); 
+  width: 350px;
+  background: white;
+  height: 100%;
+  padding: 40px 30px;
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
 }
 
-.modal-content input, .modal-content textarea {
-    width: 100%; 
-    padding: 10px; 
-    margin: 10px 0 20px; 
-    border: 1px solid #ddd; 
-    border-radius: 8px; 
+.modal-content input,
+.modal-content textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
 }
 
-.btn-save { 
-    width: 100%; 
-    background: var(--pup-red); 
-    color: white; 
-    border: none; padding: 15px; border-radius: 8px; 
-    cursor: pointer; 
-    font-weight: bold; 
+.btn-save {
+  width: 100%;
+  background: var(--pup-red);
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
 }
 
 /*footer*/
