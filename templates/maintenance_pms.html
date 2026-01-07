@@ -25,7 +25,7 @@
             <a href="{{ url_for('tools_equipment') }}">TOOLS & EQUIPMENT</a>
           </li>
           <li><a href="{{ url_for('parts_supplies') }}">PARTS & SUPPLIES</a></li>
-          <li>REPORTS</li>
+          <li><a href="{{ url_for('reports') }}">REPORTS</a></li>
         </ul>
       </nav>
 
@@ -79,7 +79,7 @@
                     <p class="val">{{ m_count }}</p>
                 </div>
                 <div class="card">
-                    <h3>Total Maintenance Cost</h3>
+                    <h3>Total Maintenance Cost This Month</h3>
                     <p class="val">₱{{ "{:,.2f}".format(total_m_cost) }}</p>
                 </div>
             </div>

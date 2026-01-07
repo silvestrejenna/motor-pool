@@ -23,15 +23,6 @@ select {
     background-color: #e0e0e0;
 }
 
-.btn-generate {
-    background-color: var(--primary-maroon);
-    color: white;
-    padding: 12px 30px;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-}
 
 .stats-grid {
     display: grid;
@@ -58,12 +49,27 @@ select {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 0;
     border-bottom: 1px solid var(--border-color);
+    padding: 8px 12px;     /* reduce internal spacing */
+  margin-bottom: 6px;
 }
 
-.report-info { display: flex; gap: 15px; align-items: center; }
+.report-info { 
+    display: flex; 
+    gap: 15px; 
+    align-items: center;
+}
+
+.report-info p {
+    margin: 2px 0 0 0;
+}
 
 .btn-view { background: #eee; border: none; padding: 8px 20px; border-radius: 4px; margin-right: 10px; }
 
 .btn-export { background: var(--primary-maroon); color: white; border: none; padding: 8px 20px; border-radius: 4px; }
+
+.file-icon {
+    width: 50px;      /* 👈 adjust this (24–36px is ideal) */
+    height: 50px;
+    object-fit: contain;
+}
