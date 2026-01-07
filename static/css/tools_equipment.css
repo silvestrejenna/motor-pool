@@ -60,7 +60,7 @@ body {
 }
 
 .sidebar li a:hover {
-  background: rgba(255, 255, 255, 0.15);
+  color: #ffc107;
 }
 
 /* Active Sidebar Item (MATCH ALL PAGES) */
@@ -347,4 +347,62 @@ body {
 
 .footer-right p {
   margin-bottom: 8px;
+}
+
+/* ================= MODAL FORM FIX ================= */
+.modal-content h2 {
+  margin-bottom: 25px;
+  color: var(--pup-red);
+}
+
+/* Form layout */
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Labels */
+.modal-content label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #444;
+}
+
+/* Inputs & Select */
+.modal-content input,
+.modal-content select {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 18px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+/* Buttons container */
+.modal-content .btn-save,
+.modal-content .btn-cancel {
+  margin-top: 8px;
+}
+
+/* Save button */
+.btn-save {
+  background: var(--pup-red);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Cancel button */
+.btn-cancel {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  cursor: pointer;
 }
