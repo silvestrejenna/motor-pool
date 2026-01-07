@@ -18,7 +18,6 @@ body {
 .main-container {
   display: flex;
   min-height: 100vh;
-  width: 100%;
 }
 
 /* ================= SIDEBAR ================= */
@@ -26,20 +25,23 @@ body {
   width: 250px;
   min-width: 250px;
   background: var(--pup-red);
+  position: sticky;
+  top: 0;
+  height: 100vh;
   color: white;
   padding: 20px 0;
 }
 
 .logo-section {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
 }
 
 .logo-section img {
   width: 80px;
+  max-width: 80px;
 }
 
-/* Sidebar Menu */
 .sidebar ul {
   list-style: none;
   padding: 0;
@@ -48,6 +50,7 @@ body {
 
 .sidebar li {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
 }
 
 .sidebar li a {
@@ -59,11 +62,6 @@ body {
   font-size: 14px;
 }
 
-.sidebar li a:hover {
-  color: #ffc107;
-}
-
-/* Active Sidebar Item (MATCH ALL PAGES) */
 .sidebar li.active {
   background: white;
 }
@@ -72,19 +70,21 @@ body {
   color: var(--pup-red);
 }
 
+.sidebar li a:hover {
+  color: #ffc107;
+}
+
 /* ================= CONTENT ================= */
 .content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-width: 0;
 }
 
 /* ================= TOP NAV ================= */
 .top-nav {
   background: white;
   padding: 15px 40px;
-  min-height: 64px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -93,51 +93,22 @@ body {
 
 .nav-links a {
   margin-right: 30px;
-  text-decoration: none;
   font-weight: bold;
   color: #333;
+  text-decoration: none;
 }
 
-.nav-links a:hover,
-.nav-links a.active {
+.nav-links a.active,
+.nav-links a:hover {
   color: var(--pup-red);
 }
 
-/* ================= USER PROFILE ================= */
 .user-profile {
   display: flex;
-  align-items: center;
   gap: 15px;
 }
 
-.icon {
-  cursor: pointer;
-}
-
-/* Profile Dropdown */
-.profile {
-  position: relative;
-}
-
-.profile-dropdown {
-  position: absolute;
-  right: 0;
-  top: 36px;
-  background: white;
-  width: 220px;
-  border-radius: 6px;
-  padding: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  display: none;
-  text-align: center;
-  z-index: 1000;
-}
-
-.profile-dropdown.show {
-  display: block;
-}
-
-/* ================= PAGE CONTENT ================= */
+/* ================= PAGE ================= */
 .tools-section {
   padding: 30px 40px;
 }
@@ -152,20 +123,20 @@ body {
 
 .page-header h1 {
   margin: 0;
-  color: var(--pup-red);
+  color: #000;
 }
 
 .subtitle {
-  margin-top: 5px;
   color: #666;
+  margin-top: 5px;
 }
 
-/* ================= BUTTON ================= */
+/* ================= PRIMARY BUTTON ================= */
 .primary-btn {
   background: var(--pup-red);
   color: white;
   border: none;
-  padding: 12px 24px;
+  padding: 12px 22px;
   border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
@@ -183,26 +154,15 @@ body {
   padding: 25px;
   border-radius: 15px;
   flex: 1;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .summary-card h3 {
-  margin: 0;
   font-size: 14px;
   color: #777;
 }
 
 .summary-card h2 {
-  margin-top: 8px;
-  font-size: 28px;
-}
-
-.summary-card.success h2 {
-  color: #2e7d32;
-}
-
-.summary-card.info h2 {
-  color: #1565c0;
+  margin-top: 10px;
 }
 
 /* ================= TABLE ================= */
@@ -210,13 +170,11 @@ body {
   background: white;
   padding: 25px;
   border-radius: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .inventory-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
 }
 
 .inventory-table th {
@@ -227,15 +185,14 @@ body {
 }
 
 .inventory-table td {
-  padding: 15px 0;
+  padding: 14px 0;
   border-top: 1px solid #eee;
   font-size: 14px;
-  font-weight: 500;
 }
 
 /* ================= BADGES ================= */
 .badge {
-  padding: 6px 16px;
+  padding: 6px 14px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: bold;
@@ -245,17 +202,14 @@ body {
   background: #e8f5e9;
   color: #2e7d32;
 }
-
 .badge.good {
   background: #e3f2fd;
   color: #1565c0;
 }
-
 .badge.fair {
   background: #fff3e0;
   color: #e65100;
 }
-
 .badge.damaged {
   background: #fdecea;
   color: #c62828;
@@ -265,13 +219,32 @@ body {
 .action-buttons {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
+/* NORMAL BUTTONS */
 .btn-edit {
   background: #ffc107;
-  color: black;
   border: none;
-  padding: 6px 14px;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-update {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 7px 14px;
   border-radius: 6px;
   cursor: pointer;
 }
@@ -280,47 +253,124 @@ body {
   background: #dc3545;
   color: white;
   border: none;
-  padding: 6px 14px;
+  padding: 7px 14px;
   border-radius: 6px;
   cursor: pointer;
 }
 
-/* ================= MODAL ================= */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+/* ================= INLINE EDIT (FIXED & CLEAN) ================= */
+.edit-input {
   display: none;
-  justify-content: flex-end;
-  z-index: 2000;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 13px;
 }
 
-.modal-content {
-  width: 350px;
+/* View mode */
+.view {
+  display: inline-block;
+}
+
+/* Edit mode */
+tr.editing .view {
+  display: none;
+}
+
+tr.editing .edit-input {
+  display: inline-block;
+}
+
+/* Button toggle */
+.btn-update,
+.btn-cancel {
+  display: none;
+}
+
+tr.editing .btn-edit {
+  display: none;
+}
+
+tr.editing .btn-update,
+tr.editing .btn-cancel {
+  display: inline-block;
+}
+
+/* ================= DRAWER ================= */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  justify-content: flex-end;
+  z-index: 3000;
+}
+
+.drawer {
+  width: 420px;
   background: white;
+  padding: 40px 32px;
   height: 100%;
-  padding: 40px 30px;
-  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+}
+
+.drawer h2 {
+  color: var(--pup-red);
+  margin-bottom: 25px;
+}
+
+.drawer label {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.drawer input,
+.drawer select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 18px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+.btn-save {
+  width: 100%;
+  background: var(--pup-red);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.drawer-cancel {
+  width: 100%;
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 12px;
 }
 
 /* ================= FOOTER ================= */
 .footer {
   margin-top: auto;
+  width: 100%;
   background: #f3f0ee;
   padding: 40px 60px 20px;
   color: #333;
-
-  /* 🔑 FIX */
-  width: 100vw; /* full screen width */
-  margin-left: -250px; /* pull under sidebar */
 }
 
 .footer-content {
   display: grid;
   grid-template-columns: 1.5fr 1fr 1fr;
   gap: 40px;
-
-  /* keeps content centered */
+  align-items: start;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -332,6 +382,12 @@ body {
 .footer-desc {
   max-width: 320px;
   line-height: 1.5;
+}
+
+.footer-center h4,
+.footer-right h4 {
+  margin-bottom: 12px;
+  font-weight: bold;
 }
 
 .footer-center a {
@@ -349,60 +405,28 @@ body {
   margin-bottom: 8px;
 }
 
-/* ================= MODAL FORM FIX ================= */
-.modal-content h2 {
-  margin-bottom: 25px;
-  color: var(--pup-red);
-}
-
-/* Form layout */
-.modal-content form {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Labels */
-.modal-content label {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 6px;
-  color: #444;
-}
-
-/* Inputs & Select */
-.modal-content input,
-.modal-content select {
-  width: 100%;
-  padding: 10px 12px;
-  margin-bottom: 18px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-/* Buttons container */
-.modal-content .btn-save,
-.modal-content .btn-cancel {
-  margin-top: 8px;
-}
-
-/* Save button */
-.btn-save {
-  background: var(--pup-red);
-  color: white;
+.footer-divider {
+  margin: 25px 0 15px;
   border: none;
-  padding: 14px;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
+  border-top: 1px solid #ccc;
 }
 
-/* Cancel button */
-.btn-cancel {
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #555;
+}
+
+/* ================= FIX DRAWER CANCEL BUTTON ================= */
+.drawer .drawer-cancel {
+  display: block !important; /* overrides inline-edit hiding */
+  width: 100%;
   background: #6c757d;
   color: white;
   border: none;
   padding: 14px;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
+  margin-top: 12px;
 }
