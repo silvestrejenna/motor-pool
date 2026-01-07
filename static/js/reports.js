@@ -1,4 +1,4 @@
-async function generateReport() {
+/*async function generateReport() {
     const monthSelect = document.getElementById("month");
     const yearSelect = document.getElementById("year");
 
@@ -39,3 +39,26 @@ async function generateReport() {
         alert("An error occurred while generating the report.");
     }
 }
+    */
+
+async function loadUserProfile() {
+        const res = await fetch("/auth/user");
+        if (!res.ok) {
+          window.location.href = "/";
+          return;
+        }
+        const user = await res.json();
+        document.getElementById("profileName").textContent = user.full_name;
+        document.getElementById("profileEmail").textContent = user.email;
+      }
+
+      loadUserProfile();
+
+      function toggleProfile() {
+        document.getElementById("profileDropdown").classList.toggle("show");
+      }
+
+      async function logout() {
+        await fetch("/logout", { method: "POST" });
+        window.location.href = "/";
+      }
