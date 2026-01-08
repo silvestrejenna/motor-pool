@@ -4,7 +4,7 @@ import psycopg2
 from docx import Document
 import psycopg2.extras
 from flask import send_from_directory
-
+from datetime import datetime
 
 
 app = Flask(__name__)
@@ -741,7 +741,7 @@ def reports():
 
 
 
-#STEP 9: TEST REPORT ROUTE
+#==========GAS&RFID REPORT GENERATION=============================
 
 def fetch_gas_rfid_rows(month, year):
     conn = get_db_connection()
@@ -836,6 +836,7 @@ def replace_placeholder(doc, key, value):
         if key in paragraph.text:
             paragraph.text = paragraph.text.replace(key, value)
 
+#========SAVE REPORT RECORD TO DB=============================
 
 def save_report_record(report_type, month, year, file_name, file_path):
     conn = get_db_connection()
@@ -848,87 +849,219 @@ def save_report_record(report_type, month, year, file_name, file_path):
         VALUES (%s, %s, %s, %s, %s)
     """, (report_type, month, year, file_name, file_path))
 
+
     conn.commit()
     cur.close()
     conn.close()
 
+    return
+#========GAS&RFID END==========================================
+
+#==========VEHICLE INVENTORY REPORT GENERATION============================= 
+
+#===FETCH VEHICLE ROWS FROM DB====
+def fetch_vehicle_rows():
+    conn = get_db_connection()
+    if not conn:
+        return []
+    
+    cur = conn.cursor()
+    cur.execute("""
+                SELECT 
+                    name, plate_number, color, type, status, mileage
+                FROM vehicle
+                ORDER BY name
+            """)
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+#=====INSERT VEHICLE ROWS INTO DOCX TABLE====
+def insert_vehicle_rows(doc,rows):
+    table = doc.tables[0]
+
+    for row in rows:
+        cells = table.add_row().cells
+
+        cells[0].text = str(row[0])   # name
+        cells[1].text = str(row[1])   # plate_number
+        cells[2].text = str(row[2])   # color
+        cells[3].text = str(row[3])   # type
+        cells[4].text = str(row[4])   # status
+        cells[5].text = str(row[5])   # mileage
+
+#==for summary====
+def calculate_vehicle_summary():
+    # Placeholder for future summary calculations
+    conn = get_db_connection()
+    if not conn:
+        return {}
+    
+    cur = conn.cursor()
+
+    cur.execute("SELECT COUNT(*) FROM vehicle")
+    total = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM vehicle WHERE status = 'Activee'")
+    active = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM vehicle WHERE status = 'Inactive'")
+    inactive = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM vehicle WHERE status = 'Maintenance'")
+    maintenance = cur.fetchone()[0]
+
+    cur.execute("""
+                SELECT name, mileage
+                FROM vehicle
+                ORDER BY mileage DESC
+                LIMIT 1
+                """)
+    
+    top_vehicle = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    return {
+        "total": total,
+        "active": active,
+        "inactive": inactive,
+        "maintenance": maintenance,
+        "most_mileage": (
+            f"{top_vehicle[0]} ({top_vehicle[1]}km)"
+            if top_vehicle else "N/A"
+        )
+    }
 
 
-#==find STEP 10: PRODUCTION REPORT ROUTE==
+def fetch_vehicle_type_distribution():
+    conn = get_db_connection()
+    if not conn:
+        return {}
+
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT type, COUNT(*) 
+        FROM vehicle 
+        GROUP BY type
+        ORDER BY COUNT(*) DESC        
+    """)
+    results = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return results
+
+def insert_vehicle_type_distribution(doc, distribution_rows):
+    lines = []  # second table in the template
+
+    for vehicle_type, count in distribution_rows:
+        lines.append(f"{vehicle_type} : {count}")
+
+    distribution_text = "\n".join(lines)
+
+    replace_placeholder(
+        doc,
+        "{{vehicle_type_distribution}}",
+        distribution_text
+    )
+
+
 
 @app.route("/generate_report", methods=["POST"])
 def generate_report():
-    
-
     report_type = request.form.get("report_type")
     month = request.form.get("month")
     year = request.form.get("year")
 
-    rows = fetch_gas_rfid_rows(month, year)
+    if not report_type or not month or not year:
+        return redirect(url_for("reports"))
 
     import calendar
     month_name = calendar.month_name[int(month)]
 
     print("Generating report:", report_type, month, year)
 
-    # TEMP: hardcode file name for now
+    # Output file setup
     output_filename = f"{report_type}_{month}_{year}.docx"
     output_path = os.path.join("reports_output", output_filename)
-
-    # Make sure folder exists
     os.makedirs("reports_output", exist_ok=True)
 
-    # Load your template
-    doc = Document("report_template/gas&rfid_temp.docx")
+    # ===============================
+    # GAS & RFID REPORT (CURRENT)
+    # ===============================
+    if report_type == "gas_rfid":
+        rows = fetch_gas_rfid_rows(month, year)
 
-    month_year = f"{month_name} {year}"
-    replace_placeholder(doc, "{{month_year}}", month_year)
+        doc = Document("report_template/gas&rfid_temp.docx")
 
-    # STEP 2.2 — insert table rows
-    insert_gas_rfid_rows(doc, rows)
+        # Header placeholder
+        month_year = f"{month_name} {year}"
+        replace_placeholder(doc, "{{month_year}}", month_year)
 
-    summary = calculate_gas_rfid_summary(month, year)
+        # Table rows
+        insert_gas_rfid_rows(doc, rows)
 
-    replace_placeholder(doc, "{{total_gas}}", str(summary["total_gas"]))
-    replace_placeholder(doc, "{{avg_gas}}", str(summary["avg_gas"]))
-    replace_placeholder(doc, "{{total_autosweep}}", str(summary["total_autosweep"]))
-    replace_placeholder(doc, "{{total_easytrip}}", str(summary["total_easytrip"]))
+        # Summary values
+        summary = calculate_gas_rfid_summary(month, year)
+        replace_placeholder(doc, "{{total_gas}}", str(summary["total_gas"]))
+        replace_placeholder(doc, "{{avg_gas}}", str(summary["avg_gas"]))
+        replace_placeholder(doc, "{{total_autosweep}}", str(summary["total_autosweep"]))
+        replace_placeholder(doc, "{{total_easytrip}}", str(summary["total_easytrip"]))
 
+        doc.save(output_path)
 
-    # TEMP: just save it (we already tested filling earlier)
+    # ===============================
+    # OTHER REPORT TYPES (NEXT PHASE)
+    # ===============================
+    elif report_type == "vehicle":
+
+        doc = Document("report_template/vehicle_temp.docx")
+
+        month_year = f"{month_name} {year}"
+        replace_placeholder(doc, "{{month_year}}", month_year)
+
+        vehicle_rows = fetch_vehicle_rows()
+        insert_vehicle_rows(doc, vehicle_rows)
+
+        type_distribution = fetch_vehicle_type_distribution()
+        insert_vehicle_type_distribution(doc, type_distribution)
+
+        summary = calculate_vehicle_summary()
+        replace_placeholder(doc, "{{total_vehicles}}", str(summary["total"]))
+        replace_placeholder(doc, "{{active_vehicles}}", str(summary["active"]))
+        replace_placeholder(doc, "{{inactive_vehicles}}", str(summary["inactive"]))
+        replace_placeholder(doc, "{{maintenance_vehicles}}", str(summary["maintenance"]))
+        replace_placeholder(doc, "{{most_mileage}}", summary["most_mileage"])
+
+        doc.save(output_path)
+    else:
+        print("Report type not implemented yet:", report_type)
+        return redirect(url_for("reports"))
+
+    # ===============================
+    # SAVE REPORT METADATA (ONCE)
+    # ===============================
+    save_report_record(    
+        report_type=report_type,
+        month=int(month),
+        year=int(year),
+        file_name=output_filename,
+        file_path=output_path
+    )
+
+    doc = Document(output_path)
+    replace_placeholder(doc, "{{generated_by}}", session.get("user_name", ""))
+    replace_placeholder(doc, "{{generated_on}}", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     doc.save(output_path)
 
-    save_report_record(
-    report_type=report_type,
-    month=month,
-    year=year,
-    file_name=output_filename,
-    file_path=output_path
-)
-
-
     print("Report saved at:", output_path)
-
-    # STEP 3.2.5 — save report metadata
-    conn = get_db_connection()
-    if conn:
-        cur = conn.cursor()
-        cur.execute("""
-            INSERT INTO reports (report_type, month, year, file_name, file_path)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (
-            report_type,
-            int(month),
-            int(year),
-            output_filename,
-            output_path
-        ))
-        conn.commit()
-        cur.close()
-        conn.close()
-
-
     return redirect(url_for("reports"))
+
 
 
 def fetch_recent_reports(limit=5):
