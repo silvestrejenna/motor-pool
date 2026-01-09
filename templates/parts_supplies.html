@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Parts & Supplies</title>
+    <title>PUP Motor Pool | Parts & Supplies</title>
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/parts_supplies.css') }}"
@@ -16,11 +16,10 @@
         <div class="logo-section">
           <img
             src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-            alt="Motor Pool Logo"
           />
         </div>
 
-        <ul class="inventory-selection">
+        <ul>
           <li><a href="{{ url_for('inventory') }}">VEHICLES</a></li>
           <li><a href="{{ url_for('gas_rfid') }}">GASOLINE & RFID</a></li>
           <li>
@@ -32,7 +31,7 @@
           <li class="active">
             <a href="{{ url_for('parts_supplies') }}">PARTS & SUPPLIES</a>
           </li>
-          <li><a href="{{ url_for('reports') }}">REPORTS</a></li>
+          <li><a href="#">REPORTS</a></li>
         </ul>
       </aside>
 
@@ -45,19 +44,9 @@
             <a href="{{ url_for('inventory') }}" class="active">INVENTORY</a>
             <a href="{{ url_for('records') }}">RECORDS</a>
           </div>
-
           <div class="user-profile">
             <span class="icon">🔔</span>
-            <div class="profile">
-              <span class="icon" onclick="toggleProfile()">👤</span>
-              <div class="profile-dropdown" id="profileDropdown">
-                <p id="profileName">User</p>
-                <hr />
-                <a href="#">Activity</a>
-                <a href="#">Change Password</a>
-                <a href="#" onclick="logout()">Log Out</a>
-              </div>
-            </div>
+            <span class="icon">👤</span>
           </div>
         </header>
 
@@ -68,177 +57,203 @@
               <h1>PARTS & SUPPLIES</h1>
               <p class="subtitle">Track spare parts and supply inventory</p>
             </div>
-            <button class="btn-add" onclick="openAddModal()">Add Part</button>
-          </div>
 
-          <!-- ================= SUMMARY ================= -->
-          <div class="summary-cards">
-            <div class="summary-card">
-              <h3>Total Items</h3>
-              <h2>{{ total }}</h2>
-            </div>
-            <div class="summary-card success">
-              <h3>In Stock</h3>
-              <h2>{{ in_stock }}</h2>
-            </div>
-            <div class="summary-card info">
-              <h3>Low Stock</h3>
-              <h2>{{ low_stock }}</h2>
-            </div>
+            <button class="primary-btn" onclick="openAddDrawer()">
+              Add Part
+            </button>
           </div>
 
           <!-- ================= TABLE ================= -->
-          <div class="table-card">
-            <table class="inventory-table">
-              <thead>
-                <tr>
-                  <th>Code</th>
-                  <th>Name</th>
-                  <th>Category</th>
-                  <th>Stock</th>
-                  <th>Min</th>
-                  <th>Unit</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for p in parts %}
-                <tr>
-                  <td>{{ p[1] }}</td>
-                  <td>{{ p[2] }}</td>
-                  <td>{{ p[3] }}</td>
-                  <td>{{ p[4] }}</td>
-                  <td>{{ p[5] }}</td>
-                  <td>{{ p[6] }}</td>
-                  <td>
-                    <span class="badge {{ p[7]|lower|replace(' ','-') }}">
-                      {{ p[7] }}
-                    </span>
-                  </td>
-                  <td class="action-buttons">
-                    <button
-                      class="btn-edit"
-                      onclick="openUpdateModal('{{ p[0] }}','{{ p[2] }}','{{ p[4] }}','{{ p[5] }}')"
-                    >
-                      Update
-                    </button>
+  
+            <div class="table-card">
+              <table class="inventory-table">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Stock</th>
+                    <th>Min</th>
+                    <th>Unit</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
 
-                    <form
-                      method="POST"
-                      action="{{ url_for('delete_part', part_id=p[0]) }}"
-                      onsubmit="return confirmDelete('{{ p[2] }}')"
-                    >
-                      <button class="btn-delete">Delete</button>
-                    </form>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+                <tbody>
+                  {% for p in parts %}
+                  <tr id="row-{{ p[0] }}">
+                    <td>{{ p[1] }}</td>
+
+                    <td>
+                      <span class="view">{{ p[2] }}</span>
+                      <input class="edit-input" value="{{ p[2] }}" />
+                    </td>
+
+                    <td>
+                      <span class="view">{{ p[3] }}</span>
+                      <input class="edit-input" value="{{ p[3] }}" />
+                    </td>
+
+                    <td>
+                      <span class="view">{{ p[4] }}</span>
+                      <input
+                        type="number"
+                        class="edit-input"
+                        value="{{ p[4] }}"
+                      />
+                    </td>
+
+                    <td>
+                      <span class="view">{{ p[5] }}</span>
+                      <input
+                        type="number"
+                        class="edit-input"
+                        value="{{ p[5] }}"
+                      />
+                    </td>
+
+                    <td>
+                      <span class="view">{{ p[6] }}</span>
+                      <input class="edit-input unit-input" value="{{ p[6] }}" />
+                    </td>
+
+                    <td>
+                      <span class="badge {{ p[7]|lower|replace(' ','-') }}"
+                        >{{ p[7] }}</span
+                      >
+                    </td>
+
+                    <td class="action-buttons">
+                      <button class="btn-edit" onclick="editRow('{{ p[0] }}')">
+                        Update
+                      </button>
+                      <button
+                        class="btn-update"
+                        onclick="updateRow('{{ p[0] }}')"
+                      >
+                        Save
+                      </button>
+                      <button
+                        class="btn-cancel"
+                        onclick="cancelEdit('{{ p[0] }}')"
+                      >
+                        Cancel
+                      </button>
+
+                      <form
+                        method="POST"
+                        action="{{ url_for('delete_part', part_id=p[0]) }}"
+                        onsubmit="return confirm('Delete this part?')"
+                      >
+                        <button type="submit" class="btn-delete">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
-
-        <!-- ================= FOOTER ================= -->
-        <footer class="footer">
-          <div class="footer-content">
-            <div>
-              <img
-                src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-                class="footer-logo"
-              />
-              <p class="footer-desc">
-                A Web-Based Inventory and Record Management System for
-                <strong>Motor Pool</strong>
-              </p>
-            </div>
-
-            <div class="footer-center">
-              <h4>MENU</h4>
-              <a href="{{ url_for('home') }}">Home</a>
-              <a href="{{ url_for('inventory') }}">Inventory</a>
-              <a href="{{ url_for('records') }}">Record Management</a>
-            </div>
-
-            <div class="footer-right">
-              <h4>CONTACT US</h4>
-              <p>📧 motorpool@pup.edu.ph</p>
-              <p>📞 (02) 5335-1787</p>
-            </div>
-          </div>
-        </footer>
       </div>
-    </div>
+    
+    <!-- ================= FOOTER ================= -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div>
+          <img
+            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+            class="footer-logo"
+          />
+          <p class="footer-desc">
+            A Web-Based Inventory and Record Management System for
+            <strong>Motor Pool</strong>
+          </p>
+        </div>
 
-    <!-- ================= ADD MODAL ================= -->
-    <div class="modal-overlay" id="addModal">
-      <div class="modal-box">
-        <h3>Add Part</h3>
+        <div class="footer-center">
+          <h4>MENU</h4>
+          <a href="{{ url_for('home') }}">Home</a>
+          <a href="{{ url_for('inventory') }}">Inventory</a>
+          <a href="{{ url_for('records') }}">Record Management</a>
+        </div>
+
+        <div class="footer-right">
+          <h4>CONTACT US</h4>
+          <p>📧 motorpool@pup.edu.ph</p>
+          <p>📞 (02) 5335-1787</p>
+        </div>
+      </div>
+
+      <hr class="footer-divider" />
+      <div class="footer-bottom">
+        © 2025 Polytechnic University of the Philippines. Under G.A.S.S.
+      </div>
+    </footer>
+    <!-- ================= ADD PART DRAWER ================= -->
+    <div class="drawer-overlay" id="addDrawer">
+      <div class="drawer">
+        <h2>Add Part</h2>
+
         <form method="POST" action="{{ url_for('add_part') }}">
-          <input name="name" placeholder="Part Name" required />
-          <input name="category" placeholder="Category" required />
+          <label>Part Name</label>
+          <input name="name" required />
 
-          <div class="row">
-            <input type="number" name="stock" placeholder="Stock" required />
-            <input
-              type="number"
-              name="min_stock"
-              placeholder="Min Stock"
-              required
-            />
-          </div>
+          <label>Category</label>
+          <input name="category" required />
 
-          <input name="unit" placeholder="Unit" required />
-          <button class="btn-save">Save</button>
-          <button type="button" class="btn-cancel" onclick="closeAddModal()">
+          <label>Stock</label>
+          <input type="number" name="stock" required />
+
+          <label>Min Stock</label>
+          <input type="number" name="min_stock" required />
+
+          <label>Unit</label>
+          <input name="unit" required />
+
+          <button type="submit" class="btn-save">Save</button>
+          <button
+            type="button"
+            class="drawer-cancel"
+            onclick="closeAddDrawer()"
+          >
             Cancel
           </button>
         </form>
       </div>
     </div>
 
-    <!-- ================= UPDATE MODAL ================= -->
-    <div class="modal-overlay" id="updateModal">
-      <div class="modal-box">
-        <h3 id="updateTitle">Update Part</h3>
-        <form method="POST" id="updateForm">
-          <input type="number" name="stock" id="uStock" required />
-          <input type="number" name="min_stock" id="uMin" required />
-          <button class="btn-save">Update</button>
-          <button type="button" class="btn-cancel" onclick="closeUpdateModal()">
-            Cancel
-          </button>
-        </form>
-      </div>
-    </div>
-
-    <!-- ================= SCRIPT ================= -->
     <script>
-      function openAddModal() {
-        document.getElementById("addModal").style.display = "flex";
+      function openAddDrawer() {
+        document.getElementById("addDrawer").classList.add("show");
       }
-      function closeAddModal() {
-        document.getElementById("addModal").style.display = "none";
-      }
-
-      function openUpdateModal(id, name, stock, min) {
-        document.getElementById("updateTitle").innerText =
-          "Update Part: " + name;
-        document.getElementById("uStock").value = stock;
-        document.getElementById("uMin").value = min;
-        document.getElementById("updateForm").action = "/update-part/" + id;
-        document.getElementById("updateModal").style.display = "flex";
-      }
-      function closeUpdateModal() {
-        document.getElementById("updateModal").style.display = "none";
+      function closeAddDrawer() {
+        document.getElementById("addDrawer").classList.remove("show");
       }
 
-      function confirmDelete(name) {
-        return confirm("Delete this part?\n\n" + name);
+      function editRow(id) {
+        document.getElementById("row-" + id).classList.add("editing");
+      }
+      function cancelEdit(id) {
+        document.getElementById("row-" + id).classList.remove("editing");
       }
 
-      function toggleProfile() {
-        document.getElementById("profileDropdown").classList.toggle("show");
+      function updateRow(id) {
+        const row = document.getElementById("row-" + id);
+        const i = row.querySelectorAll(".edit-input");
+
+        const formData = new FormData();
+        formData.append("name", i[0].value);
+        formData.append("category", i[1].value);
+        formData.append("stock", i[2].value);
+        formData.append("min_stock", i[3].value);
+        formData.append("unit", i[4].value);
+
+        fetch("/update-part/" + id, {
+          method: "POST",
+          body: formData,
+        }).then(() => location.reload());
       }
     </script>
   </body>
