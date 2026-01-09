@@ -1058,8 +1058,46 @@ def calculate_maintenance_summary():
     }
 
 
-#=========MAINTENANCE & PMS REPORT END==========================================
+#=========MAINTENANCE REPORT END==========================================
+#=========PMS REPORT START==========================================
 
+def fetch_pms_rows():
+    conn = get_db_connection()
+    if not conn:
+        return []
+    
+    cur = conn.cursor()
+    cur.execute("""
+                SELECT
+                    vehicle_name,
+                    last_pms_date,
+                    km,
+                    oil_liters,
+                    next_pms_date
+                FROM pms_log
+                ORDER BY vehicle_name
+            """)
+    
+    
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+def insert_pms_rows(doc, rows):
+    # Insert maintenance and PMS rows into the document
+    table = doc.tables[0]  # Assuming the second table is for PMS
+    
+    for row in rows:
+        cells = table.add_row().cells
+        cells[0].text = str(row[0])  # vehicle_name
+        cells[1].text = str(row[1])  # last_pms_date
+        cells[2].text = str(row[2])  # km
+        cells[3].text = str(row[3])  # oil_liters
+        cells[4].text = str(row[4])  # next_pms_date
+
+
+#=========PMS REPORT END==========================================
 
 @app.route("/generate_report", methods=["POST"])
 def generate_report():
@@ -1130,7 +1168,7 @@ def generate_report():
         doc.save(output_path)
 
     # ===============================
-    # MAINTENANCE & REPORT
+    # MAINTENANCE REPORT
     # ===============================
 
     elif report_type == "maintenance_log":
@@ -1151,7 +1189,26 @@ def generate_report():
         replace_placeholder(doc, "{{lowest_cost}}", f"{summary['lowest_cost'][0]} (₱{summary['lowest_cost'][1]})" if summary['lowest_cost'] else "N/A")
 
         doc.save(output_path)
-    
+
+    # ===============================
+    # PMS REPORT
+    # ===============================
+
+    elif report_type == "pms_log":
+        doc = Document("report_template/pms_temp.docx")
+
+        month_year = f"{month_name} {year}"
+        replace_placeholder(doc, "{{month_year}}", month_year)
+
+        pms_rows = fetch_pms_rows()
+        insert_pms_rows(doc, pms_rows)
+
+        doc.save(output_path)
+
+    # ===============================
+    # PMS REPORT
+    # ===============================
+
     else:
         print("Report type not implemented yet:", report_type)
         return redirect(url_for("reports"))
