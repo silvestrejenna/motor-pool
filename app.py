@@ -853,8 +853,6 @@ def save_report_record(report_type, month, year, file_name, file_path):
     conn.commit()
     cur.close()
     conn.close()
-
-    return
 #========GAS&RFID END==========================================
 
 #==========VEHICLE INVENTORY REPORT GENERATION============================= 
@@ -970,6 +968,97 @@ def insert_vehicle_type_distribution(doc, distribution_rows):
         distribution_text
     )
 
+#========VEHICLE INVENTORY REPORT END==========================================
+#=========MAINTENANCE & PMS REPORT START==========================================
+
+def fetch_maintenance_rows():
+    conn = get_db_connection()
+    if not conn:
+        return []
+    
+    cur = conn.cursor()
+    cur.execute("""
+                SELECT
+                    date,
+                    vehicle_name,
+                    problem, 
+                    action_taken, 
+                    cost, 
+                    mechanic
+                FROM maintenance_log
+                ORDER BY date
+            """)
+    
+    
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+
+def insert_maintenance_rows(doc, rows):
+    # Insert maintenance and PMS rows into the document
+    table = doc.tables[0]  # Assuming the first table is for maintenance and PMS
+    
+    for row in rows:
+        cells = table.add_row().cells
+        cells[0].text = str(row[0])  # date
+        cells[1].text = str(row[1])  # vehicle_name
+        cells[2].text = str(row[2])  # problem
+        cells[3].text = str(row[3])  # action_taken
+        cells[4].text = str(row[4])  # cost
+        cells[5].text = str(row[5])  # mechanic
+
+
+def calculate_maintenance_summary():
+    conn = get_db_connection()
+    if not conn:
+        return {}
+    
+    cur = conn.cursor()
+
+    cur.execute("SELECT COUNT(*) FROM maintenance_log")
+    total_maintenance = cur.fetchone()[0]
+
+    cur.execute("SELECT SUM(cost) FROM maintenance_log")
+    total_cost = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(problem) FROM maintenance_log")
+    total_problems = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(DISTINCT mechanic) FROM maintenance_log")
+    total_mechanics = cur.fetchone()[0]
+
+    cur.execute("""
+                SELECT vehicle_name, cost
+                FROM maintenance_log
+                WHERE cost = (SELECT MAX(cost) FROM maintenance_log)
+                LIMIT 1
+                """)
+    highest_cost = cur.fetchone()
+
+    cur.execute("""
+                SELECT vehicle_name, cost
+                FROM maintenance_log
+                WHERE cost = (SELECT MIN(cost) FROM maintenance_log)
+                LIMIT 1
+                """)
+    lowest_cost = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    return {
+        "total_maintenance": total_maintenance,
+        "total_cost": round(total_cost, 2),
+        "total_problems": total_problems,
+        "total_mechanics": total_mechanics,
+        "highest_cost": highest_cost,
+        "lowest_cost": lowest_cost
+    }
+
+
+#=========MAINTENANCE & PMS REPORT END==========================================
 
 
 @app.route("/generate_report", methods=["POST"])
@@ -1016,7 +1105,7 @@ def generate_report():
         doc.save(output_path)
 
     # ===============================
-    # OTHER REPORT TYPES (NEXT PHASE)
+    # VEHICLE INVENTORY REPORT
     # ===============================
     elif report_type == "vehicle":
 
@@ -1039,6 +1128,30 @@ def generate_report():
         replace_placeholder(doc, "{{most_mileage}}", summary["most_mileage"])
 
         doc.save(output_path)
+
+    # ===============================
+    # MAINTENANCE & REPORT
+    # ===============================
+
+    elif report_type == "maintenance_log":
+        doc = Document("report_template/maintenance_temp.docx")
+
+        month_year = f"{month_name} {year}"
+        replace_placeholder(doc, "{{month_year}}", month_year)
+
+        maintenance_rows = fetch_maintenance_rows()
+        insert_maintenance_rows(doc, maintenance_rows)
+
+        summary = calculate_maintenance_summary()
+        replace_placeholder(doc, "{{total_maintenance}}", str(summary["total_maintenance"]))
+        replace_placeholder(doc, "{{total_cost}}", str(summary["total_cost"]))
+        replace_placeholder(doc, "{{total_problems}}", str(summary["total_problems"]))
+        replace_placeholder(doc, "{{total_mechanics}}", str(summary["total_mechanics"]))
+        replace_placeholder(doc, "{{highest_cost}}", f"{summary['highest_cost'][0]} (₱{summary['highest_cost'][1]})" if summary['highest_cost'] else "N/A")
+        replace_placeholder(doc, "{{lowest_cost}}", f"{summary['lowest_cost'][0]} (₱{summary['lowest_cost'][1]})" if summary['lowest_cost'] else "N/A")
+
+        doc.save(output_path)
+    
     else:
         print("Report type not implemented yet:", report_type)
         return redirect(url_for("reports"))
@@ -1064,7 +1177,7 @@ def generate_report():
 
 
 
-def fetch_recent_reports(limit=5):
+def fetch_recent_reports(limit=3):
     conn = get_db_connection()
     if not conn:
         return []
