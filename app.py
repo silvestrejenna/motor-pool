@@ -1098,6 +1098,102 @@ def insert_pms_rows(doc, rows):
 
 
 #=========PMS REPORT END==========================================
+#=========TOOLS & EQUIPMENT REPORT START==========================================
+
+def fetch_tools_equipment_rows():
+    conn = get_db_connection()
+    if not conn:
+        return []
+    
+    cur = conn.cursor()
+    cur.execute("""
+                SELECT
+                    name,
+                    category,
+                    quantity,
+                    condition
+                FROM tools_equipment
+                ORDER BY name
+            """)
+    
+    
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+def insert_tools_equipment_rows(doc, rows):
+    # Insert tools & equipment rows into the document
+    table = doc.tables[0]  # Assuming the first table is for tools & equipment
+    
+    for row in rows:
+        cells = table.add_row().cells
+        cells[0].text = str(row[0])  # name
+        cells[1].text = str(row[1])  # category
+        cells[2].text = str(row[2])  # quantity
+        cells[3].text = str(row[3])  # condition
+
+def calculate_tools_equipment_summary():
+    conn = get_db_connection()
+    if not conn:
+        return {}
+    
+    cur = conn.cursor()
+
+    cur.execute("SELECT COUNT(*) FROM tools_equipment")
+    total_items = cur.fetchone()[0]
+
+    cur.execute("""
+                SELECT name, quantity
+                FROM tools_equipment
+                WHERE quantity = (SELECT MAX(quantity) FROM tools_equipment)
+                LIMIT 1
+                """)
+    most_qty = cur.fetchone()
+
+    cur.execute("""
+                SELECT name, quantity
+                FROM tools_equipment
+                WHERE quantity = (SELECT MIN(quantity) FROM tools_equipment)
+                LIMIT 1
+                """)
+    least_qty = cur.fetchone()
+
+    cur.execute("""
+                SELECT COUNT(*) FROM tools_equipment WHERE condition = 'Excelelent'
+                """)
+    excellent = cur.fetchone()[0]
+
+    cur.execute("""
+                SELECT COUNT(*) FROM tools_equipment WHERE condition = 'Good'
+                """)
+    good = cur.fetchone()[0]
+
+    cur.execute("""
+                SELECT COUNT(*) FROM tools_equipment WHERE condition = 'Fair'
+                """)
+    fair = cur.fetchone()[0]
+
+    cur.execute("""
+                SELECT COUNT(*) FROM tools_equipment WHERE condition = 'Damaged'
+                """)
+    damaged = cur.fetchone()[0]
+
+    cur.close()
+    conn.close()
+
+    return {
+        "total_items": total_items,
+        "most_qty": most_qty,
+        "least_qty": least_qty,
+        "excellent": excellent,
+        "good": good,
+        "fair": fair,
+        "damaged": damaged
+    }
+
+
+#=========TOOLS & EQUIPMENT REPORT END==========================================
 
 @app.route("/generate_report", methods=["POST"])
 def generate_report():
@@ -1206,8 +1302,28 @@ def generate_report():
         doc.save(output_path)
 
     # ===============================
-    # PMS REPORT
+    # TOOLS & EQUIPMENT REPORT
     # ===============================
+    
+    elif report_type == "tools_equipment":
+        doc = Document("report_template/tools&eq_temp.docx")
+
+        month_year = f"{month_name} {year}"
+        replace_placeholder(doc, "{{month_year}}", month_year)
+
+        tools_rows = fetch_tools_equipment_rows()
+        insert_tools_equipment_rows(doc, tools_rows)
+
+        summary = calculate_tools_equipment_summary()
+        replace_placeholder(doc, "{{total_items}}", str(summary["total_items"]))
+        replace_placeholder(doc, "{{most_qty}}", str(summary["most_qty"]))
+        replace_placeholder(doc, "{{least_qty}}", str(summary["least_qty"]))
+        replace_placeholder(doc, "{{excellent}}", str(summary["excellent"]))
+        replace_placeholder(doc, "{{good}}", str(summary["good"]))
+        replace_placeholder(doc, "{{fair}}", str(summary["fair"]))
+        replace_placeholder(doc, "{{damaged}}", str(summary["damaged"]))
+
+        doc.save(output_path)
 
     else:
         print("Report type not implemented yet:", report_type)
