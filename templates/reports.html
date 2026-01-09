@@ -81,6 +81,7 @@
                         <option value="maintenance_log">Maintenance Log</option>
                         <option value="pms_log">PMS Log</option>
                         <option value="tools_equipment">Tools & Equipment</option>
+                        <option value="parts_supplies">Parts & Supplies</option>
                     </select>
 
                     <select id="reportMonth" name="month" required>
@@ -143,10 +144,10 @@
                             class="file-icon"
                           >
                           <div>
-                            <strong>{{ report.report_type|upper }} Report</strong>
+                            <strong>{{ report.report_type|upper }} REPORT</strong>
                             <p>
                               Period: {{ report.month }}/{{ report.year }}
-                              • Generated: {{ report.created_at.strftime('%Y-%m-%d') }}
+                              • Generated: {{ report.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
                             </p>
                           </div>
                         </div>

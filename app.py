@@ -1194,6 +1194,97 @@ def calculate_tools_equipment_summary():
 
 
 #=========TOOLS & EQUIPMENT REPORT END==========================================
+#=========PARTS & SUPPLIES REPORT START==========================================
+
+def fetch_parts_supplies_rows():
+    conn = get_db_connection()
+    if not conn:
+        return []
+    
+    cur = conn.cursor()
+    cur.execute("""
+                SELECT
+                    name,
+                    category,
+                    stock,
+                    unit,
+                    status
+                FROM parts_supplies
+                ORDER BY name
+            """)
+    
+    
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+def insert_parts_supplies_rows(doc, rows):
+    # Insert parts & supplies rows into the document
+    table = doc.tables[0]  # Assuming the first table is for parts & supplies
+    
+    for row in rows:
+        cells = table.add_row().cells
+        cells[0].text = str(row[0])  # name
+        cells[1].text = str(row[1])  # category
+        cells[2].text = str(row[2])  # stock
+        cells[3].text = str(row[3])  # unit
+        cells[4].text = str(row[4])  # status
+
+def calculate_parts_supplies_summary():
+    conn = get_db_connection()
+    if not conn:
+        return {}
+    
+    cur = conn.cursor()
+
+    cur.execute("SELECT COUNT(*) FROM parts_supplies")
+    total_items = cur.fetchone()[0]
+
+    cur.execute("""
+                SELECT name, stock
+                FROM parts_supplies
+                WHERE stock = (SELECT MAX(stock) FROM parts_supplies)
+                LIMIT 1
+                """)
+    most_stock = cur.fetchone()
+
+    cur.execute("""
+                SELECT name, stock
+                FROM parts_supplies
+                WHERE stock = (SELECT MIN(stock) FROM parts_supplies)
+                LIMIT 1
+                """)
+    lowest_stock = cur.fetchone()
+
+    cur.execute("""
+                SELECT COUNT(*) FROM parts_supplies WHERE status = 'In Stock'
+                """)
+    in_stock = cur.fetchone()[0]
+
+    cur.execute("""
+                SELECT COUNT(*) FROM parts_supplies WHERE status = 'Low Stock'
+                """)
+    low_stock = cur.fetchone()[0]
+
+    cur.execute("""
+                SELECT COUNT(*) FROM parts_supplies WHERE status = 'Out of Stock'
+                """)
+    out_stock = cur.fetchone()[0]
+
+    cur.close()
+    conn.close()
+
+    return {
+        "total_items": total_items,
+        "most_stock": most_stock,
+        "lowest_stock": lowest_stock,
+        "in_stock": in_stock,
+        "low_stock": low_stock,
+        "out_stock": out_stock
+    }
+
+#=========PARTS & SUPPLIES REPORT END==========================================
 
 @app.route("/generate_report", methods=["POST"])
 def generate_report():
@@ -1316,12 +1407,35 @@ def generate_report():
 
         summary = calculate_tools_equipment_summary()
         replace_placeholder(doc, "{{total_items}}", str(summary["total_items"]))
-        replace_placeholder(doc, "{{most_qty}}", str(summary["most_qty"]))
-        replace_placeholder(doc, "{{least_qty}}", str(summary["least_qty"]))
+        replace_placeholder(doc, "{{most_qty}}", f"{summary['most_qty'][0]} ({summary['most_qty'][1]})" if summary['most_qty'] else "N/A")
+        replace_placeholder(doc, "{{least_qty}}", f"{summary['least_qty'][0]} ({summary['least_qty'][1]})" if summary['least_qty'] else "N/A")
         replace_placeholder(doc, "{{excellent}}", str(summary["excellent"]))
         replace_placeholder(doc, "{{good}}", str(summary["good"]))
         replace_placeholder(doc, "{{fair}}", str(summary["fair"]))
         replace_placeholder(doc, "{{damaged}}", str(summary["damaged"]))
+
+        doc.save(output_path)
+
+    # ===============================
+    # PARTS & SUPPLIES REPORT
+    # ===============================
+
+    elif report_type == "parts_supplies":
+        doc = Document("report_template/parts&supplies_temp.docx")
+
+        month_year = f"{month_name} {year}"
+        replace_placeholder(doc, "{{month_year}}", month_year)
+
+        parts_rows = fetch_parts_supplies_rows()
+        insert_parts_supplies_rows(doc, parts_rows)
+
+        summary = calculate_parts_supplies_summary()
+        replace_placeholder(doc, "{{total_items}}", str(summary["total_items"]))
+        replace_placeholder(doc, "{{most_stock}}", f"{summary['most_stock'][0]} ({summary['most_stock'][1]})" if summary['most_stock'] else "N/A")
+        replace_placeholder(doc, "{{lowest_stock}}", f"{summary['lowest_stock'][0]} ({summary['lowest_stock'][1]})" if summary['lowest_stock'] else "N/A")
+        replace_placeholder(doc, "{{in_stock}}", str(summary["in_stock"]))
+        replace_placeholder(doc, "{{low_stock}}", str(summary["low_stock"]))
+        replace_placeholder(doc, "{{out_stock}}", str(summary["out_stock"]))
 
         doc.save(output_path)
 
