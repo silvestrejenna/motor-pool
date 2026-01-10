@@ -10,6 +10,16 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = "motorpool_secret_key"
 
+import calendar
+
+@app.template_filter('month_name')
+def month_name_filter(month_number):
+    try:
+        return calendar.month_name[int(month_number)]
+    except:
+        return month_number
+
+
 # --- CONNECT TO SUPABASE ---
 def get_db_connection():
     DB_URI = "postgresql://postgres.nudeyxdtkmgrfbepsluf:motorpool_db.312@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
@@ -1496,14 +1506,95 @@ def download_report(filename):
 
 
 #========ROUTES==========================================
-
-
+# =========================
+# 📄 RECORDS PAGE
+# =========================
 @app.route('/records')
 def records():
     if 'user_name' not in session:
         return redirect(url_for('index'))
 
-    return "<h1>Records Page (Under Development)</h1>"
+    import calendar
+
+    search = request.args.get('search')
+    month = request.args.get('month')
+    rtype = request.args.get('type')
+
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    query = """
+        SELECT report_id, report_type, month, year, file_name, created_at
+        FROM reports
+        WHERE 1=1
+    """
+    params = []
+
+    if search:
+        query += " AND report_type ILIKE %s"
+        params.append(f"%{search}%")
+
+    if month:
+        query += " AND month = %s"
+        params.append(int(month))
+
+    if rtype:
+        query += " AND report_type = %s"
+        params.append(rtype)
+
+    query += " ORDER BY created_at DESC"
+
+    cur.execute(query, params)
+    records = cur.fetchall()
+
+    for r in records:
+        r["month_name"] = calendar.month_name[r["month"]]
+
+    cur.execute("SELECT COUNT(*) FROM reports")
+    total = cur.fetchone()["count"]
+
+    cur.execute("""
+        SELECT COUNT(*) FROM reports
+        WHERE date_trunc('month', created_at) = date_trunc('month', CURRENT_DATE)
+    """)
+    this_month = cur.fetchone()["count"]
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        "records.html",
+        records=records,
+        total_reports=total,
+        this_month=this_month
+    )
+
+@app.route("/delete_record/<int:id>", methods=["POST"])
+def delete_record(id):
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT file_path FROM reports WHERE report_id = %s", (id,))
+    row = cur.fetchone()
+
+    if row:
+        file_path = row[0]
+
+        if file_path and os.path.exists(file_path):
+            os.remove(file_path)
+
+        cur.execute("DELETE FROM reports WHERE report_id = %s", (id,))
+        conn.commit()
+
+    cur.close()
+    conn.close()
+    return redirect(url_for("records"))
+
+
+#=====END RECORDS PAGE=====
 
 @app.route('/auth/user')
 def auth_user():

@@ -105,7 +105,34 @@ body {
 
 .user-profile {
   display: flex;
+  align-items: center;
   gap: 15px;
+}
+
+.icon {
+  cursor: pointer;
+}
+
+/* PROFILE DROPDOWN */
+.profile {
+  position: relative;
+}
+
+.profile-dropdown {
+  position: absolute;
+  right: 0;
+  top: 35px;
+  background: #fff;
+  width: 220px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: none;
+  padding: 10px;
+  text-align: center;
+}
+
+.profile-dropdown.show {
+  display: block;
 }
 
 /* ================= PAGE ================= */
