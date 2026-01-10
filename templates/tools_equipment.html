@@ -44,10 +44,20 @@
       </div>
 
       <div class="user-profile">
-        <span class="icon">🔔</span>
-        <span class="icon">👤</span>
-      </div>
-    </header>
+            <span class="icon">🔔</span>
+
+            <div class="profile">
+              <span class="icon" onclick="toggleProfile()">👤</span>
+
+              <div class="profile-dropdown" id="profileDropdown">
+                <p class="name" id="profileName">Loading...</p>
+                <p class="email" id="profileEmail"></p>
+                <hr />
+                <a href="#">Activity</a><br />
+                <a href="#">Change Password</a><br />
+                <a href="#" onclick="logout()" class="logout">Log Out</a>
+              </div>
+        </header>
 
     <!-- ================= PAGE ================= -->
     <section class="tools-section">
@@ -250,6 +260,27 @@
     })
   }).then(() => location.reload());
 }
+async function loadUserProfile() {
+        const res = await fetch("/auth/user");
+        if (!res.ok) {
+          window.location.href = "/";
+          return;
+        }
+        const user = await res.json();
+        document.getElementById("profileName").textContent = user.full_name;
+        document.getElementById("profileEmail").textContent = user.email;
+      }
+
+      loadUserProfile();
+
+      function toggleProfile() {
+        document.getElementById("profileDropdown").classList.toggle("show");
+      }
+
+      async function logout() {
+        await fetch("/logout", { method: "POST" });
+        window.location.href = "/";
+      }
 </script>
 
 </body>
