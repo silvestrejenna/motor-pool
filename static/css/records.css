@@ -154,6 +154,10 @@ body {
   padding: 20px;
   border-radius: 12px;
   border-left: 5px solid var(--pup-red);
+
+  display: flex;
+  flex-direction: column; /* 👈 stack vertically */
+  align-items: flex-start; /* 👈 align to left */
 }
 
 .stat-card .label {
