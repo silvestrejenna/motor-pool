@@ -1,154 +1,150 @@
 /* General Reset */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-body, html {
-    height: 100%;
-    width: 100%;
-    /* Prevents scrolling on large screens to maintain the split look */
-    overflow: hidden; 
+body,
+html {
+  height: 100%;
+  width: 100%;
+  /* Prevents scrolling on large screens to maintain the split look */
+  overflow: hidden;
 }
 
 .main-container {
-    display: flex;
-    height: 100vh;
+  display: flex;
+  height: 100vh;
 }
 
 /* --- Left side styling (PUP Pylon) --- */
 .left-section {
-    flex: 1; /* Takes up 1 part of available space */
-    
-    /* UPDATED: Using the PUP Pylon image */
-    background: url('../images/pup-login.png') no-repeat center center;
-    
-    /* Ensures the image covers the whole area without stretching weirdly */
-    background-size: cover; 
+  flex: 1; /* Takes up 1 part of available space */
+
+  /* UPDATED: Using the PUP Pylon image */
+  background: url("../images/pup-login.png") no-repeat center center;
+
+  /* Ensures the image covers the whole area without stretching weirdly */
+  background-size: cover;
 }
 
 /* --- Right side styling (Form area) --- */
 .right-section {
-    flex: 1.2; /* Takes up slightly more space than the left side */
-    background-color: #800000; /* The PUP Maroon color */
-    display: flex;
-    flex-direction: column;
+  flex: 1.2; /* Takes up slightly more space than the left side */
+  background-color: #800000; /* The PUP Maroon color */
+  display: flex;
+  flex-direction: column;
 }
 
 /* Header styling */
 .top-header {
-    padding: 30px 40px;
+  padding: 30px 40px;
 }
 
 .logo-area {
-    display: flex;
-    align-items: center;
-    gap: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 /* Logo Image Styling */
 .logo {
-    width: 70px; /* Adjusted slightly for better visibility */
-    height: auto;
+  width: 70px; /* Adjusted slightly for better visibility */
+  height: auto;
 }
 
 .header-text {
-    color: white;
-    font-weight: bold;
-    font-size: 1.1rem;
-    letter-spacing: 0.5px;
+  color: white;
+  font-weight: bold;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
 }
 
 /* Form Card Container - Centers the card vertically */
 .form-wrapper {
-    flex-grow: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding-bottom: 50px; /* Visual balance */
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 50px; /* Visual balance */
 }
 
 /* The Login Box */
 .login-card {
-    background-color: #C6B7B7; /* Muted grayish-pink from original design */
-    width: 85%;
-    max-width: 420px;
-    padding: 40px 35px;
-    border-radius: 12px;
-    text-align: center;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  background-color: #c6b7b7; /* Muted grayish-pink from original design */
+  width: 85%;
+  max-width: 420px;
+  padding: 40px 35px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
 
 .login-card h2 {
-    margin-bottom: 25px;
-    font-size: 1.3rem;
-    font-weight: 800;
-    color: #1a1a1a;
-    letter-spacing: 0.5px;
+  margin-bottom: 25px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  letter-spacing: 0.5px;
 }
 
 /* Input Fields */
 .input-group {
-    margin-bottom: 15px;
+  margin-bottom: 15px;
 }
 
 input {
-    width: 100%;
-    padding: 12px 15px;
-    border: none;
-    border-radius: 6px;
-    background-color: #E8E8E8; /* Light gray input background */
-    font-size: 0.95rem;
-    outline: none;
+  width: 100%;
+  padding: 12px 15px;
+  border: none;
+  border-radius: 6px;
+  background-color: #e8e8e8; /* Light gray input background */
+  font-size: 0.95rem;
+  outline: none;
 }
 
 /* Buttons */
 .btn {
-    width: 100%;
-    padding: 12px;
-    margin-top: 10px;
-    border: none;
-    border-radius: 6px;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .btn-signin {
-    background-color: #ffffff;
-    color: #000;
-    margin-top: 25px;
-}
-
-.btn-create {
-    background-color: #ffffff;
-    color: #000;
+  background-color: #ffffff;
+  color: #000;
+  margin-top: 25px;
 }
 
 .btn:hover {
-    background-color: #7a0c0c;
-    color: #ffffff;
-    transform: translateY(-2px); /* Slight lift effect on hover */
+  background-color: #7a0c0c;
+  color: #ffffff;
+  transform: translateY(-2px); /* Slight lift effect on hover */
 }
 
 /* Responsive adjustments for smaller screens (tablets/phones) */
 @media (max-width: 900px) {
-    .left-section {
-        display: none; /* Hide the pylon image on smaller screens so the form fits */
-    }
-    
-    .right-section {
-        flex: 1;
-    }
-    
-    .header-text {
-        font-size: 0.9rem;
-    }
-    
-    .logo {
-        width: 50px;
-    }
+  .left-section {
+    display: none; /* Hide the pylon image on smaller screens so the form fits */
+  }
+
+  .right-section {
+    flex: 1;
+  }
+
+  .header-text {
+    font-size: 0.9rem;
+  }
+
+  .logo {
+    width: 50px;
+  }
 }
