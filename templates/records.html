@@ -42,12 +42,11 @@
      <header class="top-nav">
           <div class="nav-links">
             <a href="{{ url_for('home') }}">HOME</a>
-            <a href="{{ url_for('inventory') }}" class="active">INVENTORY</a>
-            <a href="{{ url_for('records') }}">RECORDS</a>
+            <a href="{{ url_for('inventory') }}">INVENTORY</a>
+            <a href="{{ url_for('records') }}" class="active">RECORDS</a>
           </div>
 
           <div class="user-profile">
-            <span class="icon">🔔</span>
 
             <div class="profile">
               <span class="icon" onclick="toggleProfile()">👤</span>
@@ -126,24 +125,24 @@
     </thead>
 
     <tbody>
-      {% for r in records %}
-      <tr>
-        <td>REC{{ "%03d"|format(loop.index) }}</td>
-        <td>{{ r.report_type|replace('_',' ')|title }} Report</td>
-        <td>{{ r.report_type|replace('_',' ')|title }}</td>
-        <td>{{ r.month_name }}</td>
-        <td>{{ r.created_at.strftime('%Y-%m-%d') }}</td>
-        <td class="actions">
-          <a href="{{ url_for('download_report', filename=r.file_name) }}" class="icon-btn">⬇️</a>
-          <form method="POST"
-                action="{{ url_for('delete_record', id=r.report_id) }}"
-                onsubmit="return confirm('Delete this report?')">
-            <button class="icon-btn delete">🗑</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
+  {% for r in records %}
+  <tr>
+    <td>REC{{ "%03d"|format(r.report_id) }}</td>
+    <td>{{ r.report_type|replace('_',' ')|title }} Report</td>
+    <td>{{ r.report_type|replace('_',' ')|title }}</td>
+    <td>{{ r.month_name }}</td>
+    <td>{{ r.created_at.strftime('%Y-%m-%d') }}</td>
+    <td class="actions">
+      <a href="{{ url_for('download_report', filename=r.file_name) }}" class="icon-btn">⬇️</a>
+      <form method="POST"
+            action="{{ url_for('delete_record', id=r.report_id) }}"
+            onsubmit="return confirm('Delete this report?')">
+        <button class="icon-btn delete">🗑</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</tbody>
   </table>
 </section>
 

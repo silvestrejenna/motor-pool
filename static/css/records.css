@@ -13,6 +13,12 @@ body {
   background: var(--bg-gray);
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 .main-container {
   display: flex;
   min-height: 100vh;
