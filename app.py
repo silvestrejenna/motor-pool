@@ -5,6 +5,7 @@ from docx import Document
 import psycopg2.extras
 from flask import send_from_directory
 from datetime import datetime
+from functools import wraps
 
 
 app = Flask(__name__)
@@ -19,6 +20,23 @@ def month_name_filter(month_number):
     except:
         return month_number
 
+
+# =========================ROLE BASED AUTHENTICATION=========================
+def role_required(*allowed_roles):
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            if 'user_role' not in session:
+                return redirect(url_for('index'))
+
+            if session['user_role'] not in allowed_roles:
+                flash("Access denied")
+                return redirect(url_for('home'))
+
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
+# =========================END ROLE BASED AUTHENTICATION=========================
 
 # --- CONNECT TO SUPABASE ---
 def get_db_connection():
@@ -125,6 +143,7 @@ def inventory():
 
 
 @app.route('/add_vehicle', methods=['POST'])
+@role_required('Admin')
 def add_vehicle():
     name = request.form['name']
     plate_number = request.form['plate_number']
@@ -149,6 +168,7 @@ def add_vehicle():
 
 
 @app.route('/delete_vehicle/<int:id>')
+@role_required('Admin')
 def delete_vehicle(id):
     conn = get_db_connection()
     if conn:
@@ -170,6 +190,7 @@ def delete_vehicle(id):
 
 
 @app.route('/update_vehicle/<int:id>', methods=['POST'])
+@role_required('Admin')
 def update_vehicle(id):
     name = request.form.get('name')
     plate = request.form.get('plate')
@@ -260,6 +281,7 @@ def gas_rfid():
     return render_template("gas&rfid_inv.html", records=records, vehicles=vehicles, summary=summary)
 
 @app.route('/add_fuel', methods=['POST'])
+@role_required('Admin')
 def add_fuel():
     # Make sure your form uses name="v_name" for the vehicle selection
     data = (
@@ -283,6 +305,7 @@ def add_fuel():
 from flask import jsonify # Ensure jsonify is imported at the top
 
 @app.route('/update_fuel', methods=['POST'])
+@role_required('Admin')
 def update_fuel():
     data = request.get_json()
     record_id = data.get('id')
@@ -318,6 +341,7 @@ def update_fuel():
 
 
 @app.route('/delete_fuel/<int:id>')
+@role_required('Admin')
 def delete_fuel(id):
     conn = get_db_connection()
     if conn:
@@ -378,6 +402,7 @@ def tools_equipment():
 # ➕ SAVE TOOL
 # ================================
 @app.route("/save_tool", methods=["POST"])
+@role_required('Admin')
 def save_tool():
     conn = get_db_connection()
     cur = conn.cursor()
@@ -417,6 +442,7 @@ def save_tool():
 # ✏️ UPDATE TOOL (INLINE EDIT)
 # ================================
 @app.route("/update_tool", methods=["POST"])
+@role_required('Admin')
 def update_tool():
     data = request.get_json()
 
@@ -450,6 +476,7 @@ def update_tool():
 # 🗑️ DELETE TOOL
 # ================================
 @app.route('/delete_tool/<int:id>')
+@role_required('Admin')
 def delete_tool(id):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -516,6 +543,7 @@ def maintenance_pms():
 
 # Route to save a new Maintenance Record
 @app.route('/add_maintenance', methods=['POST'])
+@role_required('Admin')
 def add_maintenance():
     # Mapping HTML form names to your Supabase columns
     date = request.form.get('date')
@@ -538,6 +566,7 @@ def add_maintenance():
 #--pms--#
 # --- ROUTE TO ADD PMS RECORD ---
 @app.route('/add_pms', methods=['POST'])
+@role_required('Admin')
 def add_pms():
     # Fetching data from the form (matches your expected modal fields)
     v_name = request.form.get('vehicle_name')
@@ -565,6 +594,7 @@ def add_pms():
 
 # --- ACTION BUTTON FUNCTIONS (DELETE) ---
 @app.route('/delete_maintenance/<int:id>')
+@role_required('Admin')
 def delete_maintenance(id):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -575,6 +605,7 @@ def delete_maintenance(id):
     return redirect(url_for('maintenance_pms'))
 
 @app.route('/delete_pms/<int:id>')
+@role_required('Admin')
 def delete_pms(id):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -639,6 +670,7 @@ def parts_supplies():
 # ➕ ADD PART
 # ===============================
 @app.route('/add-part', methods=['POST'])
+@role_required('Admin')
 def add_part():
     if 'user_id' not in session:
         return redirect(url_for('index'))
@@ -696,6 +728,7 @@ def add_part():
 # ✏️ UPDATE PART
 # ===============================
 @app.route('/update-part/<int:part_id>', methods=['POST'])
+@role_required('Admin')
 def update_part(part_id):
     stock = int(request.form['stock'])
     min_stock = int(request.form['min_stock'])
@@ -726,6 +759,7 @@ def update_part(part_id):
 # 🗑️ DELETE PART
 # ===============================
 @app.route('/delete-part/<int:part_id>', methods=['POST'])
+@role_required('Admin')
 def delete_part(part_id):
     if 'user_id' not in session:
         return redirect(url_for('index'))
@@ -756,6 +790,7 @@ def delete_part(part_id):
 # REPORTS START
 # =======================================================
 @app.route("/reports", methods=["GET"])
+@role_required('Admin', 'Staff')
 def reports():
     if "user_id" not in session:
         return redirect(url_for("login"))
