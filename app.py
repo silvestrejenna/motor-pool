@@ -563,13 +563,79 @@ def add_maintenance():
     conn.close()
     return redirect(url_for('maintenance_pms'))
 
+@app.route('/update_maintenance/<int:id>', methods=['POST'])
+@role_required('Admin')
+def update_maintenance(id):
+    date = request.form.get('date')
+    vehicle = request.form.get('vehicle')          # ✅ MATCH JS
+    problem = request.form.get('problem')
+    action_taken = request.form.get('action_taken')
+    cost = request.form.get('cost')
+    mechanic = request.form.get('mechanic')
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            UPDATE maintenance_log
+            SET
+                date = %s,
+                vehicle_name = %s,
+                problem = %s,
+                action_taken = %s,
+                cost = %s,
+                mechanic = %s
+            WHERE id = %s
+        """, (
+            date,
+            vehicle,
+            problem,
+            action_taken,
+            cost,
+            mechanic,
+            id
+        ))
+        conn.commit()
+    except Exception as e:
+        print(f"Error updating maintenance record: {e}")
+        conn.rollback()
+    finally:
+        cur.close()
+        conn.close()
+
+    print(request.form)
+    return redirect(url_for('maintenance_pms'))
+
+
+@app.route('/delete_maintenance/<int:id>', methods=['POST'])
+@role_required('Admin')
+def delete_maintenance(id):
+    conn = get_db_connection()
+    if conn:
+        try:
+            cur = conn.cursor()
+            cur.execute('DELETE FROM maintenance_log WHERE id = %s', (id,))
+            conn.commit()
+            flash("Maintenance record deleted successfully!")
+            cur.close()
+        except Exception as e:
+            print(f"Delete error: {e}")
+            flash("Error deleting maintenance record.")
+            conn.rollback()
+        finally:
+            conn.close()
+        
+    return redirect(url_for('maintenance_pms'))
+    
+
 #--pms--#
 # --- ROUTE TO ADD PMS RECORD ---
 @app.route('/add_pms', methods=['POST'])
 @role_required('Admin')
 def add_pms():
     # Fetching data from the form (matches your expected modal fields)
-    v_name = request.form.get('vehicle_name')
+    v_name = request.form.get('vehicle')
     last_pms = request.form.get('last_pms_date')
     km = request.form.get('km')
     oil = request.form.get('oil_liters')
@@ -593,27 +659,73 @@ def add_pms():
     return redirect(url_for('maintenance_pms'))
 
 # --- ACTION BUTTON FUNCTIONS (DELETE) ---
-@app.route('/delete_maintenance/<int:id>')
+@app.route('/update_pms/<int:id>', methods=['POST'])
 @role_required('Admin')
-def delete_maintenance(id):
+def update_pms(id):
+    vehicle = request.form.get('vehicle')
+    last_pms = request.form.get('last_pms_date')
+    km = request.form.get('km')
+    oil = request.form.get('oil_liters')
+    next_pms = request.form.get('next_pms_date')
+
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('DELETE FROM maintenance_log WHERE id = %s', (id,))
-    conn.commit()
-    cur.close()
-    conn.close()
+    try:
+        cur.execute("""
+            UPDATE pms_log
+            SET
+                vehicle_name = %s,
+                last_pms_date = %s,
+                km = %s,
+                oil_liters = %s,
+                next_pms_date = %s
+            WHERE id = %s
+        """, (
+            vehicle,
+            last_pms,
+            km,
+            oil,
+            next_pms,
+            id
+        ))
+        conn.commit()
+    except Exception as e:
+        print(f"Error updating PMS record: {e}")
+        conn.rollback()
+    finally:
+        cur.close()
+        conn.close()
+
+    print(request.form)
+
+    if not last_pms or not next_pms:
+        flash("PMS dates cannot be empty.")
     return redirect(url_for('maintenance_pms'))
 
-@app.route('/delete_pms/<int:id>')
+    
+
+
+@app.route('/delete_pms/<int:id>', methods=['POST'])
 @role_required('Admin')
 def delete_pms(id):
     conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('DELETE FROM pms_log WHERE id = %s', (id,))
-    conn.commit()
-    cur.close()
-    conn.close()
-    return redirect(url_for('maintenance_pms'))
+
+    if conn:
+        try:
+            cur = conn.cursor()
+            cur.execute('DELETE FROM pms_log WHERE id = %s', (id,))
+            conn.commit()
+            flash("PMS record deleted successfully!")   
+            cur.close()
+            conn.close()
+        except Exception as e:
+            print(f"Delete error: {e}")
+            flash("Error deleting PMS record.")
+            conn.rollback()
+        finally:
+            conn.close()
+
+        return redirect(url_for('maintenance_pms'))
 
 # --- END maintenance & pms ---
 
