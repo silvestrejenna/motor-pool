@@ -32,7 +32,7 @@ def get_db_connection():
         return None
 
 # --- SYNC ADMIN USER ---
-def sync_assigned_user():
+#def sync_assigned_user():
     assigned_email = "motorpooladmin@pup.edu.ph"
     assigned_password = "tmps.123"
     assigned_name = "Admin"  # New Column
@@ -60,19 +60,32 @@ def login():
     conn = get_db_connection()
     if conn:
         cur = conn.cursor()
-        cur.execute('SELECT * FROM users WHERE email = %s AND password = %s', (email, password))
+        cur.execute('SELECT id, email, full_name, position, role, password FROM users WHERE email = %s AND password = %s', (email, password))
         user = cur.fetchone()
         cur.close()
         conn.close()
 
         if user:
-            session['user_name'] = user[3]
-            session['user_position'] = user[4]
-            return redirect(url_for('home'))
+            db_password = user[5]
+            print("DB PASSWORD:", db_password)
+            print("INPUT PASSWORD:", password)    
+
+            if password == db_password:
+                session['user_id'] = user[0]
+                session['user_email'] = user[1]
+                session['user_fullname'] = user[2]
+                session['user_position'] = user[3]
+                session['user_role'] = user[4]
+                return redirect(url_for('home'))
+            else:
+                flash("Incorrect password!")
+                return redirect(url_for('index'))
         else:
-            flash("Invalid credentials!")
+            flash("User not found!")
             return redirect(url_for('index'))
     return redirect(url_for('index'))
+
+
 
 @app.route('/')
 def index():
@@ -80,7 +93,7 @@ def index():
 
 @app.route('/home')
 def home():
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
     return render_template('index.html')
 
@@ -91,7 +104,7 @@ def home():
 
 @app.route('/inventory')
 def inventory():
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
 
     conn = get_db_connection()
@@ -200,7 +213,7 @@ def update_vehicle(id):
 
 @app.route('/gas_rfid')
 def gas_rfid():
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
 
     conn = get_db_connection()
@@ -327,7 +340,7 @@ def delete_fuel(id):
 
 @app.route('/tools-equipment')
 def tools_equipment():
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
 
     conn = get_db_connection()
@@ -579,7 +592,7 @@ def delete_pms(id):
 
 @app.route('/parts-supplies')
 def parts_supplies():
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
 
     conn = get_db_connection()
@@ -627,7 +640,7 @@ def parts_supplies():
 # ===============================
 @app.route('/add-part', methods=['POST'])
 def add_part():
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
 
     name = request.form['name']
@@ -714,7 +727,7 @@ def update_part(part_id):
 # ===============================
 @app.route('/delete-part/<int:part_id>', methods=['POST'])
 def delete_part(part_id):
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
 
     conn = get_db_connection()
@@ -744,7 +757,7 @@ def delete_part(part_id):
 # =======================================================
 @app.route("/reports", methods=["GET"])
 def reports():
-    if "user_name" not in session:
+    if "user_id" not in session:
         return redirect(url_for("login"))
     recent_reports = fetch_recent_reports()
     return render_template("reports.html", recent_reports=recent_reports)
@@ -1465,7 +1478,7 @@ def generate_report():
     )
 
     doc = Document(output_path)
-    replace_placeholder(doc, "{{generated_by}}", session.get("user_name", ""))
+    replace_placeholder(doc, "{{generated_by}}", session.get("user_position", ""))
     replace_placeholder(doc, "{{generated_on}}", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     doc.save(output_path)
 
@@ -1511,7 +1524,7 @@ def download_report(filename):
 # =========================
 @app.route('/records')
 def records():
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
 
     import calendar
@@ -1598,12 +1611,14 @@ def delete_record(id):
 
 @app.route('/auth/user')
 def auth_user():
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return {}, 401
 
     return {
-        "full_name": session.get("user_name"),
-        "email": "motorpooladmin@pup.edu.ph"
+        "full_name": session.get("user_fullname"),
+        "email": session.get("user_email"),
+        "position": session.get("user_position"),
+        "role": session.get("user_role")
     }
 
 @app.route('/logout', methods=['POST'])
@@ -1613,5 +1628,5 @@ def logout():
 
 
 if __name__ == '__main__':
-    sync_assigned_user()
+    #sync_assigned_user()
     app.run(debug=True, port=5055)
