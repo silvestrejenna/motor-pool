@@ -71,7 +71,9 @@
         <div id="maintenance-section">
             <div class="header-area">
                 <h1>MAINTENANCE LOG</h1>
+                {% if session['user_role'] == 'Admin' %}
                 <button class="btn-add-maroon" onclick="openModal('m-modal')">Add Maintenance Record</button>
+                {% endif %}
             </div>
             <div class="stats-cards">
                 <div class="card">
@@ -108,7 +110,9 @@
         <div id="pms-section" style="display:none;">
             <div class="header-area">
                 <h1>PREVENTIVE MAINTENANCE LOG</h1>
+                {% if session['user_role'] == 'Admin' %}
                 <button class="btn-add-maroon" onclick="openModal('p-modal')">Add PMS Record</button>
+                {% endif %}
             </div>
             <div class="table-card">
                 <table>

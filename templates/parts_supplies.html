@@ -68,9 +68,11 @@
               <p class="subtitle">Track spare parts and supply inventory</p>
             </div>
 
+            {% if session['user_role'] == 'Admin' %}
             <button class="primary-btn" onclick="openAddDrawer()">
               Add Part
             </button>
+            {% endif %}
           </div>
 
           <!-- ================= TABLE ================= -->
@@ -86,7 +88,9 @@
                     <th>Min</th>
                     <th>Unit</th>
                     <th>Status</th>
+                    {% if session['user_role'] == 'Admin' %}
                     <th>Action</th>
+                    {% endif %}
                   </tr>
                 </thead>
 
@@ -133,7 +137,7 @@
                         >{{ p[7] }}</span
                       >
                     </td>
-
+                    {% if session['user_role'] == 'Admin' %}
                     <td class="action-buttons">
                       <button class="btn-edit" onclick="editRow('{{ p[0] }}')">
                         Update
@@ -159,6 +163,7 @@
                         <button type="submit" class="btn-delete">Delete</button>
                       </form>
                     </td>
+                    {% endif %}
                   </tr>
                   {% endfor %}
                 </tbody>
