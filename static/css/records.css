@@ -13,6 +13,12 @@ body {
   background: var(--bg-gray);
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 .main-container {
   display: flex;
   min-height: 100vh;
@@ -148,6 +154,10 @@ body {
   padding: 20px;
   border-radius: 12px;
   border-left: 5px solid var(--pup-red);
+
+  display: flex;
+  flex-direction: column; /* 👈 stack vertically */
+  align-items: flex-start; /* 👈 align to left */
 }
 
 .stat-card .label {
