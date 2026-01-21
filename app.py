@@ -902,12 +902,23 @@ def delete_part(part_id):
 # REPORTS START
 # =======================================================
 @app.route("/reports", methods=["GET"])
-@role_required('Admin', 'Staff')
+@role_required("Admin", "Staff")
 def reports():
     if "user_id" not in session:
         return redirect(url_for("login"))
+
     recent_reports = fetch_recent_reports()
-    return render_template("reports.html", recent_reports=recent_reports)
+    summary = fetch_reports_summary()
+
+    return render_template(
+        "reports.html",
+        recent_reports=recent_reports,
+        total_reports=summary["total_reports"],
+        reports_this_month=summary["this_month"],
+        month_name=summary["month_name"],
+        most_generated_title=summary["most_generated"]
+    )
+
 
 
 
@@ -1652,6 +1663,58 @@ def fetch_recent_reports(limit=3):
     conn.close()
 
     return reports
+
+def fetch_reports_summary():
+    conn = get_db_connection()
+    if not conn:
+        return {
+            "total_reports": 0,
+            "this_month": 0,
+            "month_name": "",
+            "most_generated": "N/A"
+        }
+
+    cur = conn.cursor()
+
+    # Total reports (all time)
+    cur.execute("SELECT COUNT(*) FROM reports")
+    total_reports = cur.fetchone()[0]
+
+    # This month
+    cur.execute("""
+        SELECT COUNT(*)
+        FROM reports
+        WHERE EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE)
+          AND EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)
+    """)
+    this_month = cur.fetchone()[0]
+
+    # Month name (for subtitle)
+    cur.execute("""
+        SELECT TO_CHAR(CURRENT_DATE, 'Month')
+    """)
+    month_name = cur.fetchone()[0].strip()
+
+    # Most generated report type
+    cur.execute("""
+        SELECT report_type, COUNT(*) AS total
+        FROM reports
+        GROUP BY report_type
+        ORDER BY total DESC
+        LIMIT 1
+    """)
+    row = cur.fetchone()
+    most_generated = row[0].upper() if row else "N/A"
+
+    cur.close()
+    conn.close()
+
+    return {
+        "total_reports": total_reports,
+        "this_month": this_month,
+        "month_name": month_name,
+        "most_generated": most_generated
+    }
 
 @app.route("/download_report/<filename>")
 def download_report(filename):
