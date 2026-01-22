@@ -72,36 +72,50 @@ def get_db_connection():
 
 @app.route('/login', methods=['POST'])
 def login():
+    session.clear()  # ✅ wipe previous user completely
+
     email = request.form.get('email')
     password = request.form.get('password')
-    
+
     conn = get_db_connection()
-    if conn:
-        cur = conn.cursor()
-        cur.execute('SELECT id, email, full_name, position, role, password FROM users WHERE email = %s AND password = %s', (email, password))
-        user = cur.fetchone()
-        cur.close()
-        conn.close()
+    if not conn:
+        flash("Database connection failed")
+        return redirect(url_for('index'))
 
-        if user:
-            db_password = user[5]
-            print("DB PASSWORD:", db_password)
-            print("INPUT PASSWORD:", password)    
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT id, email, full_name, position, role, password
+        FROM users
+        WHERE email = %s
+        """,
+        (email,)
+    )
+    user = cur.fetchone()
+    cur.close()
+    conn.close()
 
-            if password == db_password:
-                session['user_id'] = user[0]
-                session['user_email'] = user[1]
-                session['user_fullname'] = user[2]
-                session['user_position'] = user[3]
-                session['user_role'] = user[4]
-                return redirect(url_for('home'))
-            else:
-                flash("Incorrect password!")
-                return redirect(url_for('index'))
-        else:
-            flash("User not found!")
-            return redirect(url_for('index'))
-    return redirect(url_for('index'))
+    # ❌ USER NOT FOUND
+    if not user:
+        flash("Invalid email or password")
+        return redirect(url_for('index'))
+
+    # ❌ PASSWORD MISMATCH
+    if password != user[5]:
+        flash("Invalid email or password")
+        return redirect(url_for('index'))
+
+    # ✅ LOGIN SUCCESS
+    session['user_id'] = user[0]
+    session['user_email'] = user[1]
+    session['user_fullname'] = user[2]
+    session['user_position'] = user[3]
+    session['user_role'] = user[4]
+
+    print("LOGGED IN AS:", user[1], "ROLE:", user[4])  # DEBUG LINE
+
+    return redirect(url_for('home'))
+
 
 
 
