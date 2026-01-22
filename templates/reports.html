@@ -116,17 +116,17 @@
         <section class="stats-grid">
             <div class="stat-card">
                 <span class="label">Total Reports</span>
-                <span class="value">127</span>
+                <span class="value">{{ total_reports }}</span>
                 <span class="subtext">Generated this year</span>
             </div>
             <div class="stat-card">
                 <span class="label">This Month</span>
-                <span class="value">18</span>
-                <span class="subtext">Reports generated in October</span>
+                <span class="value">{{ reports_this_month }}</span>
+                <span class="subtext">Reports generated in {{ month_name }}</span>
             </div>
             <div class="stat-card">
-                <span class="label">Most Viewed</span>
-                <span class="value">Fuel</span>
+                <span class="label">Most Generated</span>
+                <span class="value">{{ most_generated_title }}</span>
                 <span class="subtext">Report category</span>
             </div>
         </section>

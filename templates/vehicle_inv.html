@@ -73,9 +73,11 @@
                 Monitor and manage the status and availability of all vehicles
               </p>
             </div>
+            {% if session['user_role'] == 'Admin' %}
             <button class="btn-add" onclick="toggleModal()">
               Add Vehicle Record
             </button>
+            {% endif %}
           </div>
 
           <div class="table-card">
@@ -91,7 +93,9 @@
                   <th>Type</th>
                   <th>Status</th>
                   <th>Mileage</th>
+                  {% if session['user_role'] == 'Admin' %}
                   <th>Actions</th>
+                  {% endif %}
                 </tr>
               </thead>
 
@@ -126,6 +130,7 @@
                   <td class="v-mileage">{{ vehicle[6] }} km</td>
 
                   <td class="actions">
+                    {% if session['user_role'] == 'Admin' %}
                     <div class="action-buttons">
                       <button
                         class="btn-edit"
@@ -161,6 +166,7 @@
                       </a>
                     </div>
                   </td>
+                  {% endif %}
                 </tr>
                 {% endfor %}
               </tbody>

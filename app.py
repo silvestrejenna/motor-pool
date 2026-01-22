@@ -5,6 +5,7 @@ from docx import Document
 import psycopg2.extras
 from flask import send_from_directory
 from datetime import datetime
+from functools import wraps
 
 
 app = Flask(__name__)
@@ -20,6 +21,23 @@ def month_name_filter(month_number):
         return month_number
 
 
+# =========================ROLE BASED AUTHENTICATION=========================
+def role_required(*allowed_roles):
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            if 'user_role' not in session:
+                return redirect(url_for('index'))
+
+            if session['user_role'] not in allowed_roles:
+                flash("Access denied")
+                return redirect(url_for('home'))
+
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
+# =========================END ROLE BASED AUTHENTICATION=========================
+
 # --- CONNECT TO SUPABASE ---
 def get_db_connection():
     DB_URI = "postgresql://postgres.nudeyxdtkmgrfbepsluf:motorpool_db.312@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
@@ -32,7 +50,7 @@ def get_db_connection():
         return None
 
 # --- SYNC ADMIN USER ---
-def sync_assigned_user():
+#def sync_assigned_user():
     assigned_email = "motorpooladmin@pup.edu.ph"
     assigned_password = "tmps.123"
     assigned_name = "Admin"  # New Column
@@ -60,19 +78,32 @@ def login():
     conn = get_db_connection()
     if conn:
         cur = conn.cursor()
-        cur.execute('SELECT * FROM users WHERE email = %s AND password = %s', (email, password))
+        cur.execute('SELECT id, email, full_name, position, role, password FROM users WHERE email = %s AND password = %s', (email, password))
         user = cur.fetchone()
         cur.close()
         conn.close()
 
         if user:
-            session['user_name'] = user[3]
-            session['user_position'] = user[4]
-            return redirect(url_for('home'))
+            db_password = user[5]
+            print("DB PASSWORD:", db_password)
+            print("INPUT PASSWORD:", password)    
+
+            if password == db_password:
+                session['user_id'] = user[0]
+                session['user_email'] = user[1]
+                session['user_fullname'] = user[2]
+                session['user_position'] = user[3]
+                session['user_role'] = user[4]
+                return redirect(url_for('home'))
+            else:
+                flash("Incorrect password!")
+                return redirect(url_for('index'))
         else:
-            flash("Invalid credentials!")
+            flash("User not found!")
             return redirect(url_for('index'))
     return redirect(url_for('index'))
+
+
 
 @app.route('/')
 def index():
@@ -80,7 +111,7 @@ def index():
 
 @app.route('/home')
 def home():
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
     return render_template('index.html')
 
@@ -91,7 +122,7 @@ def home():
 
 @app.route('/inventory')
 def inventory():
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
 
     conn = get_db_connection()
@@ -112,6 +143,7 @@ def inventory():
 
 
 @app.route('/add_vehicle', methods=['POST'])
+@role_required('Admin')
 def add_vehicle():
     name = request.form['name']
     plate_number = request.form['plate_number']
@@ -136,6 +168,7 @@ def add_vehicle():
 
 
 @app.route('/delete_vehicle/<int:id>')
+@role_required('Admin')
 def delete_vehicle(id):
     conn = get_db_connection()
     if conn:
@@ -157,6 +190,7 @@ def delete_vehicle(id):
 
 
 @app.route('/update_vehicle/<int:id>', methods=['POST'])
+@role_required('Admin')
 def update_vehicle(id):
     name = request.form.get('name')
     plate = request.form.get('plate')
@@ -200,7 +234,7 @@ def update_vehicle(id):
 
 @app.route('/gas_rfid')
 def gas_rfid():
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
 
     conn = get_db_connection()
@@ -247,6 +281,7 @@ def gas_rfid():
     return render_template("gas&rfid_inv.html", records=records, vehicles=vehicles, summary=summary)
 
 @app.route('/add_fuel', methods=['POST'])
+@role_required('Admin')
 def add_fuel():
     # Make sure your form uses name="v_name" for the vehicle selection
     data = (
@@ -270,6 +305,7 @@ def add_fuel():
 from flask import jsonify # Ensure jsonify is imported at the top
 
 @app.route('/update_fuel', methods=['POST'])
+@role_required('Admin')
 def update_fuel():
     data = request.get_json()
     record_id = data.get('id')
@@ -305,6 +341,7 @@ def update_fuel():
 
 
 @app.route('/delete_fuel/<int:id>')
+@role_required('Admin')
 def delete_fuel(id):
     conn = get_db_connection()
     if conn:
@@ -327,7 +364,7 @@ def delete_fuel(id):
 
 @app.route('/tools-equipment')
 def tools_equipment():
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
 
     conn = get_db_connection()
@@ -365,6 +402,7 @@ def tools_equipment():
 # ➕ SAVE TOOL
 # ================================
 @app.route("/save_tool", methods=["POST"])
+@role_required('Admin')
 def save_tool():
     conn = get_db_connection()
     cur = conn.cursor()
@@ -404,6 +442,7 @@ def save_tool():
 # ✏️ UPDATE TOOL (INLINE EDIT)
 # ================================
 @app.route("/update_tool", methods=["POST"])
+@role_required('Admin')
 def update_tool():
     data = request.get_json()
 
@@ -437,6 +476,7 @@ def update_tool():
 # 🗑️ DELETE TOOL
 # ================================
 @app.route('/delete_tool/<int:id>')
+@role_required('Admin')
 def delete_tool(id):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -503,6 +543,7 @@ def maintenance_pms():
 
 # Route to save a new Maintenance Record
 @app.route('/add_maintenance', methods=['POST'])
+@role_required('Admin')
 def add_maintenance():
     # Mapping HTML form names to your Supabase columns
     date = request.form.get('date')
@@ -522,12 +563,79 @@ def add_maintenance():
     conn.close()
     return redirect(url_for('maintenance_pms'))
 
+@app.route('/update_maintenance/<int:id>', methods=['POST'])
+@role_required('Admin')
+def update_maintenance(id):
+    date = request.form.get('date')
+    vehicle = request.form.get('vehicle')          # ✅ MATCH JS
+    problem = request.form.get('problem')
+    action_taken = request.form.get('action_taken')
+    cost = request.form.get('cost')
+    mechanic = request.form.get('mechanic')
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            UPDATE maintenance_log
+            SET
+                date = %s,
+                vehicle_name = %s,
+                problem = %s,
+                action_taken = %s,
+                cost = %s,
+                mechanic = %s
+            WHERE id = %s
+        """, (
+            date,
+            vehicle,
+            problem,
+            action_taken,
+            cost,
+            mechanic,
+            id
+        ))
+        conn.commit()
+    except Exception as e:
+        print(f"Error updating maintenance record: {e}")
+        conn.rollback()
+    finally:
+        cur.close()
+        conn.close()
+
+    print(request.form)
+    return redirect(url_for('maintenance_pms'))
+
+
+@app.route('/delete_maintenance/<int:id>', methods=['POST'])
+@role_required('Admin')
+def delete_maintenance(id):
+    conn = get_db_connection()
+    if conn:
+        try:
+            cur = conn.cursor()
+            cur.execute('DELETE FROM maintenance_log WHERE id = %s', (id,))
+            conn.commit()
+            flash("Maintenance record deleted successfully!")
+            cur.close()
+        except Exception as e:
+            print(f"Delete error: {e}")
+            flash("Error deleting maintenance record.")
+            conn.rollback()
+        finally:
+            conn.close()
+        
+    return redirect(url_for('maintenance_pms'))
+    
+
 #--pms--#
 # --- ROUTE TO ADD PMS RECORD ---
 @app.route('/add_pms', methods=['POST'])
+@role_required('Admin')
 def add_pms():
     # Fetching data from the form (matches your expected modal fields)
-    v_name = request.form.get('vehicle_name')
+    v_name = request.form.get('vehicle')
     last_pms = request.form.get('last_pms_date')
     km = request.form.get('km')
     oil = request.form.get('oil_liters')
@@ -551,25 +659,73 @@ def add_pms():
     return redirect(url_for('maintenance_pms'))
 
 # --- ACTION BUTTON FUNCTIONS (DELETE) ---
-@app.route('/delete_maintenance/<int:id>')
-def delete_maintenance(id):
+@app.route('/update_pms/<int:id>', methods=['POST'])
+@role_required('Admin')
+def update_pms(id):
+    vehicle = request.form.get('vehicle')
+    last_pms = request.form.get('last_pms_date')
+    km = request.form.get('km')
+    oil = request.form.get('oil_liters')
+    next_pms = request.form.get('next_pms_date')
+
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('DELETE FROM maintenance_log WHERE id = %s', (id,))
-    conn.commit()
-    cur.close()
-    conn.close()
+    try:
+        cur.execute("""
+            UPDATE pms_log
+            SET
+                vehicle_name = %s,
+                last_pms_date = %s,
+                km = %s,
+                oil_liters = %s,
+                next_pms_date = %s
+            WHERE id = %s
+        """, (
+            vehicle,
+            last_pms,
+            km,
+            oil,
+            next_pms,
+            id
+        ))
+        conn.commit()
+    except Exception as e:
+        print(f"Error updating PMS record: {e}")
+        conn.rollback()
+    finally:
+        cur.close()
+        conn.close()
+
+    print(request.form)
+
+    if not last_pms or not next_pms:
+        flash("PMS dates cannot be empty.")
     return redirect(url_for('maintenance_pms'))
 
-@app.route('/delete_pms/<int:id>')
+    
+
+
+@app.route('/delete_pms/<int:id>', methods=['POST'])
+@role_required('Admin')
 def delete_pms(id):
     conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('DELETE FROM pms_log WHERE id = %s', (id,))
-    conn.commit()
-    cur.close()
-    conn.close()
-    return redirect(url_for('maintenance_pms'))
+
+    if conn:
+        try:
+            cur = conn.cursor()
+            cur.execute('DELETE FROM pms_log WHERE id = %s', (id,))
+            conn.commit()
+            flash("PMS record deleted successfully!")   
+            cur.close()
+            conn.close()
+        except Exception as e:
+            print(f"Delete error: {e}")
+            flash("Error deleting PMS record.")
+            conn.rollback()
+        finally:
+            conn.close()
+
+        return redirect(url_for('maintenance_pms'))
 
 # --- END maintenance & pms ---
 
@@ -579,7 +735,7 @@ def delete_pms(id):
 
 @app.route('/parts-supplies')
 def parts_supplies():
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
 
     conn = get_db_connection()
@@ -626,8 +782,9 @@ def parts_supplies():
 # ➕ ADD PART
 # ===============================
 @app.route('/add-part', methods=['POST'])
+@role_required('Admin')
 def add_part():
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
 
     name = request.form['name']
@@ -683,6 +840,7 @@ def add_part():
 # ✏️ UPDATE PART
 # ===============================
 @app.route('/update-part/<int:part_id>', methods=['POST'])
+@role_required('Admin')
 def update_part(part_id):
     stock = int(request.form['stock'])
     min_stock = int(request.form['min_stock'])
@@ -713,8 +871,9 @@ def update_part(part_id):
 # 🗑️ DELETE PART
 # ===============================
 @app.route('/delete-part/<int:part_id>', methods=['POST'])
+@role_required('Admin')
 def delete_part(part_id):
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
 
     conn = get_db_connection()
@@ -743,11 +902,23 @@ def delete_part(part_id):
 # REPORTS START
 # =======================================================
 @app.route("/reports", methods=["GET"])
+@role_required("Admin", "Staff")
 def reports():
-    if "user_name" not in session:
+    if "user_id" not in session:
         return redirect(url_for("login"))
+
     recent_reports = fetch_recent_reports()
-    return render_template("reports.html", recent_reports=recent_reports)
+    summary = fetch_reports_summary()
+
+    return render_template(
+        "reports.html",
+        recent_reports=recent_reports,
+        total_reports=summary["total_reports"],
+        reports_this_month=summary["this_month"],
+        month_name=summary["month_name"],
+        most_generated_title=summary["most_generated"]
+    )
+
 
 
 
@@ -1465,7 +1636,7 @@ def generate_report():
     )
 
     doc = Document(output_path)
-    replace_placeholder(doc, "{{generated_by}}", session.get("user_name", ""))
+    replace_placeholder(doc, "{{generated_by}}", session.get("user_position", ""))
     replace_placeholder(doc, "{{generated_on}}", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     doc.save(output_path)
 
@@ -1493,6 +1664,58 @@ def fetch_recent_reports(limit=3):
 
     return reports
 
+def fetch_reports_summary():
+    conn = get_db_connection()
+    if not conn:
+        return {
+            "total_reports": 0,
+            "this_month": 0,
+            "month_name": "",
+            "most_generated": "N/A"
+        }
+
+    cur = conn.cursor()
+
+    # Total reports (all time)
+    cur.execute("SELECT COUNT(*) FROM reports")
+    total_reports = cur.fetchone()[0]
+
+    # This month
+    cur.execute("""
+        SELECT COUNT(*)
+        FROM reports
+        WHERE EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE)
+          AND EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)
+    """)
+    this_month = cur.fetchone()[0]
+
+    # Month name (for subtitle)
+    cur.execute("""
+        SELECT TO_CHAR(CURRENT_DATE, 'Month')
+    """)
+    month_name = cur.fetchone()[0].strip()
+
+    # Most generated report type
+    cur.execute("""
+        SELECT report_type, COUNT(*) AS total
+        FROM reports
+        GROUP BY report_type
+        ORDER BY total DESC
+        LIMIT 1
+    """)
+    row = cur.fetchone()
+    most_generated = row[0].upper() if row else "N/A"
+
+    cur.close()
+    conn.close()
+
+    return {
+        "total_reports": total_reports,
+        "this_month": this_month,
+        "month_name": month_name,
+        "most_generated": most_generated
+    }
+
 @app.route("/download_report/<filename>")
 def download_report(filename):
     return send_from_directory(
@@ -1511,7 +1734,7 @@ def download_report(filename):
 # =========================
 @app.route('/records')
 def records():
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
 
     import calendar
@@ -1598,12 +1821,14 @@ def delete_record(id):
 
 @app.route('/auth/user')
 def auth_user():
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return {}, 401
 
     return {
-        "full_name": session.get("user_name"),
-        "email": "motorpooladmin@pup.edu.ph"
+        "full_name": session.get("user_fullname"),
+        "email": session.get("user_email"),
+        "position": session.get("user_position"),
+        "role": session.get("user_role")
     }
 
 @app.route('/logout', methods=['POST'])
@@ -1613,5 +1838,5 @@ def logout():
 
 
 if __name__ == '__main__':
-    sync_assigned_user()
+    #sync_assigned_user()
     app.run(debug=True, port=5055)

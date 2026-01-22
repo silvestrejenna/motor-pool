@@ -51,7 +51,7 @@
             <section class="inventory-section">
                 <div class="section-header">
                     <h1>GASOLINE & RFID CONSUMPTION</h1>
-                    <button class="btn-add" onclick="toggleFuelModal()">Add Fuel Record</button>
+                   {% if session['user_role'] == 'Admin' %}<button class="btn-add" onclick="toggleFuelModal()">Add Fuel Record</button>{% endif %}
                 </div>
 
                 <div class="summary-container">
@@ -70,7 +70,7 @@
                                     <th>Gas Bal</th><th>Purchased</th><th>After Trip</th>
                                     <th>KM Start</th><th>KM End</th><th>KM Used</th>
                                     <th>EasyTrip</th><th>AutoSweep</th>
-                                    <th class="sticky-action">Actions</th>
+                                     {% if session['user_role'] == 'Admin' %}<th class="sticky-action">Actions</th>{% endif %}
                                 </tr>
                             </thead>
                             <tbody>
@@ -142,6 +142,7 @@
                                         <input type="number" step="0.01" class="edit-mode edit-input" name="auto_rfid_bal" value="{{ row[11] }}" style="display:none;">
                                     </td>
 
+                                    {% if session['user_role'] == 'Admin' %}
                                     <td class="sticky-action">
                                         <div class="view-btns-{{ row[0] }}">
                                             <button class="btn-edit" onclick="toggleEdit('{{ row[0] }}')">Edit</button>
@@ -154,6 +155,7 @@
                                             <button class="btn-delete" onclick="deleteFuel('{{ row[0] }}')">Delete</button>
                                         </div>
                                     </td>
+                                    {% endif %}
                                 </tr>
                                 {% endfor %}
                             </tbody>
