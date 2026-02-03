@@ -1150,6 +1150,52 @@ def insert_vehicle_type_distribution(doc, distribution_rows):
     )
 
 #========VEHICLE INVENTORY REPORT END==========================================
+#=========Vehicle_details start==========================================
+@app.route("/vehicle/<int:vehicle_id>")
+def vehicle_details(vehicle_id):
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, name, plate_number, color, type, status, mileage
+        FROM vehicle
+        WHERE id = %s
+    """, (vehicle_id,))
+    vehicle = cur.fetchone()
+
+    if vehicle is None:
+        return "Vehicle not found", 404
+
+    cur.execute("""
+        SELECT date, description
+        FROM maintenance_log
+        WHERE vehicle_id = %s
+        ORDER BY date DESC
+    """, (vehicle_id,))
+    maintenance = cur.fetchall()
+
+    cur.execute("""
+        SELECT date, liters
+        FROM gas_rfid
+        WHERE vehicle_id = %s
+        ORDER BY date DESC
+    """, (vehicle_id,))
+    gas = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        "vehicle_details.html",
+        vehicle=vehicle,
+        maintenance=maintenance,
+        gas=gas
+    )
+
+#=========Vehicle_details end==========================================
 #=========MAINTENANCE & PMS REPORT START==========================================
 
 def fetch_maintenance_rows():

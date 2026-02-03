@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{{ vehicle[1] }} | Vehicle Details</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/vehicle_inv.css') }}"
+    />
+  </head>
+
+  <body>
+    <div class="main-container">
+      <!-- SIDEBAR (copied, NOT included) -->
+      <nav class="sidebar">
+        <div class="logo-section">
+          <img
+            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+          />
+        </div>
+        <ul class="inventory-selection">
+          <li class="active">VEHICLES</li>
+          <li><a href="{{ url_for('gas_rfid') }}">GASOLINE & RFID</a></li>
+          <li>
+            <a href="{{ url_for('maintenance_pms') }}">MAINTENANCE & PMS LOG</a>
+          </li>
+          <li>
+            <a href="{{ url_for('tools_equipment') }}">TOOLS & EQUIPMENT</a>
+          </li>
+          <li>
+            <a href="{{ url_for('parts_supplies') }}">PARTS & SUPPLIES</a>
+          </li>
+          <li><a href="{{ url_for('reports') }}">REPORTS</a></li>
+        </ul>
+      </nav>
+
+      <div class="content">
+        <!-- TOP NAV -->
+        <header class="top-nav">
+          <div class="nav-links">
+            <a href="{{ url_for('home') }}">HOME</a>
+            <a href="{{ url_for('inventory') }}" class="active">INVENTORY</a>
+            <a href="{{ url_for('records') }}">RECORDS</a>
+          </div>
+        </header>
+
+        <!-- VEHICLE DETAILS -->
+        <section class="inventory-section">
+          <h1>{{ vehicle[1] }}</h1>
+
+          <div class="card">
+            <p><strong>Plate Number:</strong> {{ vehicle[2] }}</p>
+            <p><strong>Color:</strong> {{ vehicle[3] }}</p>
+            <p><strong>Type:</strong> {{ vehicle[4] }}</p>
+            <p><strong>Status:</strong> {{ vehicle[5] }}</p>
+            <p><strong>Mileage:</strong> {{ vehicle[6] }} km</p>
+          </div>
+
+          <div class="card">
+            <h3>Maintenance Records</h3>
+            <table class="inventory-table">
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+              </tr>
+              {% for m in maintenance %}
+              <tr>
+                <td>{{ m[0] }}</td>
+                <td>{{ m[1] }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="2">No maintenance records</td>
+              </tr>
+              {% endfor %}
+            </table>
+          </div>
+
+          <div class="card">
+            <h3>Gasoline / RFID Records</h3>
+            <table class="inventory-table">
+              <tr>
+                <th>Date</th>
+                <th>Liters</th>
+              </tr>
+              {% for g in gas %}
+              <tr>
+                <td>{{ g[0] }}</td>
+                <td>{{ g[1] }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="2">No gas records</td>
+              </tr>
+              {% endfor %}
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </body>
+</html>
