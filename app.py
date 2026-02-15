@@ -112,9 +112,12 @@ def login():
     session['user_position'] = user[3]
     session['user_role'] = user[4]
 
-    print("LOGGED IN AS:", user[1], "ROLE:", user[4])  # DEBUG LINE
+    print("INPUT PASSWORD:", repr(password))
+    print("DB PASSWORD:", repr(user[5]))
+
 
     return redirect(url_for('home'))
+
 
 
 
