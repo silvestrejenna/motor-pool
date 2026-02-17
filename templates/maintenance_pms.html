@@ -149,18 +149,20 @@
                         {% for row in p_records %}
                         <tr id="p-row-{{ row[0] }}">
                             <td class="p-vehicle"><strong>{{ row[1] }}</strong></td>
-                            <td class="p-last">{{ row[2] }}</td>
+                            <td class="p-last" data-date="{{ row[2] }}">{{ row[2] }}</td>
                             <td class="p-km">{{ row[3] }}km</td>
                             <td class="p-oil">{{ row[4] }}L</td>
-                            <td class="p-next">{{ row[5] }}</td>
+                            <td class="p-next" data-date="{{ row[5] }}">{{ row[5] }}</td>
 
                             {% if session['user_role'] == 'Admin' %}
                             <td class="action-buttons">
                                 <button class="btn-edit" onclick="editPMS('{{ row[0] }}')">Edit</button>
                                 <button class="btn-update" id="p-upd-{{ row[0] }}" style="display:none"
                                     onclick="updatePMS('{{ row[0] }}')">Update</button>
-                                <button class="btn-cancel" id="p-cancel-{{ row[0] }}" style="display:none" onclick="cancelPMS('{{ row[0] }}')">Cancel</button>
-                                <form action="/delete_pms/{{ row[0] }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this record?');" style="display:inline;">
+                                <button class="btn-cancel" id="p-cancel-{{ row[0] }}" style="display:none" 
+                                    onclick="cancelPMS('{{ row[0] }}')">Cancel</button>
+                                <form action="/delete_pms/{{ row[0] }}" method="POST" 
+                                    onsubmit="return confirm('Are you sure you want to delete this record?');" style="display:inline;">
                                     <button type="submit" class="btn-delete">Delete</button>
                             </form>
                             </td>
