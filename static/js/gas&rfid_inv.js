@@ -125,3 +125,7 @@ function saveUpdate(id) {
         alert("An error occurred while saving.");
     });
 }
+
+function closeDrawer() {
+    document.getElementById("fuelModal").style.display = "none";
+  }
