@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>Vehicle Inventory | Motor Pool</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/vehicle_inv.css') }}"
@@ -179,7 +180,7 @@
     <!-- ================= ADD MODAL ================= -->
     <div id="addModal" class="modal-overlay">
       <div class="modal-content">
-        <span class="close-btn" onclick="toggleModal()">&times;</span>
+        <!--<span class="close-btn" onclick="toggleModal()">&times;</span> -->
         <h2>New Vehicle Record</h2>
 
         <form action="{{ url_for('add_vehicle') }}" method="POST">
@@ -202,6 +203,7 @@
           <input type="number" name="mileage" />
 
           <button type="submit" class="btn-save">Save Record</button>
+          <button type="button" class="modal-cancel" onclick="closeDrawer()">Cancel</button>
         </form>
       </div>
     </div>

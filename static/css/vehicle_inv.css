@@ -145,6 +145,7 @@ body {
   cursor: pointer;
 }
 
+
 /* Table Styling */
 .table-card {
   background: white;
@@ -261,7 +262,7 @@ body {
 .modal-content input,
 .modal-content textarea {
   width: 100%;
-  padding: 10px;
+  padding: 5px;
   margin: 10px 0 20px;
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -276,6 +277,19 @@ body {
   border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
+}
+  
+
+.modal-cancel {
+  width: 100%;
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
 }
 
 /*footer*/
