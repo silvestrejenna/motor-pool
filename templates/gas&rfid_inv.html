@@ -168,7 +168,6 @@
 
     <div id="fuelModal" class="modal-overlay">
         <div class="modal-content scrollable-modal">
-            <span class="icon" class="close-btn" onclick="toggleFuelModal()">&times;</span>
             <h2>New Fuel Record</h2>
             <form action="{{ url_for('add_fuel') }}" method="POST">
                 <div class="form-grid">
@@ -193,6 +192,7 @@
                     <label>Remarks</label><textarea name="remarks"></textarea>
                 </div>
                 <button type="submit" class="btn-save">Save Record</button>
+                 <button type="button" class="modal-cancel" onclick="closeDrawer()">Cancel</button>
             </form>
         </div>
     </div>
