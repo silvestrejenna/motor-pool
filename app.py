@@ -651,8 +651,9 @@ def delete_maintenance(id):
 @app.route('/add_pms', methods=['POST'])
 @role_required('Admin')
 def add_pms():
+    print("FORM DATA:", request.form)
     # Fetching data from the form (matches your expected modal fields)
-    v_name = request.form.get('vehicle')
+    v_name = request.form.get('vehicle_name')
     last_pms = request.form.get('last_pms_date')
     km = request.form.get('km')
     oil = request.form.get('oil_liters')
