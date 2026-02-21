@@ -1,4 +1,6 @@
+import bcrypt
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
+from dotenv import load_dotenv
 import os
 import psycopg2
 from docx import Document
@@ -6,10 +8,13 @@ import psycopg2.extras
 from flask import send_from_directory
 from datetime import datetime
 from functools import wraps
+import bcrypt
+
+load_dotenv()  # Load environment variables from .env file
 
 
 app = Flask(__name__)
-app.secret_key = "motorpool_secret_key"
+app.secret_key = os.getenv("SECRET_KEY")
 
 import calendar
 
@@ -38,9 +43,9 @@ def role_required(*allowed_roles):
     return decorator
 # =========================END ROLE BASED AUTHENTICATION=========================
 
-# --- CONNECT TO SUPABASE ---
+# --- CONNECT TO SUPABASE ---6ymhn
 def get_db_connection():
-    DB_URI = "postgresql://postgres.nudeyxdtkmgrfbepsluf:motorpool_db.312@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
+    DB_URI = os.getenv("DATABASE_URL")
     try:
         conn = psycopg2.connect(DB_URI)
         print("Connected to the database successfully.")
@@ -99,11 +104,13 @@ def login():
     if not user:
         flash("Invalid email or password")
         return redirect(url_for('index'))
+    
+    stored_password = user[5]
 
-    # ❌ PASSWORD MISMATCH
-    if password != user[5]:
+    if not bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8')):
         flash("Invalid email or password")
         return redirect(url_for('index'))
+    
 
     # ✅ LOGIN SUCCESS
     session['user_id'] = user[0]
@@ -111,10 +118,6 @@ def login():
     session['user_fullname'] = user[2]
     session['user_position'] = user[3]
     session['user_role'] = user[4]
-
-    print("INPUT PASSWORD:", repr(password))
-    print("DB PASSWORD:", repr(user[5]))
-
 
     return redirect(url_for('home'))
 
@@ -651,7 +654,6 @@ def delete_maintenance(id):
 @app.route('/add_pms', methods=['POST'])
 @role_required('Admin')
 def add_pms():
-    print("FORM DATA:", request.form)
     # Fetching data from the form (matches your expected modal fields)
     v_name = request.form.get('vehicle_name')
     last_pms = request.form.get('last_pms_date')
