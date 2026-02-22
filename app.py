@@ -1,4 +1,3 @@
-import bcrypt
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 from dotenv import load_dotenv
 import os
@@ -31,10 +30,10 @@ def role_required(*allowed_roles):
     def decorator(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
-            if 'user_role' not in session:
+            if 'user_id' not in session:
                 return redirect(url_for('index'))
 
-            if session['user_role'] not in allowed_roles:
+            if session.get('user_role') not in allowed_roles:
                 flash("Access denied")
                 return redirect(url_for('home'))
 
@@ -107,6 +106,10 @@ def login():
     
     stored_password = user[5]
 
+    if not stored_password:
+        flash("Invalid email or password")
+        return redirect(url_for('index'))
+
     if not bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8')):
         flash("Invalid email or password")
         return redirect(url_for('index'))
@@ -141,9 +144,8 @@ def home():
 # =======================================================
 
 @app.route('/inventory')
+@role_required('Admin', 'Staff')
 def inventory():
-    if 'user_id' not in session:
-        return redirect(url_for('index'))
 
     conn = get_db_connection()
     vehicles = []
@@ -253,9 +255,8 @@ def update_vehicle(id):
 # --- GASOLINE & RFID ROUTES ---
 
 @app.route('/gas_rfid')
+@role_required('Admin', 'Staff')
 def gas_rfid():
-    if 'user_id' not in session:
-        return redirect(url_for('index'))
 
     conn = get_db_connection()
     records = []
@@ -383,10 +384,9 @@ def delete_fuel(id):
 # ================================
 
 @app.route('/tools-equipment')
+@role_required('Admin', 'Staff')
 def tools_equipment():
-    if 'user_id' not in session:
-        return redirect(url_for('index'))
-
+    
     conn = get_db_connection()
     cur = conn.cursor()
 
@@ -515,6 +515,7 @@ def delete_tool(id):
 
 # --- maintenance & pms ---
 @app.route('/maintenance_pms')
+@role_required('Admin', 'Staff')
 def maintenance_pms():
     conn = get_db_connection()
     cur = conn.cursor()
@@ -754,9 +755,8 @@ def delete_pms(id):
 # =======================================================
 
 @app.route('/parts-supplies')
+@role_required('Admin', 'Staff')
 def parts_supplies():
-    if 'user_id' not in session:
-        return redirect(url_for('index'))
 
     conn = get_db_connection()
     parts = []
@@ -804,8 +804,6 @@ def parts_supplies():
 @app.route('/add-part', methods=['POST'])
 @role_required('Admin')
 def add_part():
-    if 'user_id' not in session:
-        return redirect(url_for('index'))
 
     name = request.form['name']
     category = request.form['category']
@@ -893,8 +891,6 @@ def update_part(part_id):
 @app.route('/delete-part/<int:part_id>', methods=['POST'])
 @role_required('Admin')
 def delete_part(part_id):
-    if 'user_id' not in session:
-        return redirect(url_for('index'))
 
     conn = get_db_connection()
     if conn:
@@ -924,8 +920,6 @@ def delete_part(part_id):
 @app.route("/reports", methods=["GET"])
 @role_required("Admin", "Staff")
 def reports():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
 
     recent_reports = fetch_recent_reports()
     summary = fetch_reports_summary()
@@ -1102,7 +1096,7 @@ def calculate_vehicle_summary():
     cur.execute("SELECT COUNT(*) FROM vehicle")
     total = cur.fetchone()[0]
 
-    cur.execute("SELECT COUNT(*) FROM vehicle WHERE status = 'Activee'")
+    cur.execute("SELECT COUNT(*) FROM vehicle WHERE status = 'Active'")
     active = cur.fetchone()[0]
 
     cur.execute("SELECT COUNT(*) FROM vehicle WHERE status = 'Inactive'")
@@ -1361,7 +1355,7 @@ def calculate_tools_equipment_summary():
     least_qty = cur.fetchone()
 
     cur.execute("""
-                SELECT COUNT(*) FROM tools_equipment WHERE condition = 'Excelelent'
+                SELECT COUNT(*) FROM tools_equipment WHERE condition = 'Excellent'
                 """)
     excellent = cur.fetchone()[0]
 
@@ -1488,6 +1482,7 @@ def calculate_parts_supplies_summary():
 #=========PARTS & SUPPLIES REPORT END==========================================
 
 @app.route("/generate_report", methods=["POST"])
+@role_required("Admin", "Staff")
 def generate_report():
     report_type = request.form.get("report_type")
     month = request.form.get("month")
@@ -1737,6 +1732,7 @@ def fetch_reports_summary():
     }
 
 @app.route("/download_report/<filename>")
+@role_required("Admin", "Staff")
 def download_report(filename):
     return send_from_directory(
         directory="reports_output",
@@ -1753,9 +1749,8 @@ def download_report(filename):
 # 📄 RECORDS PAGE
 # =========================
 @app.route('/records')
+@role_required('Admin', 'Staff')
 def records():
-    if 'user_id' not in session:
-        return redirect(url_for('index'))
 
     import calendar
 
@@ -1813,9 +1808,8 @@ def records():
     )
 
 @app.route("/delete_record/<int:id>", methods=["POST"])
+@role_required("Admin", "Staff")
 def delete_record(id):
-    if 'user_name' not in session:
-        return redirect(url_for('index'))
 
     conn = get_db_connection()
     cur = conn.cursor()
