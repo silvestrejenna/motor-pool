@@ -184,23 +184,28 @@
         <h2>New Vehicle Record</h2>
 
         <form action="{{ url_for('add_vehicle') }}" method="POST">
-          <label>Vehicle Name</label>
-          <input type="text" name="name" required />
+              <label>Vehicle Name</label>
+              <input type="text" name="name" required />
 
-          <label>Plate Number</label>
-          <input type="text" name="plate_number" required />
+              <label>Plate Number</label>
+              <input type="text" name="plate_number" required />
 
-          <label>Color</label>
-          <input type="text" name="color" />
+              <label>Color</label>
+              <input type="text" name="color" />
 
-          <label>Type</label>
-          <input type="text" name="type" />
+              <label>Type</label>
+              <input type="text" name="type" />
+              <label>Status</label>
+              <select name="status">
+                <option value="" disabled selected>Select status</option>
+                <option>For Repair</option>
+                <option>For PMS</option>
+                <option>For repair & PMS</option>
+                <option>Disposal</option>
+              </select>
 
-          <label>Status</label>
-          <textarea name="status"></textarea>
-
-          <label>Mileage</label>
-          <input type="number" name="mileage" />
+              <label>Mileage</label>
+              <input type="number" name="mileage" />
 
           <button type="submit" class="btn-save">Save Record</button>
           <button type="button" class="modal-cancel" onclick="closeDrawer()">Cancel</button>

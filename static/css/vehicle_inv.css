@@ -177,25 +177,7 @@ body {
   text-decoration: underline;
 }
 
-.status-pill {
-  padding: 6px 16px;
-  border-radius: 20px;
-  color: white;
-  font-size: 12px;
-}
 
-.status-pill.active {
-  background: blue;
-}
-
-.status-pill.inactive {
-  background: red;
-}
-
-.status-pill.maintenance {
-  background: #ccc;
-  color: #333;
-}
 
 /* Action Buttons */
 .action-buttons button,
@@ -257,9 +239,11 @@ body {
   height: 100%;
   padding: 40px 30px;
   box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+  gap: 10px;
 }
 
 .modal-content input,
+.modal-content select,
 .modal-content textarea {
   width: 100%;
   padding: 5px;

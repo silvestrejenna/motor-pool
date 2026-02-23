@@ -181,6 +181,7 @@
             <form action="/add_maintenance" method="POST">
                 <input type="date" name="date" required>
                 <select name="vehicle_name">
+                    <option value="" disabled selected>Select Vehicle</option>
                     {% for v in vehicles %}
                     <option value="{{ v[1] }}">{{ v[1] }}</option>
                     {% endfor %}
@@ -200,6 +201,7 @@
             <h2>New PMS Record</h2>
             <form action="/add_pms" method="POST">
                 <select name="vehicle_name">
+                    <option value="" disabled selected>Select Vehicle</option>
                     {% for v in vehicles %}
                     <option value="{{ v[1] }}">{{ v[1] }}</option>
                     {% endfor %}
