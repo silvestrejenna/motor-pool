@@ -1480,6 +1480,40 @@ def calculate_parts_supplies_summary():
     }
 
 #=========PARTS & SUPPLIES REPORT END==========================================
+#=========MONTHLY MONITORING REPORT START==========================================
+#=========ANNEX B1 START==========================================
+
+def insert_annex_b1_rows(doc, rows, monitoring_date, m_month, m_week):
+    table = doc.tables[0]  # first table in the template
+
+    for row in rows:
+        status = row[4]
+
+        if status == "Condition":
+            remark = "Condition"
+        elif status == "For PMS":
+            remark = "Upon the availability of funds (For PMS)"
+        elif status == "For Repair":
+            remark = "Upon the availability of funds (For Repair)"
+        elif status == "For repair & PMS":
+            remark = "Upon the availability of funds (For Repair & PMS)"
+        elif status == "Disposal":
+            remark = "Disposal"
+
+        else:
+            remark = " N/A"
+
+        schedule = f"{m_month} {m_week}"
+
+        cells = table.add_row().cells
+
+        cells[0].text = monitoring_date
+        cells[1].text = row[0]   # vehicle name
+        cells[2].text = remark
+        cells[3].text = schedule
+        cells[4].text = ""   # Date accomplished
+        cells[5].text = ""  # No. of days
+        
 
 @app.route("/generate_report", methods=["POST"])
 @role_required("Admin", "Staff")
@@ -1488,11 +1522,17 @@ def generate_report():
     month = request.form.get("month")
     year = request.form.get("year")
 
-    if not report_type or not month or not year:
+    if not report_type:
         return redirect(url_for("reports"))
+    
+    if report_type != "monthly_monitoring":
+        if not month or not year:
+            return redirect(url_for("reports"))
 
     import calendar
-    month_name = calendar.month_name[int(month)]
+    month_name = None
+    if month:
+        month_name = calendar.month_name[int(month)]
 
     print("Generating report:", report_type, month, year)
 
@@ -1634,6 +1674,42 @@ def generate_report():
         replace_placeholder(doc, "{{out_stock}}", str(summary["out_stock"]))
 
         doc.save(output_path)
+    
+    # ===============================
+    # MONTHLY MONITORING REPORT
+    # ===============================
+
+    elif report_type == "monthly_monitoring":
+
+        monitoring_date = request.form.get("monitoring_date")
+        m_month = request.form.get("m_month")
+        m_week = request.form.get("m_week")
+
+        if not monitoring_date:
+            print("No monitoring date selected")
+            return redirect(url_for("reports"))
+
+
+        # Convert string → datetime object
+        dt = datetime.strptime(monitoring_date, "%Y-%m-%d")
+
+        # ✅ AUTO EXTRACT FROM DATE PICKER
+        month = dt.month
+        year = dt.year
+
+        # ✅ FORMAT FOR DOCUMENT
+        monitoring_date = dt.strftime("%B %d, %Y")
+
+        rows = fetch_vehicle_rows()
+
+        doc = Document("report_template/monitoring_temp.docx")
+
+        insert_annex_b1_rows(doc, rows, monitoring_date, m_month, m_week)
+
+        doc.save(output_path)
+
+    # ✅ ADD THIS
+        
 
     else:
         print("Report type not implemented yet:", report_type)
@@ -1643,11 +1719,11 @@ def generate_report():
     # SAVE REPORT METADATA (ONCE)
     # ===============================
     save_report_record(    
-        report_type=report_type,
-        month=int(month),
-        year=int(year),
-        file_name=output_filename,
-        file_path=output_path
+            report_type=report_type,
+            month=int(month),
+            year=int(year),
+            file_name=output_filename,
+            file_path=output_path
     )
 
     doc = Document(output_path)
@@ -1656,7 +1732,8 @@ def generate_report():
     doc.save(output_path)
 
     print("Report saved at:", output_path)
-    return redirect(url_for("reports"))
+    return send_file(output_path, as_attachment=True)
+    #return redirect(url_for("reports"))
 
 
 

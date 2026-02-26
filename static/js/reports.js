@@ -62,3 +62,27 @@ async function loadUserProfile() {
         await fetch("/logout", { method: "POST" });
         window.location.href = "/";
       }
+
+document.addEventListener("DOMContentLoaded",() => {
+    const reportType = document.getElementById("reportType");
+    const defaultFields = document.getElementById("defaultFields");
+    const monthlyFields = document.getElementById("monthlyFields");
+    const defaultInputs = document.querySelectorAll("#defaultFields select");
+    const monthlyInputs = document.querySelectorAll("#monthlyFields input, #monthlyFields select");
+
+    monthlyInputs.forEach(input => input.disabled = true);
+
+    reportType.addEventListener("change", () => {
+        if (reportType.value === "monthly_monitoring") {
+            defaultFields.style.display = "none";
+            monthlyFields.style.display = "flex";
+            defaultInputs.forEach(input => input.disabled = true);
+            monthlyInputs.forEach(input => input.disabled = false);
+        } else {
+            defaultFields.style.display = "flex";
+            monthlyFields.style.display = "none";
+            defaultInputs.forEach(input => input.disabled = false);
+            monthlyInputs.forEach(input => input.disabled = true);
+        }
+    });
+});
