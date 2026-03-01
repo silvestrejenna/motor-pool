@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+  <head>
+    <title>New Request | Motor Pool</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/user_dashboard.css') }}"
+    />
+  </head>
+
+  <body>
+    <div class="layout">
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+        <img
+          src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+          class="sidebar-logo"
+        />
+        <a href="{{ url_for('user_home') }}">HOME</a>
+        <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
+        <a class="active" href="{{ url_for('user_new_request') }}"
+          >NEW REQUEST</a
+        >
+        <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
+        <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
+      </div>
+
+      <!-- MAIN -->
+      <div class="main">
+        <!-- TOP BAR -->
+        <div class="top-bar">
+          <div class="top-links">
+            <a href="{{ url_for('user_home') }}">HOME</a>
+            <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
+            <a class="active-link">NEW REQUEST</a>
+            <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
+            <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
+          </div>
+          <div class="top-icons">
+            🔔
+            <div class="profile-circle"></div>
+          </div>
+        </div>
+
+        <div class="content">
+          <h2>New Vehicle Request</h2>
+          <p class="subtitle">
+            Fill out the form to request a vehicle for your trip
+          </p>
+
+          <form id="requestForm">
+            <!-- REQUEST INFO -->
+            <div class="form-card">
+              <h3>Request Information</h3>
+
+              <label>Type of Vehicle *</label>
+              <select required>
+                <option value="">Select Vehicle Type</option>
+                <option>Toyota Vios</option>
+                <option>Toyota Hilux</option>
+                <option>Toyota Innova</option>
+              </select>
+            </div>
+
+            <!-- TRIP DETAILS -->
+            <div class="form-card">
+              <h3>Trip Details</h3>
+
+              <label>Trip Destination *</label>
+              <input
+                type="text"
+                placeholder="e.g. Provincial Capitol, Batangas City"
+                required
+              />
+
+              <label>Purpose of Trip *</label>
+              <textarea
+                placeholder="Describe the purpose of your trip..."
+                required
+              ></textarea>
+
+              <div class="form-row">
+                <div>
+                  <label>Date of Travel *</label>
+                  <input type="date" required />
+                </div>
+
+                <div>
+                  <label>Time of Departure *</label>
+                  <input type="time" required />
+                </div>
+
+                <div>
+                  <label>Number of Days *</label>
+                  <input type="number" min="1" value="1" required />
+                </div>
+
+                <div>
+                  <label>Number of Passengers *</label>
+                  <input type="number" min="1" value="1" required />
+                </div>
+              </div>
+            </div>
+
+            <!-- REQUESTOR INFO -->
+            <div class="form-card">
+              <h3>Requestor Information</h3>
+
+              <div class="form-row">
+                <div>
+                  <label>Requestor Name</label>
+                  <input type="text" value="Juan Dela Cruz" disabled />
+                </div>
+
+                <div>
+                  <label>Office/Department *</label>
+                  <select required>
+                    <option>Human Resources</option>
+                    <option>Finance</option>
+                    <option>IT Department</option>
+                  </select>
+                </div>
+              </div>
+
+              <label>Contact Number *</label>
+              <input type="text" placeholder="09123456789" required />
+            </div>
+
+            <!-- CONFIRMATION -->
+            <div class="form-card">
+              <label class="checkbox-container">
+                <input type="checkbox" required />
+                I confirm that all details provided are accurate and complete
+              </label>
+            </div>
+
+            <!-- BUTTONS -->
+            <div class="form-actions">
+              <a href="{{ url_for('user_dashboard') }}" class="btn-cancel">
+                Cancel
+              </a>
+
+              <button type="submit" class="btn-submit">Submit Request</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("requestForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          alert("Request submitted successfully! (Frontend only)");
+        });
+    </script>
+  </body>
+</html>

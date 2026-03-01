@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Trip Tickets | Motor Pool</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/user_dashboard.css') }}"
+    />
+  </head>
+
+  <body>
+    <div class="layout">
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+        <img
+          src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+          class="sidebar-logo"
+        />
+        <a href="{{ url_for('user_home') }}">HOME</a>
+        <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
+        <a href="{{ url_for('user_new_request') }}">NEW REQUEST</a>
+        <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
+        <a class="active" href="{{ url_for('user_trip_tickets') }}"
+          >TRIP TICKETS</a
+        >
+      </div>
+
+      <!-- MAIN -->
+      <div class="main">
+        <!-- TOP BAR -->
+        <div class="top-bar">
+          <div class="top-links">
+            <a href="{{ url_for('user_home') }}">HOME</a>
+            <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
+            <a href="{{ url_for('user_new_request') }}">NEW REQUEST</a>
+            <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
+            <a class="active-link">TRIP TICKETS</a>
+          </div>
+          <div class="top-icons">
+            🔔
+            <div class="profile-circle"></div>
+          </div>
+        </div>
+
+        <div class="content">
+          <h2>Trip Tickets</h2>
+          <p class="subtitle">View and download your approved trip tickets</p>
+
+          <!-- EMPTY STATE -->
+          <div id="emptyState" class="empty-ticket">
+            <div class="empty-icon">📄</div>
+            <h3>No Trip Tickets Yet</h3>
+            <p>
+              Trip tickets are generated when your vehicle requests are
+              approved.
+            </p>
+            <a href="{{ url_for('user_my_requests') }}" class="btn-cancel">
+              View My Requests
+            </a>
+          </div>
+
+          <!-- TICKET LIST -->
+          <div id="ticketList" style="display: none">
+            <div class="ticket-card">
+              <div>
+                <h4>Trip Ticket #TT-2026-0003</h4>
+                <p>Destination: DENR Regional Office</p>
+                <p>Date: Jan 26, 2026 | 03:00 PM</p>
+              </div>
+              <a href="#" class="download-btn">Download</a>
+            </div>
+
+            <div class="ticket-card">
+              <div>
+                <h4>Trip Ticket #TT-2026-0008</h4>
+                <p>Destination: Provincial Capitol</p>
+                <p>Date: Feb 02, 2026 | 09:00 AM</p>
+              </div>
+              <a href="#" class="download-btn">Download</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* Simulated tickets (frontend only) */
+      const tickets = [
+        {
+          id: "TT-2026-0003",
+          destination: "DENR Regional Office",
+          date: "Jan 26, 2026 | 03:00 PM",
+        },
+        {
+          id: "TT-2026-0008",
+          destination: "Provincial Capitol",
+          date: "Feb 02, 2026 | 09:00 AM",
+        },
+      ];
+
+      /* Toggle empty state automatically */
+      if (tickets.length > 0) {
+        document.getElementById("emptyState").style.display = "none";
+        document.getElementById("ticketList").style.display = "block";
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,645 @@
+/* ===============================
+   ROOT
+================================ */
+:root {
+  --pup-red: #800000;
+  --light-bg: #f5f5f5;
+  --card-bg: rgba(255, 255, 255, 0.9);
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: var(--light-bg);
+}
+
+/* ===============================
+   NAVBAR
+================================ */
+.navbar {
+  background: white;
+  padding: 15px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--pup-red);
+}
+
+.nav-links a {
+  margin-right: 25px;
+  text-decoration: none;
+  font-weight: bold;
+  color: #333;
+}
+
+.nav-links a:hover {
+  color: var(--pup-red);
+}
+
+.profile {
+  font-weight: bold;
+  color: var(--pup-red);
+}
+
+/* ===============================
+   HERO
+================================ */
+.hero {
+  background: url("https://images.unsplash.com/photo-1562771244-5a3f8bdf3a64")
+    center/cover;
+  height: 380px;
+  display: flex;
+  align-items: center;
+  padding-left: 80px;
+  color: white;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+.hero p {
+  font-size: 1.2rem;
+}
+
+/* ===============================
+   DASHBOARD CARDS
+================================ */
+.dashboard-actions {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: -60px;
+  padding-bottom: 60px;
+}
+
+.action-card {
+  width: 280px;
+  background: var(--card-bg);
+  backdrop-filter: blur(5px);
+  padding: 40px 20px;
+  border-radius: 20px;
+  text-align: center;
+  border: 2px solid var(--pup-red);
+  text-decoration: none;
+  color: var(--pup-red);
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.action-card:hover {
+  background: var(--pup-red);
+  color: white;
+  transform: translateY(-5px);
+}
+
+/* ===============================
+   PAGE CONTAINER
+================================ */
+.page-container {
+  padding: 50px 80px;
+}
+
+.page-container h2 {
+  color: var(--pup-red);
+  margin-bottom: 30px;
+}
+
+/* ===============================
+   FORM
+================================ */
+form {
+  max-width: 500px;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  background: var(--pup-red);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+/* ===============================
+   TABLE
+================================ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+th,
+td {
+  padding: 15px;
+  text-align: left;
+}
+
+th {
+  background: #eee;
+}
+
+tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.status-pending {
+  color: orange;
+  font-weight: bold;
+}
+
+.status-approved {
+  color: green;
+  font-weight: bold;
+}
+
+/* ===============================
+   FOOTER
+================================ */
+.footer {
+  background: #f3f0ee;
+  padding: 40px 60px 20px;
+  color: #333;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.footer-logo {
+  width: 55px;
+  margin-bottom: 10px;
+}
+
+.footer-desc {
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.footer-center h4,
+.footer-right h4 {
+  margin-bottom: 12px;
+  font-weight: bold;
+}
+
+.footer-center a {
+  display: block;
+  color: #333;
+  text-decoration: none;
+  margin-bottom: 8px;
+}
+
+.footer-center a:hover {
+  color: #7b0000;
+}
+
+.footer-right p {
+  margin-bottom: 8px;
+}
+
+.footer-divider {
+  margin: 25px 0 15px;
+  border: none;
+  border-top: 1px solid #ccc;
+}
+
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #555;
+}
+
+/* ===============================
+   HOME NAVBAR
+================================ */
+
+.top-navbar {
+  background: white;
+  padding: 15px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #800000;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logo-section img {
+  width: 55px;
+}
+
+.logo-text {
+  font-weight: bold;
+  color: #800000;
+  line-height: 1.2;
+}
+
+.icons {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.profile-icon {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: #800000;
+}
+
+/* ===============================
+   HOME HERO
+================================ */
+
+.home-hero {
+  background: url("https://images.unsplash.com/photo-1562771244-5a3f8bdf3a64")
+    center/cover no-repeat;
+  height: 450px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 80px;
+  color: white;
+}
+
+.home-hero h1 {
+  font-size: 3.5rem;
+  margin-bottom: 15px;
+}
+
+.home-hero p {
+  font-size: 1.3rem;
+  max-width: 700px;
+}
+
+/* ===============================
+   HOME ACTION CARDS
+================================ */
+
+.home-actions {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: -70px;
+  padding-bottom: 60px;
+}
+
+.home-card {
+  width: 300px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 40px 25px;
+  border-radius: 20px;
+  text-align: center;
+  border: 2px solid #800000;
+  text-decoration: none;
+  color: #800000;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.home-card:hover {
+  background: #800000;
+  color: white;
+  transform: translateY(-5px);
+}
+
+/* ===============================
+   DASHBOARD LAYOUT
+================================ */
+
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background: #800000;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-logo {
+  width: 80px;
+  margin-bottom: 40px;
+}
+
+.sidebar a {
+  color: white;
+  text-decoration: none;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.sidebar a.active {
+  border-left: 4px solid white;
+  padding-left: 10px;
+}
+
+/* ===============================
+   MAIN AREA
+================================ */
+
+.main {
+  flex: 1;
+  background: #f6f6f6;
+}
+
+.top-bar {
+  background: white;
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #800000;
+}
+
+.top-links a {
+  margin-right: 25px;
+  text-decoration: none;
+  font-weight: bold;
+  color: #800000;
+}
+
+.top-links .active-link {
+  border-bottom: 2px solid #800000;
+}
+
+.profile-circle {
+  width: 35px;
+  height: 35px;
+  background: #800000;
+  border-radius: 50%;
+}
+
+.content {
+  padding: 40px;
+}
+
+.subtitle {
+  color: #777;
+  margin-bottom: 30px;
+}
+
+/* ===============================
+   STATS
+================================ */
+
+.stats {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  flex: 1;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card h1 {
+  margin: 10px 0;
+}
+
+/* ===============================
+   CALENDAR
+================================ */
+
+.calendar-container {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+#calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.calendar-day {
+  padding: 15px;
+  text-align: center;
+  background: #eee;
+  border-radius: 8px;
+}
+
+.calendar-day.unavailable {
+  background: #800000;
+  color: white;
+}
+/* ===============================
+   FORM STYLING
+================================ */
+
+.form-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+}
+
+.form-card h3 {
+  margin-bottom: 15px;
+}
+
+.form-card label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.form-card input,
+.form-card select,
+.form-card textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 15px;
+}
+
+.form-card textarea {
+  resize: none;
+  height: 80px;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.form-row > div {
+  flex: 1;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+}
+
+.btn-cancel {
+  background: #888;
+  color: white;
+  padding: 10px 25px;
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-submit {
+  background: #800000;
+  color: white;
+  padding: 10px 25px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-submit:hover {
+  opacity: 0.9;
+}
+/* ===============================
+   MY REQUEST PAGE
+================================ */
+
+.search-box {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tab {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 20px;
+  background: #ddd;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #800000;
+  color: white;
+}
+
+.request-card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
+}
+
+.status {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.status.pending {
+  background: orange;
+  color: white;
+}
+
+.status.approved {
+  background: green;
+  color: white;
+}
+
+.status.disapproved {
+  background: red;
+  color: white;
+}
+
+.download-btn {
+  display: inline-block;
+  margin-top: 8px;
+  background: #800000;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 12px;
+}
+/* ===============================
+   TRIP TICKETS PAGE
+================================ */
+
+.empty-ticket {
+  background: white;
+  padding: 60px;
+  text-align: center;
+  border-radius: 12px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+}
+
+.empty-icon {
+  font-size: 50px;
+  margin-bottom: 15px;
+}
+
+.ticket-card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
+}

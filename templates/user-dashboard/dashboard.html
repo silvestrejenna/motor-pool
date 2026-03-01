@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Dashboard | Motor Pool</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/user_dashboard.css') }}"
+    />
+  </head>
+
+  <body>
+    <div class="layout">
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+        <img
+          src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+          class="sidebar-logo"
+        />
+        <a href="{{ url_for('user_home') }}">HOME</a>
+        <a class="active" href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
+        <a href="{{ url_for('user_new_request') }}">NEW REQUEST</a>
+        <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
+        <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
+      </div>
+
+      <!-- MAIN CONTENT -->
+      <div class="main">
+        <!-- TOP NAV -->
+        <div class="top-bar">
+          <div class="top-links">
+            <a href="{{ url_for('user_home') }}">HOME</a>
+            <a class="active-link">DASHBOARD</a>
+            <a href="{{ url_for('user_new_request') }}">NEW REQUEST</a>
+            <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
+            <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
+          </div>
+          <div class="top-icons">
+            🔔
+            <div class="profile-circle"></div>
+          </div>
+        </div>
+
+        <div class="content">
+          <h2>Welcome, Juan!</h2>
+          <p class="subtitle">Manage your vehicle requests and trip tickets</p>
+
+          <!-- STATS -->
+          <div class="stats">
+            <div class="stat-card">
+              <h4>Total Requests</h4>
+              <h1>2</h1>
+              <p>All time submissions</p>
+            </div>
+
+            <div class="stat-card">
+              <h4>Pending</h4>
+              <h1>1</h1>
+              <p>Awaiting approval</p>
+            </div>
+
+            <div class="stat-card">
+              <h4>Approved</h4>
+              <h1>0</h1>
+              <p>Ready for travel</p>
+            </div>
+          </div>
+
+          <!-- CALENDAR -->
+          <div class="calendar-container">
+            <div class="calendar-header">
+              <h3>Availability Calendar</h3>
+
+              <select id="carSelect">
+                <option value="vios">Toyota Vios</option>
+                <option value="hilux">Toyota Hilux</option>
+                <option value="innova">Toyota Innova</option>
+              </select>
+            </div>
+
+            <div id="calendar"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const unavailableDates = {
+        vios: [9, 10, 11, 12, 13],
+        hilux: [3, 4, 18, 19],
+        innova: [7, 14, 21],
+      };
+
+      const calendar = document.getElementById("calendar");
+      const carSelect = document.getElementById("carSelect");
+
+      function renderCalendar(car) {
+        calendar.innerHTML = "";
+
+        for (let day = 1; day <= 30; day++) {
+          const cell = document.createElement("div");
+          cell.classList.add("calendar-day");
+          cell.textContent = day;
+
+          if (unavailableDates[car].includes(day)) {
+            cell.classList.add("unavailable");
+          }
+
+          calendar.appendChild(cell);
+        }
+      }
+
+      carSelect.addEventListener("change", function () {
+        renderCalendar(this.value);
+      });
+
+      renderCalendar("vios");
+    </script>
+  </body>
+</html>

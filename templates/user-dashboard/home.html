@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Home | Motor Pool</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/user_dashboard.css') }}"
+    />
+  </head>
+
+  <body>
+    <!-- NAVBAR -->
+    <div class="top-navbar">
+      <div class="logo-section">
+        <img
+          src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+        />
+        <div class="logo-text">
+          PUP<br />
+          Motor Pool<br />
+          Under GASS
+        </div>
+      </div>
+
+      <div class="nav-links">
+        <a class="active" href="{{ url_for('user_home') }}">HOME</a>
+        <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
+        <a href="{{ url_for('user_new_request') }}">NEW REQUEST</a>
+        <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
+        <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
+      </div>
+
+      <div class="icons">
+        🔔
+        <div class="profile-icon"></div>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="home-hero">
+      <h1>Hi, Juan!</h1>
+      <p>
+        A Web-Based Inventory and Record Management System for The
+        Transportation and Motor Pool Section
+      </p>
+    </div>
+
+    <!-- ACTION CARDS -->
+    <div class="home-actions">
+      <a href="{{ url_for('user_new_request') }}" class="home-card">
+        NEW VEHICLE REQUEST
+      </a>
+
+      <a href="{{ url_for('user_my_requests') }}" class="home-card">
+        VIEW ALL REQUESTS
+      </a>
+
+      <a href="{{ url_for('user_trip_tickets') }}" class="home-card">
+        TRIP TICKETS
+      </a>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div>
+          <img
+            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+            class="footer-logo"
+          />
+          <p class="footer-desc">
+            A Web-Based Inventory and Record Management System for
+            <strong>Motor Pool</strong>
+          </p>
+        </div>
+
+        <div>
+          <h4>MENU</h4>
+          <a href="{{ url_for('user_home') }}">Home</a>
+          <a href="{{ url_for('user_dashboard') }}">Dashboard</a>
+          <a href="{{ url_for('user_new_request') }}">Request</a>
+          <a href="{{ url_for('user_trip_tickets') }}">Trip Ticket</a>
+        </div>
+
+        <div>
+          <h4>CONTACT US</h4>
+          <p>📧 motorpool@pup.edu.ph</p>
+          <p>📞 (02) 5335-1787</p>
+        </div>
+      </div>
+
+      <hr class="footer-divider" />
+
+      <div class="footer-bottom">
+        <span>© 2025 Polytechnic University of the Philippines</span>
+        <span>Terms of Services and Privacy Policy</span>
+      </div>
+    </footer>
+  </body>
+</html>

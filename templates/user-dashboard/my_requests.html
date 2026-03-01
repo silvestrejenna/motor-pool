@@ -1,0 +1,142 @@
+<!doctype html>
+<html>
+  <head>
+    <title>My Requests | Motor Pool</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/user_dashboard.css') }}"
+    />
+  </head>
+
+  <body>
+    <div class="layout">
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+        <img
+          src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+          class="sidebar-logo"
+        />
+        <a href="{{ url_for('user_home') }}">HOME</a>
+        <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
+        <a href="{{ url_for('user_new_request') }}">NEW REQUEST</a>
+        <a class="active" href="{{ url_for('user_my_requests') }}"
+          >MY REQUEST</a
+        >
+        <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
+      </div>
+
+      <!-- MAIN -->
+      <div class="main">
+        <!-- TOP BAR -->
+        <div class="top-bar">
+          <div class="top-links">
+            <a href="{{ url_for('user_home') }}">HOME</a>
+            <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
+            <a href="{{ url_for('user_new_request') }}">NEW REQUEST</a>
+            <a class="active-link">MY REQUEST</a>
+            <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
+          </div>
+          <div class="top-icons">
+            🔔
+            <div class="profile-circle"></div>
+          </div>
+        </div>
+
+        <div class="content">
+          <h2>My Requests</h2>
+          <p class="subtitle">View and track your vehicle requests</p>
+
+          <!-- SEARCH -->
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search by destination, request number..."
+            class="search-box"
+          />
+
+          <!-- TABS -->
+          <div class="tabs">
+            <button class="tab active" onclick="filterRequests('all')">
+              All
+            </button>
+            <button class="tab" onclick="filterRequests('pending')">
+              Pending
+            </button>
+            <button class="tab" onclick="filterRequests('approved')">
+              Approved
+            </button>
+            <button class="tab" onclick="filterRequests('disapproved')">
+              Disapproved
+            </button>
+          </div>
+
+          <!-- REQUEST LIST -->
+          <div id="requestList">
+            <!-- REQUEST 1 -->
+            <div class="request-card" data-status="pending">
+              <div>
+                <h4>Provincial Capitol, Batangas City</h4>
+                <p>VR-2026-0001 | Jan 25, 2026 | 08:00 AM | Human Resources</p>
+              </div>
+              <span class="status pending">Pending</span>
+            </div>
+
+            <!-- REQUEST 2 -->
+            <div class="request-card" data-status="approved">
+              <div>
+                <h4>DENR Regional Office, Quezon City</h4>
+                <p>VR-2026-0003 | Jan 26, 2026 | 03:00 PM | Human Resources</p>
+              </div>
+              <div>
+                <span class="status approved">Approved</span>
+                <a href="#" class="download-btn">Download Trip Ticket</a>
+              </div>
+            </div>
+
+            <!-- REQUEST 3 -->
+            <div class="request-card" data-status="disapproved">
+              <div>
+                <h4>City Hall Meeting</h4>
+                <p>VR-2026-0005 | Jan 28, 2026 | 09:00 AM | Finance</p>
+              </div>
+              <span class="status disapproved">Disapproved</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function filterRequests(status) {
+        const cards = document.querySelectorAll(".request-card");
+        const tabs = document.querySelectorAll(".tab");
+
+        tabs.forEach((tab) => tab.classList.remove("active"));
+        event.target.classList.add("active");
+
+        cards.forEach((card) => {
+          if (status === "all") {
+            card.style.display = "flex";
+          } else {
+            card.style.display =
+              card.dataset.status === status ? "flex" : "none";
+          }
+        });
+      }
+
+      // SEARCH
+      document
+        .getElementById("searchInput")
+        .addEventListener("input", function () {
+          const value = this.value.toLowerCase();
+          const cards = document.querySelectorAll(".request-card");
+
+          cards.forEach((card) => {
+            card.style.display = card.innerText.toLowerCase().includes(value)
+              ? "flex"
+              : "none";
+          });
+        });
+    </script>
+  </body>
+</html>

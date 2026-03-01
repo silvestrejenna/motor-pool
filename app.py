@@ -132,7 +132,6 @@ def home():
         return redirect(url_for('index'))
     return render_template('index.html')
 
-
 # =======================================================
 # 🚗 VEHICLE INVENTORY - NEW CODE STARTS HERE
 # =======================================================
@@ -1881,6 +1880,34 @@ def delete_record(id):
 
 
 #=====END RECORDS PAGE=====
+# =======================================================
+# TEMPRARY ROUTE FOR USER SIDE----DASHBOARD & OTHER PAGES
+# =======================================================
+
+@app.route("/user/home")
+def user_home():
+    return render_template("user-dashboard/home.html")
+
+@app.route("/user/dashboard")
+def user_dashboard():
+    return render_template("user-dashboard/dashboard.html")
+
+@app.route("/user/new-request")
+def user_new_request():
+    return render_template("user-dashboard/new_request.html")
+
+@app.route("/user/my-requests")
+def user_my_requests():
+    return render_template("user-dashboard/my_requests.html")
+
+@app.route("/user/trip-tickets")
+def user_trip_tickets():
+    return render_template("user-dashboard/trip_tickets.html")
+
+# =======================================================
+# TEMPRARY ROUTE FOR USER SIDE---end of dashboard & other pages
+# =======================================================
+
 
 @app.route('/auth/user')
 def auth_user():
