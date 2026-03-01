@@ -74,8 +74,9 @@
                     method="POST" 
                     action="{{ url_for('generate_report') }}">
 
-                    <select id="reportType" name="report_type" required>
+                    <select id="reportType" name="report_type" class="control-grid" required>
                         <option value="" disabled selected>Report Type</option>
+                        <option value="monthly_monitoring">Monthly Monitoring</option>
                         <option value="vehicle">Vehicle Inventory</option>
                         <option value="gas_rfid">Gasoline & RFID</option>
                         <option value="maintenance_log">Maintenance Log</option>
@@ -84,6 +85,7 @@
                         <option value="parts_supplies">Parts & Supplies</option>
                     </select>
 
+                  <div id="defaultFields" class="control-grid">
                     <select id="reportMonth" name="month" required>
                         <option value="" disabled selected>Month</option>
                         <option value="1">January</option>
@@ -98,7 +100,7 @@
                         <option value="10">October</option>
                         <option value="11">November</option>
                         <option value="12">December</option>
-                    </select>
+                      </select>
 
                     <select id="reportYear" name="year" required>
                         <option value="" disabled selected>Year</option>
@@ -106,7 +108,36 @@
                         <option value="2025">2025</option>
                         <option value="2026">2026</option>
                     </select>
+                  </div>
 
+                  <div id="monthlyFields" class="control-grid" style="display: none;">
+                    <label>Date of Monitoring</label>
+                    <input type="date" id="monitoringDate" name="monitoring_date" required>
+
+                    <select name="m_month">
+                        <option value="" disabled selected>Monitoring Month</option>
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+
+                    <select name="m_week">
+                        <option value="" disabled selected>Monitoring Week</option>
+                        <option value="1">1st Week to 2nd Week</option>
+                        <option value="2">2nd Week to 3rd Week</option>
+                        <option value="3">3rd Week to 4th Week</option>
+                        <option value="4">4th Week to 5th Week</option>
+                    </select>
+                  </div>
                     <button class="btn-add" type="submit">Generate Report</button>
 
                 </form>

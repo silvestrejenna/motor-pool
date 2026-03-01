@@ -99,3 +99,7 @@ async function loadUserProfile() {
     // to discard any changes the user typed, which is the safest "Cancel".
     location.reload(); 
 }
+
+function closeDrawer() {
+    document.getElementById("addModal").style.display = "none";
+  }

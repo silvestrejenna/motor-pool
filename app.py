@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
+from dotenv import load_dotenv
 import os
 import psycopg2
 from docx import Document
@@ -6,10 +7,13 @@ import psycopg2.extras
 from flask import send_from_directory
 from datetime import datetime
 from functools import wraps
+import bcrypt
+
+load_dotenv()  # Load environment variables from .env file
 
 
 app = Flask(__name__)
-app.secret_key = "motorpool_secret_key"
+app.secret_key = os.getenv("SECRET_KEY")
 
 import calendar
 
@@ -26,10 +30,10 @@ def role_required(*allowed_roles):
     def decorator(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
-            if 'user_role' not in session:
+            if 'user_id' not in session:
                 return redirect(url_for('index'))
 
-            if session['user_role'] not in allowed_roles:
+            if session.get('user_role') not in allowed_roles:
                 flash("Access denied")
                 return redirect(url_for('home'))
 
@@ -38,9 +42,9 @@ def role_required(*allowed_roles):
     return decorator
 # =========================END ROLE BASED AUTHENTICATION=========================
 
-# --- CONNECT TO SUPABASE ---
+# --- CONNECT TO SUPABASE ---6ymhn
 def get_db_connection():
-    DB_URI = "postgresql://postgres.nudeyxdtkmgrfbepsluf:motorpool_db.312@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
+    DB_URI = os.getenv("DATABASE_URL")
     try:
         conn = psycopg2.connect(DB_URI)
         print("Connected to the database successfully.")
@@ -99,11 +103,17 @@ def login():
     if not user:
         flash("Invalid email or password")
         return redirect(url_for('index'))
+    
+    stored_password = user[5]
 
-    # ❌ PASSWORD MISMATCH
-    if password != user[5]:
+    if not stored_password:
         flash("Invalid email or password")
         return redirect(url_for('index'))
+
+    if not bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8')):
+        flash("Invalid email or password")
+        return redirect(url_for('index'))
+    
 
     # ✅ LOGIN SUCCESS
     session['user_id'] = user[0]
@@ -111,10 +121,6 @@ def login():
     session['user_fullname'] = user[2]
     session['user_position'] = user[3]
     session['user_role'] = user[4]
-
-    print("INPUT PASSWORD:", repr(password))
-    print("DB PASSWORD:", repr(user[5]))
-
 
     return redirect(url_for('home'))
 
@@ -137,9 +143,8 @@ def home():
 # =======================================================
 
 @app.route('/inventory')
+@role_required('Admin', 'Staff')
 def inventory():
-    if 'user_id' not in session:
-        return redirect(url_for('index'))
 
     conn = get_db_connection()
     vehicles = []
@@ -249,9 +254,8 @@ def update_vehicle(id):
 # --- GASOLINE & RFID ROUTES ---
 
 @app.route('/gas_rfid')
+@role_required('Admin', 'Staff')
 def gas_rfid():
-    if 'user_id' not in session:
-        return redirect(url_for('index'))
 
     conn = get_db_connection()
     records = []
@@ -379,10 +383,9 @@ def delete_fuel(id):
 # ================================
 
 @app.route('/tools-equipment')
+@role_required('Admin', 'Staff')
 def tools_equipment():
-    if 'user_id' not in session:
-        return redirect(url_for('index'))
-
+    
     conn = get_db_connection()
     cur = conn.cursor()
 
@@ -511,6 +514,7 @@ def delete_tool(id):
 
 # --- maintenance & pms ---
 @app.route('/maintenance_pms')
+@role_required('Admin', 'Staff')
 def maintenance_pms():
     conn = get_db_connection()
     cur = conn.cursor()
@@ -651,7 +655,7 @@ def delete_maintenance(id):
 @role_required('Admin')
 def add_pms():
     # Fetching data from the form (matches your expected modal fields)
-    v_name = request.form.get('vehicle')
+    v_name = request.form.get('vehicle_name')
     last_pms = request.form.get('last_pms_date')
     km = request.form.get('km')
     oil = request.form.get('oil_liters')
@@ -750,9 +754,8 @@ def delete_pms(id):
 # =======================================================
 
 @app.route('/parts-supplies')
+@role_required('Admin', 'Staff')
 def parts_supplies():
-    if 'user_id' not in session:
-        return redirect(url_for('index'))
 
     conn = get_db_connection()
     parts = []
@@ -800,8 +803,6 @@ def parts_supplies():
 @app.route('/add-part', methods=['POST'])
 @role_required('Admin')
 def add_part():
-    if 'user_id' not in session:
-        return redirect(url_for('index'))
 
     name = request.form['name']
     category = request.form['category']
@@ -889,8 +890,6 @@ def update_part(part_id):
 @app.route('/delete-part/<int:part_id>', methods=['POST'])
 @role_required('Admin')
 def delete_part(part_id):
-    if 'user_id' not in session:
-        return redirect(url_for('index'))
 
     conn = get_db_connection()
     if conn:
@@ -920,8 +919,6 @@ def delete_part(part_id):
 @app.route("/reports", methods=["GET"])
 @role_required("Admin", "Staff")
 def reports():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
 
     recent_reports = fetch_recent_reports()
     summary = fetch_reports_summary()
@@ -1098,7 +1095,7 @@ def calculate_vehicle_summary():
     cur.execute("SELECT COUNT(*) FROM vehicle")
     total = cur.fetchone()[0]
 
-    cur.execute("SELECT COUNT(*) FROM vehicle WHERE status = 'Activee'")
+    cur.execute("SELECT COUNT(*) FROM vehicle WHERE status = 'Active'")
     active = cur.fetchone()[0]
 
     cur.execute("SELECT COUNT(*) FROM vehicle WHERE status = 'Inactive'")
@@ -1403,7 +1400,7 @@ def calculate_tools_equipment_summary():
     least_qty = cur.fetchone()
 
     cur.execute("""
-                SELECT COUNT(*) FROM tools_equipment WHERE condition = 'Excelelent'
+                SELECT COUNT(*) FROM tools_equipment WHERE condition = 'Excellent'
                 """)
     excellent = cur.fetchone()[0]
 
@@ -1528,18 +1525,59 @@ def calculate_parts_supplies_summary():
     }
 
 #=========PARTS & SUPPLIES REPORT END==========================================
+#=========MONTHLY MONITORING REPORT START==========================================
+#=========ANNEX B1 START==========================================
+
+def insert_annex_b1_rows(doc, rows, monitoring_date, m_month, m_week):
+    table = doc.tables[0]  # first table in the template
+
+    for row in rows:
+        status = row[4]
+
+        if status == "Condition":
+            remark = "Condition"
+        elif status == "For PMS":
+            remark = "Upon the availability of funds (For PMS)"
+        elif status == "For Repair":
+            remark = "Upon the availability of funds (For Repair)"
+        elif status == "For repair & PMS":
+            remark = "Upon the availability of funds (For Repair & PMS)"
+        elif status == "Disposal":
+            remark = "Disposal"
+
+        else:
+            remark = " N/A"
+
+        schedule = f"{m_month} {m_week}"
+
+        cells = table.add_row().cells
+
+        cells[0].text = monitoring_date
+        cells[1].text = row[0]   # vehicle name
+        cells[2].text = remark
+        cells[3].text = schedule
+        cells[4].text = ""   # Date accomplished
+        cells[5].text = ""  # No. of days
+        
 
 @app.route("/generate_report", methods=["POST"])
+@role_required("Admin", "Staff")
 def generate_report():
     report_type = request.form.get("report_type")
     month = request.form.get("month")
     year = request.form.get("year")
 
-    if not report_type or not month or not year:
+    if not report_type:
         return redirect(url_for("reports"))
+    
+    if report_type != "monthly_monitoring":
+        if not month or not year:
+            return redirect(url_for("reports"))
 
     import calendar
-    month_name = calendar.month_name[int(month)]
+    month_name = None
+    if month:
+        month_name = calendar.month_name[int(month)]
 
     print("Generating report:", report_type, month, year)
 
@@ -1681,6 +1719,42 @@ def generate_report():
         replace_placeholder(doc, "{{out_stock}}", str(summary["out_stock"]))
 
         doc.save(output_path)
+    
+    # ===============================
+    # MONTHLY MONITORING REPORT
+    # ===============================
+
+    elif report_type == "monthly_monitoring":
+
+        monitoring_date = request.form.get("monitoring_date")
+        m_month = request.form.get("m_month")
+        m_week = request.form.get("m_week")
+
+        if not monitoring_date:
+            print("No monitoring date selected")
+            return redirect(url_for("reports"))
+
+
+        # Convert string → datetime object
+        dt = datetime.strptime(monitoring_date, "%Y-%m-%d")
+
+        # ✅ AUTO EXTRACT FROM DATE PICKER
+        month = dt.month
+        year = dt.year
+
+        # ✅ FORMAT FOR DOCUMENT
+        monitoring_date = dt.strftime("%B %d, %Y")
+
+        rows = fetch_vehicle_rows()
+
+        doc = Document("report_template/monitoring_temp.docx")
+
+        insert_annex_b1_rows(doc, rows, monitoring_date, m_month, m_week)
+
+        doc.save(output_path)
+
+    # ✅ ADD THIS
+        
 
     else:
         print("Report type not implemented yet:", report_type)
@@ -1690,11 +1764,11 @@ def generate_report():
     # SAVE REPORT METADATA (ONCE)
     # ===============================
     save_report_record(    
-        report_type=report_type,
-        month=int(month),
-        year=int(year),
-        file_name=output_filename,
-        file_path=output_path
+            report_type=report_type,
+            month=int(month),
+            year=int(year),
+            file_name=output_filename,
+            file_path=output_path
     )
 
     doc = Document(output_path)
@@ -1703,7 +1777,8 @@ def generate_report():
     doc.save(output_path)
 
     print("Report saved at:", output_path)
-    return redirect(url_for("reports"))
+    return send_file(output_path, as_attachment=True)
+    #return redirect(url_for("reports"))
 
 
 
@@ -1779,6 +1854,7 @@ def fetch_reports_summary():
     }
 
 @app.route("/download_report/<filename>")
+@role_required("Admin", "Staff")
 def download_report(filename):
     return send_from_directory(
         directory="reports_output",
@@ -1795,9 +1871,8 @@ def download_report(filename):
 # 📄 RECORDS PAGE
 # =========================
 @app.route('/records')
+@role_required('Admin', 'Staff')
 def records():
-    if 'user_id' not in session:
-        return redirect(url_for('index'))
 
     import calendar
 
@@ -1855,9 +1930,8 @@ def records():
     )
 
 @app.route("/delete_record/<int:id>", methods=["POST"])
+@role_required("Admin", "Staff")
 def delete_record(id):
-    if 'user_name' not in session:
-        return redirect(url_for('index'))
 
     conn = get_db_connection()
     cur = conn.cursor()
