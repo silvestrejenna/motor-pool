@@ -74,8 +74,11 @@ def get_db_connection():
         cur.close()
         conn.close()
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET','POST'])
 def login():
+
+    if request.method == 'GET':
+        return render_template("login.html")
     session.clear()  # ✅ wipe previous user completely
 
     email = request.form.get('email')
@@ -124,8 +127,28 @@ def login():
 
     return redirect(url_for('home'))
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
 
+    if request.method == 'POST':
+        return render_template("register.html")
 
+    firstname = request.form.get('firstname')
+    lastname = request.form.get('lastname')
+    email = request.form.get('email')
+    password = request.form.get('password')
+    confirm_password = request.form.get('confirm_password')
+    full_name = f"{firstname} {lastname}"
+
+    if password != confirm_password:
+            flash("Passwords do not match")
+            return redirect(url_for('register'))
+    
+    flash("Account created successfully! Please log in.")
+    return redirect(url_for('login'))
+
+    # Continue with account creation logic
+    # ... (existing code for creating account)
 
 
 @app.route('/')
