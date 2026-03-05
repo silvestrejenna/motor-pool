@@ -1,0 +1,248 @@
+<!doctype html>
+<html>
+  <head>
+    <title>New Request | Motor Pool</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/user_dashboard.css') }}"
+    />
+  </head>
+
+  <body>
+    <!-- ================= NAVBAR ================= -->
+    <div class="top-navbar">
+      <div class="nav-left">
+        <div class="logo-section">
+          <img
+            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+          />
+
+          <div class="logo-text">
+            PUP<br />
+            Motor Pool<br />
+            Under GASS
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-center">
+        <div class="nav-links">
+          <a href="{{ url_for('user_home') }}">HOME</a>
+          <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
+          <a class="active" href="{{ url_for('user_new_request') }}"
+            >NEW REQUEST</a
+          >
+          <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
+          <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
+        </div>
+
+        <div class="nav-right">
+          <div class="profile">
+            <span class="icon">👤</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= PAGE LAYOUT ================= -->
+    <div class="dashboard-layout">
+      <!-- SIDEBAR -->
+      <nav class="sidebar">
+        <img
+          src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+        />
+
+        <ul class="inventory-selection">
+          <li>
+            <a href="{{ url_for('user_home') }}">HOME</a>
+          </li>
+
+          <li>
+            <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
+          </li>
+
+          <li class="active">
+            <a href="{{ url_for('user_new_request') }}">NEW REQUEST</a>
+          </li>
+
+          <li>
+            <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
+          </li>
+
+          <li>
+            <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- ================= CONTENT ================= -->
+      <div class="dashboard-content">
+        <h2>New Vehicle Request</h2>
+
+        <p class="subtitle">
+          Fill out the form to request a vehicle for your trip
+        </p>
+
+        <form
+          class="request-form"
+          method="POST"
+          action="{{ url_for('user_new_request') }}"
+        >
+          <!-- REQUEST INFO -->
+          <div class="form-card">
+            <h3>Request Information</h3>
+
+            <label>Type of Vehicle *</label>
+
+            <select name="vehicle_type" required>
+              <option value="">Select Vehicle Type</option>
+              <option value="Car">Car</option>
+              <option value="Van">Van</option>
+              <option value="Bus">Bus</option>
+            </select>
+          </div>
+
+          <!-- TRIP DETAILS -->
+          <div class="form-card">
+            <h3>Trip Details</h3>
+
+            <label>Trip Destination *</label>
+
+            <input
+              type="text"
+              name="destination"
+              placeholder="e.g. Provincial Capitol, Batangas City"
+              required
+            />
+
+            <label>Purpose of Trip *</label>
+
+            <textarea
+              name="purpose"
+              placeholder="Describe the purpose of your trip"
+              required
+            ></textarea>
+
+            <div class="form-row">
+              <div>
+                <label>Date of Travel *</label>
+
+                <input type="date" name="date" required />
+              </div>
+
+              <div>
+                <label>Time of Departure *</label>
+
+                <input type="time" name="time" required />
+              </div>
+
+              <div>
+                <label>Number of Days *</label>
+
+                <input type="number" name="days" min="1" required />
+              </div>
+
+              <div>
+                <label>Number of Passengers *</label>
+
+                <input type="number" name="passengers" min="1" required />
+              </div>
+            </div>
+          </div>
+
+          <!-- REQUESTOR -->
+          <div class="form-card">
+            <h3>Requestor Information</h3>
+
+            <div class="form-row two">
+              <div>
+                <label>Requestor Name *</label>
+
+                <input type="text" value="{{ fullname }}" readonly />
+              </div>
+
+              <div>
+                <label>Office / Department *</label>
+
+                <select name="office" required>
+                  <option value="Human Resources">Human Resources</option>
+                  <option value="Finance">Finance</option>
+                  <option value="Admin">Admin</option>
+                </select>
+              </div>
+            </div>
+
+            <label>Contact Number *</label>
+
+            <input
+              type="text"
+              name="contact_number"
+              placeholder="Enter reachable number"
+              required
+            />
+          </div>
+
+          <!-- CONFIRM -->
+          <div class="form-card">
+            <div class="checkbox-container">
+              <input type="checkbox" id="confirmCheck" required />
+
+              <label for="confirmCheck">
+                I confirm that all details provided are accurate and complete
+              </label>
+            </div>
+          </div>
+
+          <!-- BUTTONS -->
+          <div class="form-actions">
+            <a href="{{ url_for('user_dashboard') }}" class="btn-cancel">
+              Cancel
+            </a>
+            <button type="submit" class="btn-submit">Submit Request</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div>
+          <img
+            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+            class="footer-logo"
+          />
+
+          <p>
+            A Web-Based Inventory and Record Management System for
+            <strong>Motor Pool</strong>
+          </p>
+        </div>
+
+        <div>
+          <h4>MENU</h4>
+
+          <a href="{{ url_for('user_home') }}">Home</a>
+          <a href="{{ url_for('user_dashboard') }}">Dashboard</a>
+          <a href="{{ url_for('user_new_request') }}">Request</a>
+          <a href="{{ url_for('user_trip_tickets') }}">Trip Ticket</a>
+        </div>
+
+        <div>
+          <h4>CONTACT US</h4>
+
+          <p>📧 motorpool@pup.edu.ph</p>
+          <p>📞 (02) 5335-1787</p>
+        </div>
+      </div>
+
+      <hr class="footer-divider" />
+
+      <div class="footer-bottom">
+        <span>© 2025 Polytechnic University of the Philippines</span>
+        <span>Terms of Services and Privacy Policy</span>
+      </div>
+    </footer>
+  </body>
+</html>

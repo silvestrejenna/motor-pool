@@ -1,0 +1,232 @@
+<!doctype html>
+<html>
+  <head>
+    <title>My Requests | Motor Pool</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/user_dashboard.css') }}"
+    />
+  </head>
+
+  <body>
+    <!-- ================= NAVBAR ================= -->
+    <div class="top-navbar">
+      <div class="nav-left">
+        <div class="logo-section">
+          <img
+            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+          />
+          <div class="logo-text">
+            PUP<br />
+            Motor Pool<br />
+            Under GASS
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-center">
+        <div class="nav-links">
+          <a href="{{ url_for('user_home') }}">HOME</a>
+          <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
+          <a href="{{ url_for('user_new_request') }}">NEW REQUEST</a>
+          <a class="active" href="{{ url_for('user_my_requests') }}"
+            >MY REQUEST</a
+          >
+          <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
+        </div>
+
+        <div class="nav-right">
+          <div class="profile">
+            <span class="icon">👤</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= PAGE LAYOUT ================= -->
+    <div class="dashboard-layout">
+      <!-- SIDEBAR -->
+      <nav class="sidebar">
+        <img
+          src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+        />
+
+        <ul class="inventory-selection">
+          <li>
+            <a href="{{ url_for('user_home') }}">HOME</a>
+          </li>
+
+          <li>
+            <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
+          </li>
+
+          <li>
+            <a href="{{ url_for('user_new_request') }}">NEW REQUEST</a>
+          </li>
+
+          <li class="active">
+            <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
+          </li>
+
+          <li>
+            <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- ================= CONTENT ================= -->
+      <div class="dashboard-content">
+        <h2>My Requests</h2>
+        <p class="subtitle">View and track your vehicle requests</p>
+
+        <!-- SEARCH -->
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search by destination, request number..."
+          class="search-box"
+        />
+
+        <!-- FILTER TABS -->
+        <div class="tabs">
+          <button class="tab active" onclick="filterRequests('all', this)">
+            All
+          </button>
+
+          <button class="tab" onclick="filterRequests('pending', this)">
+            Pending
+          </button>
+
+          <button class="tab" onclick="filterRequests('approved', this)">
+            Approved
+          </button>
+
+          <button class="tab" onclick="filterRequests('disapproved', this)">
+            Disapproved
+          </button>
+        </div>
+
+        <!-- REQUEST LIST -->
+        <div id="requestList">
+          {% if requests|length == 0 %}
+
+          <div class="empty-ticket">
+            <h3>No Requests Yet</h3>
+            <p>You haven't submitted a vehicle request yet.</p>
+
+            <a href="{{ url_for('user_new_request') }}" class="btn-submit">
+              Create Request
+            </a>
+          </div>
+
+          {% else %} {% for r in requests %}
+
+          <div class="request-card" data-status="{{ r.status }}">
+            <div class="request-info">
+              <h4>{{ r.destination }}</h4>
+
+              <p>
+                {{ r.request_no }} | {{ r.date }} | {{ r.time }} | {{ r.office
+                }}
+              </p>
+            </div>
+
+            <div class="request-actions">
+              {% if r.status == "pending" %}
+
+              <span class="status pending">Pending</span>
+
+              {% elif r.status == "approved" %}
+
+              <span class="status approved">Approved</span>
+
+              <a href="#" class="download-btn"> Download Ticket </a>
+
+              {% elif r.status == "disapproved" %}
+
+              <span class="status disapproved">Disapproved</span>
+
+              {% endif %}
+            </div>
+          </div>
+
+          {% endfor %} {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div>
+          <img
+            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+            class="footer-logo"
+          />
+
+          <p>
+            A Web-Based Inventory and Record Management System for
+            <strong>Motor Pool</strong>
+          </p>
+        </div>
+
+        <div>
+          <h4>MENU</h4>
+
+          <a href="{{ url_for('user_home') }}">Home</a>
+          <a href="{{ url_for('user_dashboard') }}">Dashboard</a>
+          <a href="{{ url_for('user_new_request') }}">Request</a>
+          <a href="{{ url_for('user_trip_tickets') }}">Trip Ticket</a>
+        </div>
+
+        <div>
+          <h4>CONTACT US</h4>
+
+          <p>📧 motorpool@pup.edu.ph</p>
+          <p>📞 (02) 5335-1787</p>
+        </div>
+      </div>
+
+      <hr class="footer-divider" />
+
+      <div class="footer-bottom">
+        <span>© 2025 Polytechnic University of the Philippines</span>
+        <span>Terms of Services and Privacy Policy</span>
+      </div>
+    </footer>
+
+    <!-- ================= JAVASCRIPT ================= -->
+    <script>
+      function filterRequests(status, btn) {
+        const cards = document.querySelectorAll(".request-card");
+        const tabs = document.querySelectorAll(".tab");
+
+        tabs.forEach((tab) => tab.classList.remove("active"));
+        btn.classList.add("active");
+
+        cards.forEach((card) => {
+          if (status === "all") {
+            card.style.display = "flex";
+          } else {
+            card.style.display =
+              card.dataset.status === status ? "flex" : "none";
+          }
+        });
+      }
+
+      document
+        .getElementById("searchInput")
+        .addEventListener("input", function () {
+          const value = this.value.toLowerCase();
+          const cards = document.querySelectorAll(".request-card");
+
+          cards.forEach((card) => {
+            card.style.display = card.innerText.toLowerCase().includes(value)
+              ? "flex"
+              : "none";
+          });
+        });
+    </script>
+  </body>
+</html>

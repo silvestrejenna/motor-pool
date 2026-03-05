@@ -161,7 +161,6 @@ def home():
         return redirect(url_for('index'))
     return render_template('index.html')
 
-
 # =======================================================
 # 🚗 VEHICLE INVENTORY - NEW CODE STARTS HERE
 # =======================================================
@@ -1187,6 +1186,52 @@ def insert_vehicle_type_distribution(doc, distribution_rows):
     )
 
 #========VEHICLE INVENTORY REPORT END==========================================
+#=========Vehicle_details start==========================================
+@app.route("/vehicle/<int:vehicle_id>")
+def vehicle_details(vehicle_id):
+    if 'user_name' not in session:
+        return redirect(url_for('index'))
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, name, plate_number, color, type, status, mileage
+        FROM vehicle
+        WHERE id = %s
+    """, (vehicle_id,))
+    vehicle = cur.fetchone()
+
+    if vehicle is None:
+        return "Vehicle not found", 404
+
+    cur.execute("""
+        SELECT date, description
+        FROM maintenance_log
+        WHERE vehicle_id = %s
+        ORDER BY date DESC
+    """, (vehicle_id,))
+    maintenance = cur.fetchall()
+
+    cur.execute("""
+        SELECT date, liters
+        FROM gas_rfid
+        WHERE vehicle_id = %s
+        ORDER BY date DESC
+    """, (vehicle_id,))
+    gas = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        "vehicle_details.html",
+        vehicle=vehicle,
+        maintenance=maintenance,
+        gas=gas
+    )
+
+#=========Vehicle_details end==========================================
 #=========MAINTENANCE & PMS REPORT START==========================================
 
 def fetch_maintenance_rows():
@@ -2009,6 +2054,182 @@ def delete_record(id):
 
 
 #=====END RECORDS PAGE=====
+
+
+# =======================================================
+# USER SIDE ROUTES
+# =======================================================
+
+# ================= HOME PAGE =================
+@app.route("/user/home")
+def user_home():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    firstname = (session.get("user_fullname") or "User").split()[0]
+
+    return render_template(
+        "user-dashboard/home.html",
+        firstname=firstname
+    )
+
+# ================= DASHBOARD =================
+@app.route("/user_dashboard")
+def user_dashboard():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    user_id = session.get("user_id")
+
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur.execute("""
+        SELECT
+            COUNT(*) AS total,
+            COUNT(*) FILTER (WHERE status='pending') AS pending,
+            COUNT(*) FILTER (WHERE status='approved') AS approved
+        FROM vehicle_requests
+        WHERE user_id = %s
+    """, (user_id,))
+
+    stats = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    firstname = (session.get("user_fullname") or "User").split()[0]
+
+    return render_template(
+        "user-dashboard/dashboard.html",
+        firstname=firstname,
+        total_requests=stats["total"],
+        pending_requests=stats["pending"],
+        approved_requests=stats["approved"]
+    )
+
+
+# ================= NEW REQUEST PAGE =================
+@app.route("/user/new-request", methods=["GET", "POST"])
+def user_new_request():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    user_id = session.get("user_id")
+
+    if request.method == "POST":
+
+        destination = request.form.get("destination")
+        purpose = request.form.get("purpose")
+        date = request.form.get("date")
+        time = request.form.get("time")
+        days = request.form.get("days")
+        passengers = request.form.get("passengers")
+        office = request.form.get("office")
+
+        if not destination or not purpose:
+            flash("Please fill in all required fields.")
+            return redirect(url_for("user_new_request"))
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute("""
+            INSERT INTO vehicle_requests
+            (user_id, destination, purpose, date, time, days, passengers, office, status)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,'pending')
+        """,
+        (user_id, destination, purpose, date, time, days, passengers, office)
+        )
+
+        conn.commit()
+
+        cur.close()
+        conn.close()
+
+        return redirect(url_for("user_my_requests"))
+
+    firstname = (session.get("user_fullname") or "User").split()[0]
+
+    return render_template(
+        "user-dashboard/new_request.html",
+        firstname=firstname
+    )
+
+
+# ================= MY REQUESTS =================
+@app.route("/user_my_requests")
+def user_my_requests():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    user_id = session.get("user_id")
+
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur.execute("""
+        SELECT *
+        FROM vehicle_requests
+        WHERE user_id = %s
+        ORDER BY created_at DESC
+    """, (user_id,))
+
+    requests = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    firstname = (session.get("user_fullname") or "User").split()[0]
+
+    return render_template(
+        "user-dashboard/my_requests.html",
+        requests=requests,
+        firstname=firstname
+    )
+
+
+# ================= TRIP TICKETS =================
+@app.route("/user/trip-tickets")
+def user_trip_tickets():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    user_id = session.get("user_id")
+
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur.execute("""
+        SELECT *
+        FROM vehicle_requests
+        WHERE user_id = %s
+        AND status = 'approved'
+        AND trip_ticket_file IS NOT NULL
+        ORDER BY created_at DESC
+    """, (user_id,))
+
+    tickets = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    firstname = (session.get("user_fullname") or "User").split()[0]
+
+    return render_template(
+        "user-dashboard/trip_tickets.html",
+        tickets=tickets,
+        firstname=firstname
+    )
+# =======================================================
+# USER SIDE ROUTES---end
+# =======================================================
+
 
 @app.route('/auth/user')
 def auth_user():
