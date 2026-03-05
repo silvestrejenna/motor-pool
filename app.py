@@ -74,8 +74,11 @@ def get_db_connection():
         cur.close()
         conn.close()
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET','POST'])
 def login():
+
+    if request.method == 'GET':
+        return render_template("login.html")
     session.clear()  # ✅ wipe previous user completely
 
     email = request.form.get('email')
@@ -124,8 +127,28 @@ def login():
 
     return redirect(url_for('home'))
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
 
+    if request.method == 'POST':
+        return render_template("register.html")
 
+    firstname = request.form.get('firstname')
+    lastname = request.form.get('lastname')
+    email = request.form.get('email')
+    password = request.form.get('password')
+    confirm_password = request.form.get('confirm_password')
+    full_name = f"{firstname} {lastname}"
+
+    if password != confirm_password:
+            flash("Passwords do not match")
+            return redirect(url_for('register'))
+    
+    flash("Account created successfully! Please log in.")
+    return redirect(url_for('login'))
+
+    # Continue with account creation logic
+    # ... (existing code for creating account)
 
 
 @app.route('/')
@@ -1528,7 +1551,7 @@ def calculate_parts_supplies_summary():
 #=========MONTHLY MONITORING REPORT START==========================================
 #=========ANNEX B1 START==========================================
 
-def insert_annex_b1_rows(doc, rows, monitoring_date, m_month, m_week):
+def insert_annex_b1_rows(doc, rows, monitoring_date, schedule):
     table = doc.tables[0]  # first table in the template
 
     for row in rows:
@@ -1540,15 +1563,13 @@ def insert_annex_b1_rows(doc, rows, monitoring_date, m_month, m_week):
             remark = "Upon the availability of funds (For PMS)"
         elif status == "For Repair":
             remark = "Upon the availability of funds (For Repair)"
-        elif status == "For repair & PMS":
+        elif status == "For Repair & PMS":
             remark = "Upon the availability of funds (For Repair & PMS)"
         elif status == "Disposal":
             remark = "Disposal"
 
         else:
             remark = " N/A"
-
-        schedule = f"{m_month} {m_week}"
 
         cells = table.add_row().cells
 
@@ -1559,6 +1580,70 @@ def insert_annex_b1_rows(doc, rows, monitoring_date, m_month, m_week):
         cells[4].text = ""   # Date accomplished
         cells[5].text = ""  # No. of days
         
+#=========ANNEX B1 END==========================================
+#=========ANNEX B2 START==========================================
+def insert_annex_b2_rows(doc, rows, schedule):
+    table = doc.tables[1]  # 2nd table in the template
+
+    for row in rows:
+        status = row[4]
+
+        if status == "Condition":
+            detail = "Condition"
+        elif status == "For PMS":
+            detail = "Upon the availability of funds (For PMS)"
+        elif status == "For Repair":
+            detail = "Upon the availability of funds (For Repair)"
+        elif status == "For Repair & PMS":
+            detail = "Upon the availability of funds (For Repair & PMS)"
+        elif status == "Disposal":
+            detail = "Disposal"
+
+        else:
+            detail = " N/A"
+
+        cells = table.add_row().cells
+
+        cells[0].text = row[0]
+        cells[1].text = detail
+        cells[2].text = schedule
+        cells[3].text = ""   # Date accomplished
+        cells[4].text = ""   # No. of days
+        
+
+#=========ANNEX B2 END==========================================
+#=========ANNEX B3 START==========================================
+def insert_annex_b3_rows(doc, rows):
+    table = doc.tables[2]  # 3rd table in the template
+
+    for row in rows:
+        status = row[4]
+
+        if status == "Condition":
+            detail = "Condition"
+        elif status == "For PMS":
+            detail = "Upon the availability of funds (For PMS)"
+        elif status == "For Repair":
+            detail = "Upon the availability of funds (For Repair)"
+        elif status == "For Repair & PMS":
+            detail = "Upon the availability of funds (For Repair & PMS)"
+        elif status == "Disposal":
+            detail = "Disposal"
+
+        else:
+            detail = " N/A"
+
+        cells = table.add_row().cells
+
+        cells[0].text = row[0]
+        cells[1].text = detail
+        cells[2].text = ""   #SI / OR
+        cells[3].text = ""   # Date procured
+        cells[4].text = ""   # blank
+        cells[5].text = ""   # date accomplished
+        cells[6].text = ""   # remarks
+        cells[7].text = ""   # no. of days
+#=========ANNEX B3 END==========================================
 
 @app.route("/generate_report", methods=["POST"])
 @role_required("Admin", "Staff")
@@ -1730,6 +1815,19 @@ def generate_report():
         m_month = request.form.get("m_month")
         m_week = request.form.get("m_week")
 
+        week_map = {
+            "1": "1st Week to 2nd Week",
+            "2": "2nd Week to 3rd Week",
+            "3": "3rd Week to 4th Week",
+            "4": "4th Week to 5th Week",
+        }
+
+        week_label = week_map.get(m_week, "")
+
+        month_name = calendar.month_name[int(m_month)]
+
+        schedule = f"{month_name} {week_label}"
+
         if not monitoring_date:
             print("No monitoring date selected")
             return redirect(url_for("reports"))
@@ -1749,7 +1847,9 @@ def generate_report():
 
         doc = Document("report_template/monitoring_temp.docx")
 
-        insert_annex_b1_rows(doc, rows, monitoring_date, m_month, m_week)
+        insert_annex_b1_rows(doc, rows, monitoring_date, schedule)
+        insert_annex_b2_rows(doc, rows, schedule)
+        insert_annex_b3_rows(doc, rows)
 
         doc.save(output_path)
 
