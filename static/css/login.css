@@ -148,3 +148,16 @@ input {
     width: 50px;
   }
 }
+
+.flash-messages{
+    margin-bottom:15px;
+}
+
+.flash-messages{
+    background:#ffdddd;
+    color:#a30000;
+    padding:10px;
+    border-radius:6px;
+    font-size:14px;
+    text-align:center;
+}
