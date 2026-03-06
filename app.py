@@ -8,6 +8,7 @@ from flask import send_from_directory
 from datetime import datetime
 from functools import wraps
 import bcrypt
+import calendar
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -15,7 +16,8 @@ load_dotenv()  # Load environment variables from .env file
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 
-import calendar
+ALLOWED_DOMAINS = ["@pup.edu.ph", "@iskolarngbayan.pup.edu.ph"]
+TEST_EMAILS = ["silvestrejennamae09@gmail.com"]
 
 @app.template_filter('month_name')
 def month_name_filter(month_number):
@@ -130,7 +132,7 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
 
-    if request.method == 'POST':
+    if request.method == 'GET':
         return render_template("register.html")
 
     firstname = request.form.get('firstname')
@@ -140,15 +142,53 @@ def register():
     confirm_password = request.form.get('confirm_password')
     full_name = f"{firstname} {lastname}"
 
+    #EMAIL VALIDATION
+    if not allowed_email(email):
+        flash("Please use a valid PUP email address")
+        return redirect(url_for('register'))
+
     if password != confirm_password:
             flash("Passwords do not match")
             return redirect(url_for('register'))
+
+    hashed_password = bcrypt.hashpw(
+        password.encode('utf-8'),
+        bcrypt.gensalt()
+    ).decode('utf-8')
     
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+    existing_user = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if existing_user:
+        flash("An account with this email already exists.")
+        return redirect(url_for('register'))
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+                INSERT INTO users (email, full_name, role, position, password)
+                VALUES (%s, %s, %s, %s, %s)
+                """, (email, full_name, "Client", "EndUser", hashed_password))
+    conn.commit()
+    cur.close()
+    conn.close()
+
     flash("Account created successfully! Please log in.")
     return redirect(url_for('login'))
 
     # Continue with account creation logic
     # ... (existing code for creating account)
+
+#=========================== CREATE ACCOUNT OTP ==================================
+def allowed_email(email):
+    if email.endswith(tuple(ALLOWED_DOMAINS)) or email in TEST_EMAILS:
+        return True
+    return False
 
 
 @app.route('/')
