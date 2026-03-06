@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 from dotenv import load_dotenv
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import os
 import psycopg2
 from docx import Document
@@ -7,8 +9,10 @@ import psycopg2.extras
 from flask import send_from_directory
 from datetime import datetime
 from functools import wraps
-import bcrypt
+import bcrypt, random, smtplib
 import calendar
+
+
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -150,14 +154,11 @@ def register():
     if password != confirm_password:
             flash("Passwords do not match")
             return redirect(url_for('register'))
-
-    hashed_password = bcrypt.hashpw(
-        password.encode('utf-8'),
-        bcrypt.gensalt()
-    ).decode('utf-8')
     
+    #CHECK DUPLICATE EMAIL
     conn = get_db_connection()
     cur = conn.cursor()
+
     cur.execute("SELECT id FROM users WHERE email = %s", (email,))
     existing_user = cur.fetchone()
     cur.close()
@@ -166,20 +167,24 @@ def register():
     if existing_user:
         flash("An account with this email already exists.")
         return redirect(url_for('register'))
+    
+    #HASH PASSWORD
+    hashed_password = bcrypt.hashpw(
+        password.encode('utf-8'),
+        bcrypt.gensalt()
+    ).decode('utf-8')
 
-    conn = get_db_connection()
-    cur = conn.cursor()
+    #GENERATE OTP
+    otp = generate_otp()
 
-    cur.execute("""
-                INSERT INTO users (email, full_name, role, position, password)
-                VALUES (%s, %s, %s, %s, %s)
-                """, (email, full_name, "Client", "EndUser", hashed_password))
-    conn.commit()
-    cur.close()
-    conn.close()
+    #STORE TEMPT DATA
+    session['otp'] = otp
+    session['register_email'] = email
+    session['register_fullname'] = full_name
+    session['register_password'] = hashed_password
 
-    flash("Account created successfully! Please log in.")
-    return redirect(url_for('login'))
+    send_otp_email(email, otp)
+    return redirect(url_for('verify_otp'))
 
     # Continue with account creation logic
     # ... (existing code for creating account)
@@ -2269,6 +2274,67 @@ def user_trip_tickets():
 # =======================================================
 # USER SIDE ROUTES---end
 # =======================================================
+
+#================ AUTH/OTP IN ACCOUNT CREATION ===========
+@app.route('/verify_otp', methods=['GET', 'POST'])
+def verify_otp():
+    if request.method == "POST":
+        user_otp = request.form.get("otp")
+
+        if user_otp == session.get('otp'):
+
+            email = session.get('register_email')
+            fullname = session.get('register_fullname')
+            hashed_password = session.get('register_password')
+
+            conn = get_db_connection()
+            cur = conn.cursor()
+
+            cur.execute("""
+                        INSERT INTO users (email, full_name, role, position, password)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, (email, fullname, "Client", "EndUser", hashed_password))
+            
+            conn.commit()
+            cur.close()
+            conn.close()
+
+            session.pop('otp', None)
+
+            flash("Account created succesfully!")
+            return redirect(url_for('login'))
+        
+        else:
+            flash("Invalid OTP")
+
+    return render_template("verify_otp.html")
+
+def generate_otp():
+    return str(random.randint(100000, 999999))
+
+def send_otp_email(receiver_email, otp):
+    
+    sender_email = "tmps.pup@gmail.com"
+    sender_password = "ayxj yrer wmud irxl"
+
+    subject = "PUP Motor Pool Account Verification"
+    body = f"Your OTP code is: {otp}"
+
+    msg = MIMEMultipart()
+    msg['FROM'] = sender_email
+    msg['TO'] = receiver_email
+    msg['subject'] = subject
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    server.login(sender_email, sender_password)
+
+    text = msg.as_string()
+    server.sendmail(sender_email, receiver_email, text)
+
+    server.quit()
 
 
 @app.route('/auth/user')
