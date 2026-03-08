@@ -131,7 +131,19 @@ def login():
     session['user_position'] = user[3]
     session['user_role'] = user[4]
 
-    return redirect(url_for('home'))
+    role = session.get('user_role')
+
+    if role == "Admin":
+        return redirect(url_for('home'))
+    elif role == "Staff":
+        return redirect(url_for('home'))
+    elif role == "Client":
+        return redirect(url_for('user_home'))
+    else:
+        flash("Role does not exist")
+        return redirect(url_for('index'))
+
+    
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():

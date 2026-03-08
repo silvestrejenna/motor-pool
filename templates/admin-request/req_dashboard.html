@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vehicle Request | Motor Pool</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/vehicle_inv.css') }}"
+    />
+  </head>
+
+  <body>
+    <div class="main-container">
+      <!-- ================= SIDEBAR ================= -->
+      <nav class="sidebar">
+        <div class="logo-section">
+          <img
+            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+            alt="Logo"
+          />
+        </div>
+
+        <ul class="inventory-selection">]
+          <li><a href="{{ url_for('reports') }}">REPORTS</a></li>
+          <li class="active">VEHICLE REQUESTS</li>
+        </ul>
+      </nav>
+
+      <!-- CONTENT -->
+      <div class="dashboard-content">
+        <h2>Welcome, {{ firstname }}!</h2>
+        <p class="subtitle">Manage your vehicle requests and trip tickets</p>
+
+        <!-- STATS -->
+        <div class="stats">
+          <div class="stat-card">
+            <h4>Total Requests</h4>
+            <h1>{{ total_requests }}</h1>
+            <p>All time submissions</p>
+          </div>
+
+          <div class="stat-card">
+            <h4>Pending</h4>
+            <h1>{{ pending_requests }}</h1>
+            <p>Awaiting approval</p>
+          </div>
+
+          <div class="stat-card">
+            <h4>Approved</h4>
+            <h1>{{ approved_requests }}</h1>
+            <p>Ready for travel</p>
+          </div>
+        </div>
+
+        <!-- CALENDAR -->
+        <div class="calendar-container">
+          <div class="calendar-header">
+            <h3>Availability Calendar</h3>
+
+            <select id="carSelect">
+              <option value="vios">Toyota Vios</option>
+              <option value="hilux">Toyota Hilux</option>
+              <option value="innova">Toyota Innova</option>
+            </select>
+          </div>
+
+          <div id="calendar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div>
+          <img
+            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+            class="footer-logo"
+          />
+          <p>
+            A Web-Based Inventory and Record Management System for
+            <strong>Motor Pool</strong>
+          </p>
+        </div>
+
+        <div>
+          <h4>MENU</h4>
+          <a href="{{ url_for('user_home') }}">Home</a>
+          <a href="{{ url_for('user_dashboard') }}">Dashboard</a>
+          <a href="{{ url_for('user_new_request') }}">Request</a>
+          <a href="{{ url_for('user_trip_tickets') }}">Trip Ticket</a>
+        </div>
+
+        <div>
+          <h4>CONTACT US</h4>
+          <p>📧 motorpool@pup.edu.ph</p>
+          <p>📞 (02) 5335-1787</p>
+        </div>
+      </div>
+
+      <hr class="footer-divider" />
+
+      <div class="footer-bottom">
+        <span>© 2025 Polytechnic University of the Philippines</span>
+        <span>Terms of Services and Privacy Policy</span>
+      </div>
+    </footer>
+
+    <script>
+      const unavailableDates = {
+        vios: [9, 10, 11, 12, 13],
+        hilux: [3, 4, 18, 19],
+        innova: [7, 14, 21],
+      };
+
+      const calendar = document.getElementById("calendar");
+      const carSelect = document.getElementById("carSelect");
+
+      function renderCalendar(car) {
+        calendar.innerHTML = "";
+        for (let day = 1; day <= 30; day++) {
+          const cell = document.createElement("div");
+          cell.classList.add("calendar-day");
+          cell.textContent = day;
+
+          if (unavailableDates[car].includes(day)) {
+            cell.classList.add("unavailable");
+          }
+          calendar.appendChild(cell);
+        }
+      }
+
+      carSelect.addEventListener("change", function () {
+        renderCalendar(this.value);
+      });
+
+      renderCalendar("vios");
+
+      function toggleProfile() {
+        document.getElementById("profileDropdown").classList.toggle("show");
+      }
+
+      window.onclick = function (e) {
+        if (!e.target.matches(".icon")) {
+          var dropdown = document.getElementById("profileDropdown");
+          if (dropdown.classList.contains("show")) {
+            dropdown.classList.remove("show");
+          }
+        }
+      };
+    </script>
+  </body>
+</html>
