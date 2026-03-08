@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Records - Motor Pool</title>
+  <title>VEHICLE REQUESTS</title>
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/records.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/vehicle_inv.css')}}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/vehicle_inv.css') }}">
 </head>
 <body>
 
@@ -22,8 +22,9 @@
         </div>
 
         <ul class="inventory-selection">
-          <li><a class="active">REPORTS</a></li>
-          <li><a href="{{ url_for('req_dashboard') }}">VEHICLE REQUEST</a></li>
+          <li><a href="{{ url_for('reports')}}">REPORTS</a></li>
+          <li><a href="{{ url_for('req_dashboard') }}">VEHICLE REQUEST DASHBOARD</a></li>
+          <li><a class="active">VEHICLE REQUEST</a></li>
         </ul>
       </nav>
 
@@ -57,12 +58,17 @@
     <!-- STATS -->
     <section class="stats-grid">
       <div class="stat-card">
-        <span class="label">Total Records</span>
+        <span class="label">Total Requests</span>
         <span class="value">{{ total_reports }}</span>
       </div>
 
       <div class="stat-card">
-        <span class="label">This Month</span>
+        <span class="label">Pending Requests</span>
+        <span class="value">{{ this_month }}</span>
+      </div>
+
+      <div class="stat-card">
+        <span class="label">Approved Requests</span>
         <span class="value">{{ this_month }}</span>
       </div>
     </section>
@@ -106,11 +112,11 @@
   <table class="records-table">
     <thead>
       <tr>
-        <th>Record ID</th>
+        <th>Request ID</th>
         <th>Name</th>
-        <th>Type</th>
-        <th>Month</th>
-        <th>Date Stored</th>
+        <th>Name of Department</th>
+        <th>Date</th>
+        <th>Status</th>
         <th>Actions</th>
       </tr>
     </thead>
