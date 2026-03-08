@@ -1,154 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Vehicle Request | Motor Pool</title>
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/vehicle_inv.css') }}"
-    />
-  </head>
+    <title>Admin - Vehicle Requests</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/req_dashboard.css') }}">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <aside class="sidebar">
+            <div class="logo-box">
+                <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" alt="Logo">
+            </div>
+            <nav class="side-nav">
+                <li><a href="{{ url_for('records') }}">REPORTS</a></li>
+                <a href="#" class="active">VEHICLE REQUESTS DASHBOARD</a>
+                <li><a href="{{ url_for('requests')}}">VEHICLE REQUESTS</a></li>
+            </nav>
+        </aside>
 
-  <body>
-    <div class="main-container">
-      <!-- ================= SIDEBAR ================= -->
-      <nav class="sidebar">
-        <div class="logo-section">
-          <img
-            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-            alt="Logo"
-          />
-        </div>
+        <main class="main-content">
+            <header class="header-nav">
+                <div class="nav-left">
+                    <a href="#">HOME</a>
+                    <a href="#">INVENTORY</a>
+                    <a href="#" class="active">RECORD</a>
+                </div>
+                <div class="nav-right">
+                    <span class="notif-bell">🔔</span>
+                    <div class="profile-circle">👤</div>
+                </div>
+            </header>
 
-        <ul class="inventory-selection">]
-          <li><a href="{{ url_for('reports') }}">REPORTS</a></li>
-          <li class="active">VEHICLE REQUESTS</li>
-        </ul>
-      </nav>
+            <section class="content-padding">
+                <div class="title-group">
+                    <h1>VEHICLE REQUEST MANAGEMENT</h1>
+                    <p>Manage and monitor all vehicle request submissions.</p>
+                </div>
 
-      <!-- CONTENT -->
-      <div class="dashboard-content">
-        <h2>Welcome, {{ firstname }}!</h2>
-        <p class="subtitle">Manage your vehicle requests and trip tickets</p>
+                <div class="stats-container">
+                    <div class="stat-box">
+                        <span class="stat-label">Total Requests</span>
+                        <span class="stat-num">5</span>
+                        <span class="stat-sub">All time submissions</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Pending</span>
+                        <span class="stat-num highlight-pending">2</span>
+                        <span class="stat-sub">Awaiting approval</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Approved</span>
+                        <span class="stat-num highlight-approved">3</span>
+                        <span class="stat-sub">Approved Request This Month</span>
+                    </div>
+                </div>
 
-        <!-- STATS -->
-        <div class="stats">
-          <div class="stat-card">
-            <h4>Total Requests</h4>
-            <h1>{{ total_requests }}</h1>
-            <p>All time submissions</p>
-          </div>
-
-          <div class="stat-card">
-            <h4>Pending</h4>
-            <h1>{{ pending_requests }}</h1>
-            <p>Awaiting approval</p>
-          </div>
-
-          <div class="stat-card">
-            <h4>Approved</h4>
-            <h1>{{ approved_requests }}</h1>
-            <p>Ready for travel</p>
-          </div>
-        </div>
-
-        <!-- CALENDAR -->
-        <div class="calendar-container">
-          <div class="calendar-header">
-            <h3>Availability Calendar</h3>
-
-            <select id="carSelect">
-              <option value="vios">Toyota Vios</option>
-              <option value="hilux">Toyota Hilux</option>
-              <option value="innova">Toyota Innova</option>
-            </select>
-          </div>
-
-          <div id="calendar"></div>
-        </div>
-      </div>
+                <div class="calendar-card">
+                    <div class="calendar-header">
+                        <h3>Vehicle Availability Calendar</h3>
+                        <div class="calendar-controls">
+                            <select class="vehicle-select">
+                                <option>Toyota Vios</option>
+                                <option>Hyundai Starex</option>
+                            </select>
+                            <button class="btn-edit-cal">Edit Calendar</button>
+                        </div>
+                    </div>
+                    
+                    <div class="calendar-grid-wrapper">
+                        <div class="month-selector">
+                            <span></span>
+                            <strong>Sep 2025</strong>
+                            <span>></span>
+                        </div>
+                        <img src="{{ url_for('static', filename='images/calendar-placeholder.png') }}" class="cal-img" alt="Calendar View">
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
-
-    <!-- ================= FOOTER ================= -->
-    <footer class="footer">
-      <div class="footer-content">
-        <div>
-          <img
-            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-            class="footer-logo"
-          />
-          <p>
-            A Web-Based Inventory and Record Management System for
-            <strong>Motor Pool</strong>
-          </p>
-        </div>
-
-        <div>
-          <h4>MENU</h4>
-          <a href="{{ url_for('user_home') }}">Home</a>
-          <a href="{{ url_for('user_dashboard') }}">Dashboard</a>
-          <a href="{{ url_for('user_new_request') }}">Request</a>
-          <a href="{{ url_for('user_trip_tickets') }}">Trip Ticket</a>
-        </div>
-
-        <div>
-          <h4>CONTACT US</h4>
-          <p>📧 motorpool@pup.edu.ph</p>
-          <p>📞 (02) 5335-1787</p>
-        </div>
-      </div>
-
-      <hr class="footer-divider" />
-
-      <div class="footer-bottom">
-        <span>© 2025 Polytechnic University of the Philippines</span>
-        <span>Terms of Services and Privacy Policy</span>
-      </div>
-    </footer>
-
-    <script>
-      const unavailableDates = {
-        vios: [9, 10, 11, 12, 13],
-        hilux: [3, 4, 18, 19],
-        innova: [7, 14, 21],
-      };
-
-      const calendar = document.getElementById("calendar");
-      const carSelect = document.getElementById("carSelect");
-
-      function renderCalendar(car) {
-        calendar.innerHTML = "";
-        for (let day = 1; day <= 30; day++) {
-          const cell = document.createElement("div");
-          cell.classList.add("calendar-day");
-          cell.textContent = day;
-
-          if (unavailableDates[car].includes(day)) {
-            cell.classList.add("unavailable");
-          }
-          calendar.appendChild(cell);
-        }
-      }
-
-      carSelect.addEventListener("change", function () {
-        renderCalendar(this.value);
-      });
-
-      renderCalendar("vios");
-
-      function toggleProfile() {
-        document.getElementById("profileDropdown").classList.toggle("show");
-      }
-
-      window.onclick = function (e) {
-        if (!e.target.matches(".icon")) {
-          var dropdown = document.getElementById("profileDropdown");
-          if (dropdown.classList.contains("show")) {
-            dropdown.classList.remove("show");
-          }
-        }
-      };
-    </script>
-  </body>
+</body>
 </html>

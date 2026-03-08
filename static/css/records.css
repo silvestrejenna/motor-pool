@@ -324,3 +324,8 @@ body {
   font-size: 13px;
   color: #555;
 }
+
+.sidebar li.active {
+  background: white;
+  color: var(--pup-red);
+}

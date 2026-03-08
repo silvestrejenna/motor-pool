@@ -2119,6 +2119,7 @@ def delete_record(id):
 
 # ================= HOME PAGE =================
 @app.route("/user/home")
+@role_required ('Client')
 def user_home():
 
     if "user_id" not in session:
@@ -2133,6 +2134,7 @@ def user_home():
 
 # ================= DASHBOARD =================
 @app.route("/user_dashboard")
+@role_required ('Client')
 def user_dashboard():
 
     if "user_id" not in session:
@@ -2170,6 +2172,7 @@ def user_dashboard():
 
 # ================= NEW REQUEST PAGE =================
 @app.route("/user/new-request", methods=["GET", "POST"])
+@role_required ('Client')
 def user_new_request():
 
     if "user_id" not in session:
@@ -2219,6 +2222,7 @@ def user_new_request():
 
 # ================= MY REQUESTS =================
 @app.route("/user_my_requests")
+@role_required ('Client')
 def user_my_requests():
 
     if "user_id" not in session:
@@ -2252,6 +2256,7 @@ def user_my_requests():
 
 # ================= TRIP TICKETS =================
 @app.route("/user/trip-tickets")
+@role_required ('Client')
 def user_trip_tickets():
 
     if "user_id" not in session:
@@ -2347,6 +2352,62 @@ def send_otp_email(receiver_email, otp):
     server.sendmail(sender_email, receiver_email, text)
 
     server.quit()
+
+
+#============== REQUEST ADMIN SIDE ================================
+@app.route("/req_dashboard")
+@role_required ('Admin', 'Staff')
+def req_dashboard():
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT COUNT(*) FROM vehicle_requests")
+    total = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM vehicle_requests WHERE status='Pending'")
+    pending = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM vehicle_requests WHERE status='Approved'")
+    approved = cur.fetchone()[0]
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        "admin-request/req_dashboard.html",
+        total=total,
+        pending=pending,
+        approved=approved
+    )
+
+#============================ LIST OF REQUESTS ==============================
+@app.route('/admin-request/requests')
+@role_required('Admin', 'Staff')
+def requests():
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+         SELECT
+                vr.id,
+                u.full_name,
+                vr.date,
+                vr.status
+        FROM vehicle_requests vr
+        JOIN users u ON vr.user_id = u.id
+        ORDER BY vr.date DESC
+""")
+    requests = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return render_template(
+        "admin-request/requests.html",
+        requests=requests
+    )
+
 
 
 @app.route('/auth/user')
