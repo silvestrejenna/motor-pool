@@ -2198,10 +2198,11 @@ def user_new_request():
     user_id = session.get("user_id")
 
     if request.method == "POST":
-
+        vehicle_type = request.form.get("vehicle_type")
         destination = request.form.get("destination")
         purpose = request.form.get("purpose")
-        date = request.form.get("date")
+        start_date = request.form.get("start_date")
+        end_date = request.form.get("end_date")
         time = request.form.get("time")
         days = request.form.get("days")
         passengers = request.form.get("passengers")
@@ -2216,10 +2217,12 @@ def user_new_request():
 
         cur.execute("""
             INSERT INTO vehicle_requests
-            (user_id, destination, purpose, date, time, days, passengers, office, status)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,'pending')
+            (user_id, vehicle_type, destination, purpose, start_date, end_date, time, days,
+                    passengers, office, status)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'pending')
         """,
-        (user_id, destination, purpose, date, time, days, passengers, office)
+        (user_id, vehicle_type, destination, purpose, start_date, end_date, time, days,
+         passengers, office)
         )
 
         conn.commit()
@@ -2229,11 +2232,27 @@ def user_new_request():
 
         return redirect(url_for("user_my_requests"))
 
-    firstname = (session.get("user_fullname") or "User").split()[0]
+    firstname = (session.get("full_name") or "users").split()[0]
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+                SELECT vehicle_id, name, plate_number
+                FROM vehicle
+                ORDER BY name
+                """)
+        
+    vehicles = cur.fetchall()
+
+    cur.close()
+    conn.close()    
 
     return render_template(
         "user-dashboard/new_request.html",
-        firstname=firstname
+        firstname=firstname,
+
+        vehicles=vehicles
     )
 
 
@@ -2379,23 +2398,24 @@ def req_dashboard():
     conn = get_db_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT COUNT(*) FROM vehicle_requests")
-    total = cur.fetchone()[0]
+    cur.execute("""
+        SELECT
+            COUNT(*) AS total,
+            COUNT(*) FILTER (WHERE status='pending') AS pending,
+            COUNT(*) FILTER (WHERE status='approved') AS approved
+        FROM vehicle_requests
+    """)
 
-    cur.execute("SELECT COUNT(*) FROM vehicle_requests WHERE status='Pending'")
-    pending = cur.fetchone()[0]
-
-    cur.execute("SELECT COUNT(*) FROM vehicle_requests WHERE status='Approved'")
-    approved = cur.fetchone()[0]
+    stats = cur.fetchone()
 
     cur.close()
     conn.close()
 
     return render_template(
         "admin-request/req_dashboard.html",
-        total=total,
-        pending=pending,
-        approved=approved
+        total_requests=stats[0],
+        pending_requests=stats[1],
+        approved_requests=stats[2],
     )
 
 #============================ LIST OF REQUESTS ==============================
@@ -2404,26 +2424,27 @@ def req_dashboard():
 def requests():
 
     conn = get_db_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cur.execute("""
          SELECT
                 vr.id,
                 u.full_name,
-                vr. office
-                vr.date,
+                vr. office,
+                vr. destination,
+                vr.created_at,
                 vr.status
         FROM vehicle_requests vr
         JOIN users u ON vr.user_id = u.id
-        ORDER BY vr.date DESC
+        ORDER BY vr.created_at DESC
 """)
-    requests = cur.fetchall()
+    vehicle_requests = cur.fetchall()
     cur.close()
     conn.close()
 
     return render_template(
         "admin-request/requests.html",
-        requests=requests
+        vehicle_requests=vehicle_requests
     )
 
 
