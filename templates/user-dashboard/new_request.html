@@ -39,7 +39,16 @@
 
         <div class="nav-right">
           <div class="profile">
-            <span class="icon">👤</span>
+            <span class="icon" onclick="toggleProfile()">👤</span>
+
+            <div class="profile-dropdown" id="profileDropdown">
+              <p class="name" id="profileName">Loading...</p>
+              <p class="email">{{ email }}</p>
+              <hr />
+              <a href="#">Activity</a><br />
+              <a href="#">Change Password</a><br />
+              <a href="#" onclick="logout()" class="logout">Log Out</a>
+            </div>
           </div>
         </div>
       </div>
@@ -93,14 +102,25 @@
           <div class="form-card">
             <h3>Request Information</h3>
 
-            <label>Type of Vehicle *</label>
+         <label>Type of Vehicle *</label>
+<!--               <select name="vehicles">
+                <option value="" disabled selected>
+                  Select Vehicle
+                </option>
 
-            <select name="vehicle_type" required>
-              <option value="">Select Vehicle Type</option>
-              <option value="Car">Car</option>
-              <option value="Van">Van</option>
-              <option value="Bus">Bus</option>
-            </select>
+                {% for vehicle in vehicles %}
+                  <option value="{{ vehicle[1]}}">
+                    {{ vehicle [1] }}
+                  </option>
+                {% endfor %}
+              </select>
+--> 
+            <input
+              type="text"
+              name="vehicle_type"
+              placeholder="Please provide us the type of vehicle"
+              required
+            />
           </div>
 
           <!-- TRIP DETAILS -->
@@ -127,13 +147,16 @@
             <div class="form-row">
               <div>
                 <label>Date of Travel *</label>
-
-                <input type="date" name="date" required />
+                <input type="date" name="start_date" required />
+                <label>To</label>
+                <input type="date" name="end_date" required />
               </div>
 
               <div>
                 <label>Time of Departure *</label>
 
+                <input type="time" name="time" required />
+                <label>To</label>
                 <input type="time" name="time" required />
               </div>
 
@@ -158,18 +181,21 @@
             <div class="form-row two">
               <div>
                 <label>Requestor Name *</label>
-
-                <input type="text" value="{{ fullname }}" readonly />
+                
+                <input type="text" value="{{ firstname }}" readonly 
+                placeholder="Enter Fullname"
+                />
+                
               </div>
 
               <div>
                 <label>Office / Department *</label>
-
-                <select name="office" required>
-                  <option value="Human Resources">Human Resources</option>
-                  <option value="Finance">Finance</option>
-                  <option value="Admin">Admin</option>
-                </select>
+                <input
+                  type="text"
+                  name="office"
+                  placeholder="Enter Office/Department Name"
+                  required
+                />
               </div>
             </div>
 
@@ -244,5 +270,29 @@
         <span>Terms of Services and Privacy Policy</span>
       </div>
     </footer>
+    
+    <script>
+       async function loadUserProfile() {
+        const res = await fetch("/auth/user");
+        if (!res.ok) {
+          window.location.href = "/";
+          return;
+        }
+        const user = await res.json();
+        document.getElementById("profileName").textContent = user.full_name;
+        document.getElementById("profileEmail").textContent = user.email;
+      }
+
+      loadUserProfile();
+
+      function toggleProfile() {
+        document.getElementById("profileDropdown").classList.toggle("show");
+      }
+
+      async function logout() {
+        await fetch("/logout", { method: "POST" });
+        window.location.href = "/";
+      }
+    </script>
   </body>
 </html>

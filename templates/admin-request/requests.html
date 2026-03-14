@@ -55,66 +55,37 @@
           </div>
         </header>
 
-    <!-- STATS -->
-    <section class="stats-grid">
-      <div class="stat-card">
-        <span class="label">Total Requests</span>
-        <span class="value">{{ total_reports }}</span>
-      </div>
+        <div class="page-header"></div>
+          <h1>VEHICLE REQUEST MANAGEMENT</h1>
+          <p>Manage and monitor all vehicle request submissions.</p>
 
-      <div class="stat-card">
-        <span class="label">Pending Requests</span>
-        <span class="value">{{ this_month }}</span>
-      </div>
-
-      <div class="stat-card">
-        <span class="label">Approved Requests</span>
-        <span class="value">{{ this_month }}</span>
-      </div>
-    </section>
 
     <!-- SEARCH & FILTER -->
-    <section class="card">
-      <h3>Search & Filter Records</h3>
+    <section class="search-section">
 
-      <form method="GET" class="control-grid">
-        <input type="text" name="search"
-               placeholder="Search by report type..."
-               value="{{ request.args.get('search','') }}">
+      <input
+        type="text"
+        placeholder="search by name or ID..."
+        class="search_input">
 
-        <select name="month">
-          <option value="">All Months</option>
-          {% for m in range(1,13) %}
-          <option value="{{ m }}" {% if request.args.get('month') == m|string %}selected{% endif %}>
-            {{ m }}
-          </option>
-          {% endfor %}
-        </select>
-
-        <select name="type">
-          <option value="">All Types</option>
-          <option value="vehicle">Vehicle</option>
-          <option value="gas_rfid">Gas & RFID</option>
-          <option value="maintenance_log">Maintenance</option>
-          <option value="pms_log">PMS</option>
-          <option value="tools_equipment">Tools</option>
-          <option value="parts_supplies">Parts</option>
-        </select>
-
-        <button class="btn-add">Apply</button>
-      </form>
+      <select class="status-filter">
+        <option>All Statuses</option>
+        <option>Pending</option>
+        <option>Approved</option>
+        <option>Rejected</option>
+      </select>
     </section>
 
-    <!-- RECORDS LIST -->
-   <section class="card records-card">
-  <h3>Records</h3>
+    <!-- REQUEST TABLE -->
+   <section class="records-card">
+  <h3>Request Lists</h3>
 
   <table class="records-table">
     <thead>
       <tr>
-        <th>Request ID</th>
-        <th>Name</th>
+        <th>Name of Requester</th>
         <th>Name of Department</th>
+        <th>Destination</th>
         <th>Date</th>
         <th>Status</th>
         <th>Actions</th>
@@ -122,20 +93,22 @@
     </thead>
 
     <tbody>
-  {% for r in records %}
+  {% for r in vehicle_requests %}
   <tr>
-    <td>REC{{ "%03d"|format(r.report_id) }}</td>
-    <td>{{ r.report_type|replace('_',' ')|title }} Report</td>
-    <td>{{ r.report_type|replace('_',' ')|title }}</td>
-    <td>{{ r.month_name }}</td>
-    <td>{{ r.created_at.strftime('%Y-%m-%d') }}</td>
-    <td class="actions">
-      <a href="{{ url_for('download_report', filename=r.file_name) }}" class="icon-btn">⬇️</a>
-      <form method="POST"
-            action="{{ url_for('delete_record', id=r.report_id) }}"
-            onsubmit="return confirm('Delete this report?')">
-        <button class="icon-btn delete">🗑</button>
-      </form>
+    <td>{{ r.full_name }}</td>
+    <td>{{ r.office }}</td>
+    <td>{{ r.destination }}</td>
+    <td>{{ r.created_at }}</td>
+    <td>
+      <span class="status-badge">
+      {{ r.status }}
+     </span>
+    </td>
+
+    <td>
+       <a href="/admin-request/details/{{ r.id }}" class="view-btn">
+        View Details
+       </a>
     </td>
   </tr>
   {% endfor %}

@@ -28,7 +28,7 @@
                 </div>
                 <div class="nav-right">
                     <span class="notif-bell">🔔</span>
-                    <div class="profile-circle">👤</div>
+                    <span class="profile-circle">👤</span>
                 </div>
             </header>
 
@@ -38,47 +38,131 @@
                     <p>Manage and monitor all vehicle request submissions.</p>
                 </div>
 
-                <div class="stats-container">
-                    <div class="stat-box">
-                        <span class="stat-label">Total Requests</span>
-                        <span class="stat-num">5</span>
-                        <span class="stat-sub">All time submissions</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Pending</span>
-                        <span class="stat-num highlight-pending">2</span>
-                        <span class="stat-sub">Awaiting approval</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Approved</span>
-                        <span class="stat-num highlight-approved">3</span>
-                        <span class="stat-sub">Approved Request This Month</span>
-                    </div>
-                </div>
+                <!-- STATS -->
+        <div class="stats">
+          <div class="stat-card">
+            <h4>Total Requests</h4>
+            <h1>{{ total_requests }}</h1>
+            <p>All time submissions</p>
+          </div>
 
-                <div class="calendar-card">
-                    <div class="calendar-header">
-                        <h3>Vehicle Availability Calendar</h3>
-                        <div class="calendar-controls">
-                            <select class="vehicle-select">
-                                <option>Toyota Vios</option>
-                                <option>Hyundai Starex</option>
-                            </select>
-                            <button class="btn-edit-cal">Edit Calendar</button>
-                        </div>
-                    </div>
-                    
-                    <div class="calendar-grid-wrapper">
-                        <div class="month-selector">
-                            <span></span>
-                            <strong>Sep 2025</strong>
-                            <span>></span>
-                        </div>
-                        <img src="{{ url_for('static', filename='images/calendar-placeholder.png') }}" class="cal-img" alt="Calendar View">
-                    </div>
+          <div class="stat-card">
+            <h4>Pending</h4>
+            <h1>{{ pending_requests }}</h1>
+            <p>Awaiting approval</p>
+          </div>
+
+          <div class="stat-card">
+            <h4>Approved</h4>
+            <h1>{{ approved_requests }}</h1>
+            <p>Ready for travel</p>
+          </div>
+        </div>
+
+        <!-- CALENDAR -->
+        <div class="calendar-container">
+          <div class="calendar-header">
+            <h3>Availability Calendar</h3>
+
+            <div class="calendar-controls">
+              <button id="prevMonth">&lt;</button>
+              <span id="monthYear"></span>
+              <button id="nextMonth">&gt;</button>
+            </div>
+
+            <select id="vehicleSelect" name="vehicles">
+                <option value="" disabled selected>
+                  Select Vehicle
+                </option>
+
+                {% for vehicle in vehicles %}
+                  <option value="{{ vehicle[1] }}">
+                    {{ vehicle[1] }}
+                  </option>
+                {% endfor %}
+            </select>
+            <button class="btn-edit-cal">Edit Calendar</button>
+          </div>
+          <div id="calendar"></div>
+        </div>
+
                 </div>
             </section>
         </main>
     </div>
+
+    <script>
+      async function loadUserProfile() {
+        const res = await fetch("/auth/user");
+        if (!res.ok) {
+          window.location.href = "/";
+          return;
+        }
+        const user = await res.json();
+        document.getElementById("profileName").textContent = user.full_name;
+        document.getElementById("profileEmail").textContent = user.email;
+      }
+
+      loadUserProfile();
+
+      function toggleProfile() {
+        document.getElementById("profileDropdown").classList.toggle("show");
+      }
+
+      async function logout() {
+        await fetch("/logout", { method: "POST" });
+        window.location.href = "/";
+      }
+
+      const calendar = document.getElementById("calendar");
+      const monthYear = document.getElementById("monthYear");
+      const prevMonth = document.getElementById("prevMonth");
+      const nextMonth = document.getElementById("nextMonth")
+
+      let currentDate = new Date();
+
+      function renderCalendar() {
+
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        const monthNames = [
+          "January", "February", "March", "April", "May",
+          "June", "July", "August", "September",
+          "October", "November", "December"
+        ];
+
+        monthYear.textContent = monthNames[month] + " " + year;
+        calendar.innerHTML = "";
+
+        const firstDay = new Date (year, month, 1).getDay();
+        const daysInMonth = new Date (year, month + 1, 0).getDate();
+
+        for (let i = 0; i<firstDay; i++) {
+          const empty = document.createElement("div")
+          calendar.appendChild(empty);
+        }
+
+        for (let day=1; day<=daysInMonth; day++) {
+          const cell = document.createElement("div");
+          cell.classList.add("calendar-day");
+          cell.textContent = day;
+
+          calendar.appendChild(cell);
+        }
+      }
+      
+      prevMonth.onclick = function() {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+      }
+
+      nextMonth.onclick = function() {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+      }
+      renderCalendar();
+    </script>
+
 </body>
 </html>

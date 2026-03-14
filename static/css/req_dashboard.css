@@ -26,18 +26,87 @@ body {
 .nav-left a { margin-right: 30px; text-decoration: none; color: var(--maroon); font-weight: bold; }
 .content-padding { padding: 30px 40px; }
 
-/* STATS */
-.stats-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 25px 0; }
-.stat-box { padding: 20px; border: 1px solid var(--border-gray); border-radius: 12px; background: #fff; }
-.stat-label { display: block; color: #666; font-size: 14px; }
-.stat-num { display: block; font-size: 36px; font-weight: bold; margin: 10px 0; }
-.stat-sub { font-size: 12px; color: #999; }
+/* ===============================
+   STATS
+================================ */
+.stats {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 40px;
+}
 
-/* CALENDAR SECTION */
-.calendar-card { border: 1px solid var(--border-gray); border-radius: 15px; padding: 25px; margin-top: 30px; }
-.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.calendar-controls { display: flex; gap: 15px; }
-.vehicle-select { padding: 8px 15px; border-radius: 8px; border: 1px solid #ccc; }
-.btn-edit-cal { background-color: var(--maroon); color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; }
+.stat-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  flex: 1;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
 
-.cal-img { width: 100%; border-top: 1px solid #eee; padding-top: 20px; }
+.stat-card h1 {
+  margin: 10px 0;
+}
+
+/* ===============================
+   CALENDAR
+================================ */
+.calendar-container {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+#calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.calendar-day {
+  padding: 15px;
+  text-align: center;
+  background: #eee;
+  border-radius: 8px;
+}
+
+.calendar-day.unavailable {
+  background: var(--pup-red);
+  color: white;
+}
+
+.calendar-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: bold;
+}
+
+.calendar-contorols button {
+  background: #8b0000;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.calendar-contorols button:hover {
+  background: #a00000;
+}
+
+.btn-edit-cal { 
+  background-color: var(--maroon); 
+  color: white; 
+  border: none; 
+  padding: 8px 20px; 
+  border-radius: 8px; 
+  cursor: pointer; 
+}
