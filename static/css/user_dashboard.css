@@ -429,6 +429,26 @@ body {
   color: white;
 }
 
+.calendar-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: bold;
+}
+
+.calendar-contorols button {
+  background: #8b0000;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.calendar-contorols button:hover {
+  background: #a00000;
+}
+
 /* ===============================
    FORM DESIGN (FIXED)
 ================================ */

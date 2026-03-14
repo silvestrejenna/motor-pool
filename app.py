@@ -2143,7 +2143,7 @@ def user_dashboard():
     user_id = session.get("user_id")
 
     conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur = conn.cursor()
 
     cur.execute("""
         SELECT
@@ -2161,12 +2161,29 @@ def user_dashboard():
 
     firstname = (session.get("user_fullname") or "User").split()[0]
 
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+            SELECT vehicle_id, name, plate_number
+            FROM vehicle
+            ORDER BY name
+               """)
+    
+    vehicles = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+
+
     return render_template(
         "user-dashboard/dashboard.html",
         firstname=firstname,
-        total_requests=stats["total"],
-        pending_requests=stats["pending"],
-        approved_requests=stats["approved"]
+        total_requests=stats[0],
+        pending_requests=stats[1],
+        approved_requests=stats[2],
+        vehicles=vehicles
     )
 
 
@@ -2393,6 +2410,7 @@ def requests():
          SELECT
                 vr.id,
                 u.full_name,
+                vr. office
                 vr.date,
                 vr.status
         FROM vehicle_requests vr
