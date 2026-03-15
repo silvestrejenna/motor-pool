@@ -50,6 +50,7 @@ body {
   color: #333;
 }
 
+.nav-links a.active,
 .nav-links a:hover {
   color: var(--pup-red);
 }
@@ -198,10 +199,13 @@ body {
   min-height: 100vh;
 }
 
-.sidebar img {
-  width: 80px;
-  margin-bottom: 25px;
+.logo-image {
   text-align: center;
+  margin-bottom: 25px;
+}
+
+.logo-image img {
+  width: 80px;
 }
 
 .inventory-selection {

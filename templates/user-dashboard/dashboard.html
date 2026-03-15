@@ -58,9 +58,11 @@
     <div class="dashboard-layout">
       <!-- SIDEBAR -->
       <nav class="sidebar">
-        <img
-          src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-        />
+        <div class="logo-image">
+          <img
+            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+          />
+        </div>
 
         <ul class="inventory-selection">
           <li><a href="{{ url_for('user_home') }}">HOME</a></li>
