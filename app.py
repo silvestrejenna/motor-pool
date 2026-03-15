@@ -2234,25 +2234,11 @@ def user_new_request():
 
     firstname = (session.get("full_name") or "users").split()[0]
 
-    conn = get_db_connection()
-    cur = conn.cursor()
 
-    cur.execute("""
-                SELECT vehicle_id, name, plate_number
-                FROM vehicle
-                ORDER BY name
-                """)
-        
-    vehicles = cur.fetchall()
-
-    cur.close()
-    conn.close()    
 
     return render_template(
         "user-dashboard/new_request.html",
-        firstname=firstname,
-
-        vehicles=vehicles
+        firstname=firstname
     )
 
 
@@ -2445,6 +2431,48 @@ def requests():
     return render_template(
         "admin-request/requests.html",
         vehicle_requests=vehicle_requests
+    )
+
+@app.route('/admin-request/req_details/<req_id>')
+@role_required('Admin', 'Staff')
+def req_details(req_id):
+
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur.execute("""
+            SELECT vr.*, u.full_name, vr.id, vr.office, vr.vehicle_type, 
+                vr.destination, vr.purpose, start_date, end_date, time, passengers,
+                office, contact
+            FROM vehicle_requests vr
+            JOIN users u ON vr.user_id = u.id
+            WHERE vr.id = %s
+            """, (req_id,))
+    
+    request = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+            SELECT vehicle_id, name, plate_number
+            FROM vehicle
+            ORDER BY name
+               """)
+    
+    vehicles = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+
+    return render_template(
+        "admin-request/req_details.html",
+        request=request,
+        vehicles=vehicles
     )
 
 

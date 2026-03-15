@@ -1,0 +1,343 @@
+<!doctype html>
+<html>
+  <head>
+    <title>New Request | Motor Pool</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/user_dashboard.css') }}"
+    />
+  </head>
+
+  <body>
+    <!-- ================= NAVBAR ================= -->
+    <div class="top-navbar">
+      <div class="nav-left">
+        <div class="logo-section">
+          <img
+            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+          />
+
+          <div class="logo-text">
+            PUP<br />
+            Motor Pool<br />
+            Under GASS
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-center">
+        <div class="nav-links">
+          <a href="{{ url_for('user_home') }}">HOME</a>
+          <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
+          <a class="active" href="{{ url_for('user_new_request') }}"
+            >NEW REQUEST</a
+          >
+          <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
+          <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
+        </div>
+
+        <div class="nav-right">
+          <div class="profile">
+            <span class="icon" onclick="toggleProfile()">👤</span>
+
+            <div class="profile-dropdown" id="profileDropdown">
+              <p class="name" id="profileName">Loading...</p>
+              <p class="email">{{ email }}</p>
+              <hr />
+              <a href="#">Activity</a><br />
+              <a href="#">Change Password</a><br />
+              <a href="#" onclick="logout()" class="logout">Log Out</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= PAGE LAYOUT ================= -->
+    <div class="dashboard-layout">
+      <!-- SIDEBAR -->
+      <nav class="sidebar">
+        <img
+          src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+        />
+
+        <ul class="inventory-selection">
+          <li><a href="{{ url_for('reports')}}">REPORTS</a></li>
+          <li><a href="{{ url_for('req_dashboard') }}">VEHICLE REQUEST DASHBOARD</a></li>
+          <li><a class="active">VEHICLE REQUEST</a></li>
+        </ul>
+      </nav>
+
+      <!-- ================= CONTENT ================= -->
+      <div class="dashboard-content">
+        <h2>Vehicle Request Details</h2>
+
+        <p class="subtitle" id="profileName">
+
+        </p>
+
+          <!-- REQUEST INFO -->
+          <div class="form-card">
+            <h3>Request Information</h3>
+
+         <label>Type of Vehicle</label>
+<!--               <select name="vehicles">
+                <option value="" disabled selected>
+                  Select Vehicle
+                </option>
+
+                {% for vehicle in vehicles %}
+                  <option value="{{ vehicle[1]}}">
+                    {{ vehicle [1] }}
+                  </option>
+                {% endfor %}
+              </select>
+--> 
+            <p> {{ request.vehicle_type }}</p>
+          </div>
+
+          <!-- TRIP DETAILS -->
+          <div class="form-card">
+            <h3>Trip Details</h3>
+
+            <label>Trip Destination *</label>
+                <p>{{ request.destination }}</p>
+
+            <label>Purpose of Trip *</label>
+                <p>{{ request.purpose }}</p>
+
+            <div class="form-row">
+              <div>
+                <label>Date of Travel *</label>
+                    <p>{{ request.start_date }}</p>
+                <label>To</label>
+                    <p>{{ request.end_date }}</p>
+              </div>
+
+              <div>
+                <label>Time of Departure *</label>
+                    <p>{{ request.time }}</p>
+              </div>
+
+              <div>
+                <label>Number of Days *</label>
+                    <p>{{ request.days }}</p>
+              </div>
+
+              <div>
+                <label>Number of Passengers *</label>
+                    <p>{{ request.passengers }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- REQUESTOR -->
+          <div class="form-card">
+            <h3>Requestor Information</h3>
+
+            <div class="form-row two">
+              <div>
+                <label>Requestor Name *</label>
+                    <p>{{ request.full_name }}</p>
+                
+              </div>
+
+              <div>
+                <label>Office / Department *</label>
+                    <p>{{ request.office }}</p>
+              </div>
+            </div>
+
+            <label>Contact Number *</label>
+                <p>{{ request.contact }}</p>
+          </div>
+
+          <!-- CONFIRM -->
+
+          <!-- CALENDAR 
+        <div class="calendar-container">
+          <div class="calendar-header">
+            <h3>Availability Calendar</h3>
+
+            <div class="calendar-controls">
+              <button id="prevMonth">&lt;</button>
+              <span id="monthYear"></span>
+              <button id="nextMonth">&gt;</button>
+            </div>
+
+            
+            <select id="vehicleSelect" name="vehicles">
+                <option value="" disabled selected>
+                  Select Vehicle
+                </option>
+
+                {% for vehicle in vehicles %}
+                  <option value="{{ vehicle[1] }}">
+                    {{ vehicle[1] }}
+                  </option>
+                {% endfor %}
+            </select>
+            <button class="btn-edit-cal">Edit Calendar</button>
+          </div>
+          <div id="calendar"></div>
+        </div>
+
+        -->
+
+        <div class="card calendar-container">
+                    <div class="calendar-left">
+                        <div class="calendar-header">
+                            <h3>Availability Calendar</h3>
+                        </div>
+                        <div class="calendar-date-row">
+                            <button id="prevMonth">&lt;</button>
+                            <span id="monthYear"></span>
+                            <button id="nextMonth">&gt;</button>
+                        </div>
+                        <div class="calendar-grid" id="calendar">
+                            
+                        </div>
+                    </div>
+
+                    <div class="assignment-right">
+                        <div class="availability-status">
+                            <span class="status-dot">✔</span> Vehicles Available
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Assign Vehicle</label>
+                            <select id="vehicleSelect" name="vehicles">
+                                <option value="" disabled selected>Select Vehicle</option>
+                                {% for vehicle in vehicles %}
+                                <option value="{{ vehicle[1] }}">
+                                    {{ vehicle[1] }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Assign Driver</label>
+                            <input type="text" placeholder="Enter Driver Name">
+                        </div>
+
+                        <button class="btn-submit">View Trip Ticket</button>
+                    </div>
+                </div>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div>
+          <img
+            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+            class="footer-logo"
+          />
+
+          <p>
+            A Web-Based Inventory and Record Management System for
+            <strong>Motor Pool</strong>
+          </p>
+        </div>
+
+        <div>
+          <h4>MENU</h4>
+
+          <a href="{{ url_for('user_home') }}">Home</a>
+          <a href="{{ url_for('user_dashboard') }}">Dashboard</a>
+          <a href="{{ url_for('user_new_request') }}">Request</a>
+          <a href="{{ url_for('user_trip_tickets') }}">Trip Ticket</a>
+        </div>
+
+        <div>
+          <h4>CONTACT US</h4>
+
+          <p>📧 motorpool@pup.edu.ph</p>
+          <p>📞 (02) 5335-1787</p>
+        </div>
+      </div>
+
+      <hr class="footer-divider" />
+
+      <div class="footer-bottom">
+        <span>© 2025 Polytechnic University of the Philippines</span>
+        <span>Terms of Services and Privacy Policy</span>
+      </div>
+    </footer>
+    
+       <script>
+      async function loadUserProfile() {
+        const res = await fetch("/auth/user");
+        if (!res.ok) {
+          window.location.href = "/";
+          return;
+        }
+        const user = await res.json();
+        document.getElementById("profileName").textContent = user.full_name;
+        document.getElementById("profileEmail").textContent = user.email;
+      }
+
+      loadUserProfile();
+
+      function toggleProfile() {
+        document.getElementById("profileDropdown").classList.toggle("show");
+      }
+
+      async function logout() {
+        await fetch("/logout", { method: "POST" });
+        window.location.href = "/";
+      }
+
+      const calendar = document.getElementById("calendar");
+      const monthYear = document.getElementById("monthYear");
+      const prevMonth = document.getElementById("prevMonth");
+      const nextMonth = document.getElementById("nextMonth")
+
+      let currentDate = new Date();
+
+      function renderCalendar() {
+
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        const monthNames = [
+          "January", "February", "March", "April", "May",
+          "June", "July", "August", "September",
+          "October", "November", "December"
+        ];
+
+        monthYear.textContent = monthNames[month] + " " + year;
+        calendar.innerHTML = "";
+
+        const firstDay = new Date (year, month, 1).getDay();
+        const daysInMonth = new Date (year, month + 1, 0).getDate();
+
+        for (let i = 0; i<firstDay; i++) {
+          const empty = document.createElement("div")
+          calendar.appendChild(empty);
+        }
+
+        for (let day=1; day<=daysInMonth; day++) {
+          const cell = document.createElement("div");
+          cell.classList.add("calendar-day");
+          cell.textContent = day;
+
+          calendar.appendChild(cell);
+        }
+      }
+      
+      prevMonth.onclick = function() {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+      }
+
+      nextMonth.onclick = function() {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+      }
+      renderCalendar();
+    </script>
+
+  </body>
+</html>
