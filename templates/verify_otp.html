@@ -1,11 +1,66 @@
-<!DOCTYPE html>
+<!doctype html>
+
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Verify OTP</title>
 
-<body>
-<form method="POST">
-    <input type="text" name="otp" placeholder="Enter OTP" required>
-    <button type="submit">Verify</button>
-</form>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/verify_otp.css') }}"
+    />
+  </head>
 
-</body>
+  <body>
+    <div class="card">
+      <div class="icon">📧</div>
+      <h2>Email Verification</h2>
+      <p>Enter the 6-digit code sent to your email</p>
+
+      <form method="POST">
+        <div class="otp-container">
+          <input type="text" maxlength="1" name="d1" required />
+          <input type="text" maxlength="1" name="d2" required />
+          <input type="text" maxlength="1" name="d3" required />
+          <input type="text" maxlength="1" name="d4" required />
+          <input type="text" maxlength="1" name="d5" required />
+          <input type="text" maxlength="1" name="d6" required />
+        </div>
+
+        <input type="hidden" name="otp" id="otp" />
+
+        <button type="submit">Verify Code</button>
+      </form>
+
+      <div class="resend">
+        Didn't receive the code?
+        <a href="{{ url_for('resend_otp') }}">Resend</a>
+      </div>
+    </div>
+
+    <script>
+      const inputs = document.querySelectorAll(".otp-container input");
+      const hiddenInput = document.getElementById("otp");
+
+      inputs.forEach((input, index) => {
+        input.addEventListener("input", () => {
+          if (input.value.length === 1 && index < inputs.length - 1) {
+            inputs[index + 1].focus();
+          }
+
+          updateOTP();
+        });
+      });
+
+      function updateOTP() {
+        let otp = "";
+
+        inputs.forEach((i) => {
+          otp += i.value;
+        });
+
+        hiddenInput.value = otp;
+      }
+    </script>
+  </body>
 </html>

@@ -1,0 +1,11 @@
+<!doctype html>
+<html>
+  <body>
+    <h2>Verify OTP to Reset Password</h2>
+
+    <form method="POST" action="{{ url_for('verify_reset_otp') }}">
+      <input type="text" name="otp" placeholder="Enter OTP" required />
+      <button type="submit">Verify OTP</button>
+    </form>
+  </body>
+</html>

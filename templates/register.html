@@ -1,66 +1,106 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PUP Motor Pool Create Account</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
-</head>
-<body>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/login.css') }}"
+    />
+  </head>
+  <body>
     <div class="main-container">
-        <div class="left-section"></div>
+      <div class="left-section"></div>
 
-        <div class="right-section">
-            <header class="top-header">
-                <div class="logo-area">
-                    <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" alt="Motor Pool Section Logo" class="logo">
-                    <span class="header-text">TRANSPORTATION AND MOTOR POOL SECTION</span>
-                </div>
-            </header>
+      <div class="right-section">
+        <header class="top-header">
+          <div class="logo-area">
+            <img
+              src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+              alt="Motor Pool Section Logo"
+              class="logo"
+            />
+            <span class="header-text"
+              >TRANSPORTATION AND MOTOR POOL SECTION</span
+            >
+          </div>
+        </header>
 
-            <div class="form-wrapper">
-                <div class="login-card">
-
-                    {% with messages = get_flashed_messages() %}
-                        {% if messages %}
-                            <div class="flash-messages">
-                                {% for message in messages %}
-                                    <p>{{ message }}</p>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    {% endwith %}
-                    <h2>CREATE ACCOUNT</h2>
-                    
-                    <form action="{{ url_for('register') }}" method="POST" autocomplete="off">
-                        <div class="input-group">
-                            <input type="text" name="firstname" placeholder="ENTER FIRST NAME" required>
-                        </div>
-                        <div class="input-group">
-                            <input type="text" name="lastname" placeholder="ENTER LAST NAME" required>
-                        </div>
-                        
-                        
-                        <div class="input-group">
-                            <input type="email" name="email" placeholder="ENTER EMAIL" required>
-                        </div>
-                        <div class="input-group">
-                            <input type="password" name="password" placeholder="ENTER PASSWORD" required>
-                        </div>
-                        <div class="input-group">
-                            <input type="password" name="confirm_password" placeholder="CONFIRM PASSWORD" required>
-                        </div>
-
-                        <button type="submit" class="btn btn-signin">Sign Up</button>
-
-                        <p class="terms">
-                            By creating an account you agree to <br>
-                            TMPS' <strong>Terms of Services</strong> and <strong>Privacy Policy</strong>.
-                        </p>
-                    </form>
-                </div>
+        <div class="form-wrapper">
+          <div class="login-card">
+            {% with messages = get_flashed_messages() %} {% if messages %}
+            <div class="flash-messages">
+              {% for message in messages %}
+              <p>{{ message }}</p>
+              {% endfor %}
             </div>
+            {% endif %} {% endwith %}
+            <h2>CREATE ACCOUNT</h2>
+
+            <form
+              action="{{ url_for('register') }}"
+              method="POST"
+              autocomplete="off"
+            >
+              <div class="input-group">
+                <input
+                  type="text"
+                  name="firstname"
+                  placeholder="ENTER FIRST NAME"
+                  required
+                />
+              </div>
+              <div class="input-group">
+                <input
+                  type="text"
+                  name="lastname"
+                  placeholder="ENTER LAST NAME"
+                  required
+                />
+              </div>
+
+              <div class="input-group">
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="ENTER EMAIL"
+                  required
+                />
+              </div>
+              <div class="input-group">
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="ENTER PASSWORD"
+                  required
+                />
+              </div>
+              <div class="input-group">
+                <input
+                  type="password"
+                  name="confirm_password"
+                  placeholder="CONFIRM PASSWORD"
+                  required
+                />
+              </div>
+
+              <button type="submit" class="btn btn-signin">Sign Up</button>
+
+              <p class="terms">
+                By creating an account you agree to <br />
+                TMPS' <strong>Terms of Services</strong> and
+                <strong>Privacy Policy</strong>.
+              </p>
+
+              <div class="signup-link">
+                Already have an account?
+                <a href="{{ url_for('login') }}">Sign In</a>
+              </div>
+            </form>
+          </div>
         </div>
+      </div>
     </div>
-</body>
+  </body>
 </html>

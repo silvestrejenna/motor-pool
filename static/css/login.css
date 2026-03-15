@@ -107,6 +107,7 @@ input {
 
 /* Buttons */
 .btn {
+  display: block;
   width: 100%;
   padding: 12px;
   margin-top: 10px;
@@ -116,18 +117,87 @@ input {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
+  text-align: center;
 }
 
 .btn-signin {
   background-color: #ffffff;
   color: #000;
-  margin-top: 25px;
+  margin-top: 20px;
+  margin-bottom: 10px;
 }
 
 .btn:hover {
   background-color: #7a0c0c;
   color: #ffffff;
   transform: translateY(-2px); /* Slight lift effect on hover */
+}
+
+.btn-create {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #000;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.btn-create:hover {
+  background-color: #7a0c0c;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.login-card a {
+  text-decoration: none;
+}
+
+.login-link {
+  margin-top: 5px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.login-link a {
+  color: #7a0c0c;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.login-link a:hover {
+  text-decoration: underline;
+}
+
+.signup-link {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.signup-link a {
+  color: #800000;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.signup-link a:hover {
+  text-decoration: underline;
+}
+
+.icon {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 20px;
 }
 
 /* Responsive adjustments for smaller screens (tablets/phones) */
@@ -149,15 +219,15 @@ input {
   }
 }
 
-.flash-messages{
-    margin-bottom:15px;
+.flash-messages {
+  margin-bottom: 15px;
 }
 
-.flash-messages{
-    background:#ffdddd;
-    color:#a30000;
-    padding:10px;
-    border-radius:6px;
-    font-size:14px;
-    text-align:center;
+.flash-messages {
+  background: #ffdddd;
+  color: #a30000;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
 }

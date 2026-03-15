@@ -28,6 +28,7 @@ body {
 .nav-left {
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
 .nav-center {
@@ -64,6 +65,12 @@ body {
   color: var(--pup-red);
 }
 
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 .icon {
   font-size: 22px;
   cursor: pointer;
@@ -95,14 +102,13 @@ body {
   gap: 15px;
 }
 
-.logo-section img {
-  width: 55px;
-}
-
 .logo-text {
   font-weight: bold;
   color: var(--pup-red);
-  line-height: 1.2;
+}
+
+.logo-section img {
+  width: 55px;
 }
 
 /* ===============================
@@ -168,8 +174,7 @@ body {
   color: var(--pup-red);
   font-weight: bold;
   transition: 0.3s;
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(10px);
+  background: white;
 }
 
 .home-card:hover {
@@ -182,38 +187,54 @@ body {
    SIDEBAR
 ================================ */
 .sidebar {
-  width: 220px;
+  width: 250px;
+  min-width: 250px;
   background: var(--pup-red);
-  padding: 25px 15px;
-  display: flex;
-  flex-direction: column;
+  top: 0;
+  height: 100vh;
+  color: white;
+  padding: 20px 0;
+  height: auto;
+  min-height: 100vh;
 }
 
 .sidebar img {
-  width: 70px;
-  margin-bottom: 30px;
+  width: 80px;
+  margin-bottom: 25px;
+  text-align: center;
 }
 
 .inventory-selection {
   list-style: none;
+  margin: 0;
   padding: 0;
 }
 
 .inventory-selection li {
-  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .inventory-selection a {
+  display: block;
+  padding: 15px 25px;
   color: white;
   text-decoration: none;
   font-weight: bold;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.inventory-selection .active {
+  background: white;
 }
 
 .inventory-selection .active a {
-  border-left: 4px solid white;
-  padding-left: 10px;
+  color: var(--pup-red);
 }
 
+.inventory-selection a:hover {
+  color: #ffc107;
+}
 /* ===============================
    GLOBAL LAYOUT
 ================================ */
@@ -226,87 +247,6 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-}
-
-/* ===============================
-   SIDEBAR (FIXED DESIGN)
-================================ */
-.sidebar {
-  width: 220px;
-  background: var(--pup-red);
-  padding: 25px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.sidebar-logo {
-  width: 70px;
-  margin-bottom: 30px;
-}
-
-.sidebar a {
-  color: white;
-  text-decoration: none;
-  font-weight: bold;
-  margin-bottom: 18px;
-  display: block;
-}
-
-.sidebar a:hover {
-  opacity: 0.8;
-}
-
-.sidebar a.active {
-  border-left: 4px solid white;
-  padding-left: 10px;
-}
-
-/* ===============================
-   TOP NAVBAR
-================================ */
-.top-bar {
-  background: white;
-  padding: 15px 40px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 2px solid var(--pup-red);
-}
-
-.top-links {
-  display: flex;
-  gap: 30px;
-}
-
-.top-links a {
-  text-decoration: none;
-  font-weight: bold;
-  color: #333;
-}
-
-.top-links a:hover {
-  color: var(--pup-red);
-}
-
-.active-link {
-  color: var(--pup-red);
-}
-
-/* ===============================
-   PROFILE ICON
-================================ */
-.top-icons {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.profile-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--pup-red);
 }
 
 /* ===============================
