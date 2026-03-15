@@ -777,3 +777,30 @@ body {
   font-size: 13px;
   color: #555;
 }
+
+
+/* Calendar Container */
+.calendar-container { display: flex; gap: 40px; margin-top: 20px; }
+.calendar-left { flex: 1.5; }
+.calendar-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+.calendar-date-row { display: flex; gap: 10px; margin-bottom: 15px; }
+.calendar-date-row input { border: 1px solid #ccc; padding: 8px; border-radius: 8px; width: 120px; }
+
+
+/* Assignment Right Panel */
+.assignment-right { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+.availability-status { background-color: var(--success-green); padding: 15px; border-radius: 10px; color: #2d5a30; font-weight: bold; }
+.form-group label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 18px; }
+.form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 10px; background: #fdfdfd; }
+
+.btn-view-ticket { 
+    background-color: var(--maroon); 
+    color: white; 
+    border: none; 
+    padding: 15px; 
+    border-radius: 10px; 
+    font-size: 18px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    margin-top: auto;
+}
