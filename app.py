@@ -1,3 +1,5 @@
+import email
+
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 from dotenv import load_dotenv
 from email.mime.text import MIMEText
@@ -19,6 +21,29 @@ load_dotenv()  # Load environment variables from .env file
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
+
+# =======================================================
+# GLOBAL LOGIN PROTECTION
+# =======================================================
+@app.before_request
+def require_login():
+
+    allowed_routes = [
+        'login',
+        'register',
+        'forgot_password',
+        'verify_otp',
+        'verify_reset_otp',
+        'reset_password',
+        'resend_otp',
+        'static'
+    ]
+
+    if not request.endpoint:
+        return
+
+    if 'user_id' not in session and request.endpoint not in allowed_routes:
+        return redirect(url_for('login'))
 
 ALLOWED_DOMAINS = ["@pup.edu.ph", "@iskolarngbayan.pup.edu.ph"]
 TEST_EMAILS = ["silvestrejennamae09@gmail.com"]
@@ -189,6 +214,9 @@ def register():
     #GENERATE OTP
     otp = generate_otp()
 
+    print("Generated OTP:", otp)
+    print("Sending to:", email)
+    
     #STORE TEMPT DATA
     session['otp'] = otp
     session['register_email'] = email
@@ -1246,7 +1274,7 @@ def insert_vehicle_type_distribution(doc, distribution_rows):
 #=========Vehicle_details start==========================================
 @app.route("/vehicle/<int:vehicle_id>")
 def vehicle_details(vehicle_id):
-    if 'user_name' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('index'))
 
     conn = get_db_connection()
@@ -2328,6 +2356,119 @@ def user_trip_tickets():
 # USER SIDE ROUTES---end
 # =======================================================
 
+import time
+
+# =======================================================
+# FORGOT PASSWORD
+# =======================================================
+@app.route('/forgot-password', methods=['GET','POST'])
+def forgot_password():
+
+    if request.method == "GET":
+        return render_template("forgot_password.html")
+
+    email = request.form.get("email")
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT id FROM users WHERE email=%s", (email,))
+    user = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    if not user:
+        flash("Email not registered")
+        return redirect(url_for("forgot_password"))
+
+    otp = generate_otp()
+
+    session['reset_email'] = email
+    session['reset_otp'] = otp
+    session['otp_time'] = time.time()   # OTP timestamp added here
+
+    send_otp_email(email, otp)
+
+    return redirect(url_for("verify_reset_otp"))
+
+
+# =======================================================
+# VERIFY RESET OTP
+# =======================================================
+@app.route('/verify-reset-otp', methods=['GET','POST'])
+def verify_reset_otp():
+
+    if request.method == "POST":
+
+        user_otp = request.form.get("otp")
+
+        # Check if OTP expired (5 minutes)
+        if time.time() - session.get('otp_time', 0) > 300:
+            flash("OTP expired. Please request again.")
+            return redirect(url_for("forgot_password"))
+
+        if user_otp == session.get("reset_otp"):
+            return redirect(url_for("reset_password"))
+
+        else:
+            flash("Invalid OTP")
+
+    return render_template("verify_otp.html")
+
+
+# =======================================================
+# RESET PASSWORD
+# =======================================================
+@app.route('/reset-password', methods=['GET','POST'])
+def reset_password():
+
+    if not session.get("reset_email"):
+        return redirect(url_for("forgot_password"))
+
+    if request.method == "GET":
+        return render_template("reset_password.html")
+
+    password = request.form.get("password")
+    confirm_password = request.form.get("confirm_password")
+
+    if not password:
+        flash("Password is required")
+        return redirect(url_for("reset_password"))
+
+    if password != confirm_password:
+        flash("Passwords do not match")
+        return redirect(url_for("reset_password"))
+
+    email = session.get("reset_email")
+
+    hashed_password = bcrypt.hashpw(
+        password.encode('utf-8'),
+        bcrypt.gensalt()
+    ).decode('utf-8')
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE users
+        SET password = %s
+        WHERE email = %s
+    """, (hashed_password, email))
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    session.pop('reset_email', None)
+    session.pop('reset_otp', None)
+    session.pop('otp_time', None)
+
+    flash("Password updated successfully")
+
+    return redirect(url_for("login"))
+
 #================ AUTH/OTP IN ACCOUNT CREATION ===========
 @app.route('/verify_otp', methods=['GET', 'POST'])
 def verify_otp():
@@ -2366,29 +2507,51 @@ def generate_otp():
     return str(random.randint(100000, 999999))
 
 def send_otp_email(receiver_email, otp):
-    
-    sender_email = "tmps.pup@gmail.com"
-    sender_password = "ayxj yrer wmud irxl"
 
-    subject = "PUP Motor Pool Account Verification"
-    body = f"Your OTP code is: {otp}"
+    try:
+        sender_email = "tmps.pup@gmail.com"
+        sender_password = "ayxj yrer wmud irxl"
 
-    msg = MIMEMultipart()
-    msg['FROM'] = sender_email
-    msg['TO'] = receiver_email
-    msg['subject'] = subject
+        subject = "PUP Motor Pool Account Verification"
+        body = f"Your OTP code is: {otp}"
 
-    msg.attach(MIMEText(body, 'plain'))
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = receiver_email
+        msg['Subject'] = subject
 
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.starttls()
-    server.login(sender_email, sender_password)
+        msg.attach(MIMEText(body, 'plain'))
 
-    text = msg.as_string()
-    server.sendmail(sender_email, receiver_email, text)
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(sender_email, sender_password)
 
-    server.quit()
+        server.sendmail(sender_email, receiver_email, msg.as_string())
+        server.quit()
 
+        print("OTP EMAIL SENT SUCCESSFULLY")
+
+    except Exception as e:
+        print("EMAIL ERROR:", e)
+
+#============== RESEND OTP ================================
+@app.route('/resend-otp')
+def resend_otp():
+
+    email = session.get("register_email")
+
+    if not email:
+        return redirect(url_for("register"))
+
+    otp = generate_otp()
+
+    session['otp'] = otp
+
+    send_otp_email(email, otp)
+
+    flash("A new OTP has been sent to your email.")
+
+    return redirect(url_for("verify_otp"))
 
 #============== REQUEST ADMIN SIDE ================================
 @app.route("/req_dashboard")
@@ -2461,10 +2624,17 @@ def auth_user():
         "role": session.get("user_role")
     }
 
-@app.route('/logout', methods=['POST'])
+# =======================================================
+# LOGOUT
+# =======================================================
+@app.route('/logout')
 def logout():
-    session.clear()
-    return '', 204
+
+    session.clear()   # clears all login/session data
+
+    flash("You have been logged out.")
+
+    return redirect(url_for("login"))
 
 
 if __name__ == '__main__':

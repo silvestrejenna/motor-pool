@@ -52,6 +52,12 @@ body {
   gap: 15px;
 }
 
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 .icon {
   cursor: pointer;
 }
@@ -82,7 +88,8 @@ body {
 .hero {
   text-align: center;
   padding: 80px 20px;
-  background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
     url("../images/pup-img.jpg");
   background-size: cover;
   background-position: center;

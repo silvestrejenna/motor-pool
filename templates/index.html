@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -30,8 +30,8 @@
       </nav>
 
       <div class="nav-right">
-        <span class="icon">🔔</span>
-
+         <div class="user-profile">
+            <span class="icon">🔔</span>
         <div class="profile">
           <span class="icon" onclick="toggleProfile()">👤</span>
 
@@ -39,9 +39,11 @@
             <p class="name" id="profileName">Loading...</p>
             <p class="email" id="profileEmail"></p>
             <hr />
-            <a href="#">Activity</a><br/>
-            <a href="#">Change Password</a><br/>
-            <a href="#" onclick="logout()" class="logout">Log Out</a>
+            <a href="#">Activity</a><br />
+            <a href="#">Change Password</a><br />
+            <a href="{{ url_for('logout') }}" onclick="logout()" class="logout"
+              >Log Out</a
+            >
           </div>
         </div>
       </div>
