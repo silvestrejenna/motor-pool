@@ -2433,9 +2433,28 @@ def requests():
         vehicle_requests=vehicle_requests
     )
 
-@app.route('/admin-request/req_details/<req_id>')
+@app.route('/admin-request/req_details/<req_id>', methods=["GET", "POST"])
 @role_required('Admin', 'Staff')
 def req_details(req_id):
+
+    if request.method == "POST":
+        vehicle_id = request.form["vehicle_id"]
+        driver_name = request.form["driver_name"]
+        travel_date = request.form["travel_date"]
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute("""
+            INSERT INTO trip_tickets
+                    (vehicle_id, driver_name, travel_date)
+            VALUES (%s, %s, %s)
+            """, (vehicle_id, driver_name, travel_date))
+        
+        conn.commit()
+
+        cur.close()
+        conn.close()
 
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -2449,7 +2468,7 @@ def req_details(req_id):
             WHERE vr.id = %s
             """, (req_id,))
     
-    request = cur.fetchone()
+    req_data = cur.fetchone()
 
     cur.close()
     conn.close()
@@ -2471,8 +2490,42 @@ def req_details(req_id):
 
     return render_template(
         "admin-request/req_details.html",
-        request=request,
+        request=req_data,
         vehicles=vehicles
+    )
+
+    #=====================TRIP TICKET===========================
+@app.route("/trip_ticket")
+def trip_ticket():
+
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur.execute("""
+        SELECT
+            tt.driver_name,
+            v.name,
+            v.plate_number,
+            tt.travel_date,
+        FROM trip_tickets tt
+        JOIN vehicle v 
+        ON tt.vehicle_id = v.vehicle_id
+        ORDER BY tt.id DESC
+        LIMIT 1
+                """)
+    
+    ticket = cur.fetchone()
+
+    cur.execute("SELECT travel_date FROM trip_tickets")
+    bookings = cur.fettchone()
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        "trip_ticket.html",
+        ticket=ticket,
+        bookings=bookings
     )
 
 
