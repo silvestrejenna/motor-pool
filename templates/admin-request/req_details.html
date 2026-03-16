@@ -205,6 +205,7 @@
                             <span class="status-dot">✔</span> Vehicles Available
                         </div>
                         
+                        <form method="POST">
                         <div class="form-group">
                             <label>Assign Vehicle</label>
                             <select id="vehicleSelect" name="vehicles">
@@ -219,10 +220,12 @@
 
                         <div class="form-group">
                             <label>Assign Driver</label>
-                            <input type="text" placeholder="Enter Driver Name">
+                            <input type="text" id="driver_name" placeholder="Enter Driver Name">
+                            <input type="hidden" name="travel_date" id="travel_date">
                         </div>
 
-                        <button class="btn-submit">View Trip Ticket</button>
+                        <button type="submit" class="btn-submit">View Trip Ticket</button>
+                        </form>
                     </div>
                 </div>
 
@@ -318,10 +321,25 @@
           calendar.appendChild(empty);
         }
 
+        let selectedDate = null;
         for (let day=1; day<=daysInMonth; day++) {
           const cell = document.createElement("div");
           cell.classList.add("calendar-day");
           cell.textContent = day;
+
+          cell.onclick = function() {
+            document.querySelectorAll(".calendar-day")
+                .forEach(d => d.classList.remove("selected"));
+            
+            cell.classList.add("selected");
+
+            selectedDate =
+                year + "-" +
+                String(month + 1).padStart(2, "0") + "-" +
+                String(day).padStart(2,"0");
+
+            console.log("Selected Date:", selectedDate);    
+          };
 
           calendar.appendChild(cell);
         }

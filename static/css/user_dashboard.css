@@ -394,6 +394,13 @@ body {
   background: #a00000;
 }
 
+.selected{
+  background:880000;
+  color: #8b0000;
+}
+
+.selected
+
 /* ===============================
    FORM DESIGN (FIXED)
 ================================ */
