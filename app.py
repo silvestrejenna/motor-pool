@@ -2606,18 +2606,19 @@ def requests():
 def req_details(req_id):
 
     if request.method == "POST":
-        vehicle_id = request.form["vehicle_id"]
+        vehicle_name = request.form["vehicles"]
         driver_name = request.form["driver_name"]
-        travel_date = request.form["travel_date"]
+        start_date = request.form["start_date"]
+        end_date = request.form["end_date"]
 
         conn = get_db_connection()
         cur = conn.cursor()
 
         cur.execute("""
             INSERT INTO trip_tickets
-                    (vehicle_id, driver_name, travel_date)
-            VALUES (%s, %s, %s)
-            """, (vehicle_id, driver_name, travel_date))
+                    (vehicle_name, driver_name, start_date, end_date)
+            VALUES (%s, %s, %s, %s)
+            """, (vehicle_name, driver_name, start_date, end_date))
         
         conn.commit()
 
@@ -2663,8 +2664,9 @@ def req_details(req_id):
     )
 
     #=====================TRIP TICKET===========================
-@app.route("/trip_ticket")
-def trip_ticket():
+@app.route("/generate_trip_ticket/<req_id>")
+@role_required("Admin", "Staff")
+def generate_trip_ticket(req_id):
 
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -2672,28 +2674,80 @@ def trip_ticket():
     cur.execute("""
         SELECT
             tt.driver_name,
-            v.name,
+            tt.vehicle_name,
             v.plate_number,
-            tt.travel_date,
+            tt.start_date,
+            tt.end_date,
+            vr.purpose,
+            vr.destination,
+            u.full_name
+                
         FROM trip_tickets tt
-        JOIN vehicle v 
-        ON tt.vehicle_id = v.vehicle_id
-        ORDER BY tt.id DESC
+        JOIN vehicle_requests vr ON vr.id = tt.request_id
+        JOIN users u ON vr.user_id = u.id
+        JOIN vehicles v ON v.vehicle_name = tt.vehicle_name
+        WHERE WHERE vr.id = %s
         LIMIT 1
-                """)
+                """, (req_id,))
     
-    ticket = cur.fetchone()
+    data = cur.fetchone()
 
-    cur.execute("SELECT travel_date FROM trip_tickets")
-    bookings = cur.fettchone()
+    cur.close()
+    conn.close()
+    doc = Document("report_template/trip_ticket_mnla.docx")
+
+    for p in doc.paragraphs:
+        if "{{driver_name}}" in p.text:
+            p.text = p.text.replace("{{driver_name}}", data["driver_name"])
+
+        if "{{vehicle_name}}" in p.text:
+            p.text = p.text.replace("{{vehicle_name}}", data["vehicle_name"])
+
+        if "{{purpose}}" in p.text:
+            p.text = p.text.replace("{{purpose}}", data["purpose"])
+
+        if "{{DATE}}" in p.text:
+            p.text = p.text.replace("{{DATE}}", str(data["start_date"]))
+
+        if "{{full_name}}" in p.text:
+            p.text = p.text.replace("{{full_name}}", data["full_name"])
+
+    filename = f"trip_ticket_{req_id}.docx"
+    filepath = os.path.join("reports_output", filename)
+
+    doc.save(filepath)
+
+    return redirect("/admin/trip-tickets")
+
+
+@app.route("/admin/trip-tickets")
+@role_required("Admin","Staff")
+def admin_trip_tickets():
+
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur.execute("""
+        SELECT *
+        FROM trip_tickets
+        ORDER BY start_date DESC
+    """)
+
+    tickets = cur.fetchall()
 
     cur.close()
     conn.close()
 
-    return render_template(
-        "trip_ticket.html",
-        ticket=ticket,
-        bookings=bookings
+    return render_template("admin-request/trip_ticket.html", tickets=tickets)
+
+
+@app.route("/download-trip/<filename>")
+def download_trip(filename):
+
+    return send_from_directory(
+        directory="reports_output",
+        path=filename,
+        as_attachment=True
     )
 
 
