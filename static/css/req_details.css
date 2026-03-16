@@ -1,0 +1,208 @@
+
+/* ===============================
+   CALENDAR
+================================ */
+.calendar-container {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+#calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.calendar-day {
+  padding: 15px;
+  text-align: center;
+  background: #eee;
+  border-radius: 8px;
+}
+
+.calendar-day.unavailable {
+  background: var(--pup-red);
+  color: white;
+}
+
+.calendar-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: bold;
+}
+
+.calendar-contorols button {
+  background: #8b0000;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.calendar-contorols button:hover {
+  background: #a00000;
+}
+
+.btn-edit-cal { 
+  background-color: var(--maroon); 
+  color: white; 
+  border: none; 
+  padding: 8px 20px; 
+  border-radius: 8px; 
+  cursor: pointer; 
+}
+
+.calendar-day.selected{
+    background:#8B0000;
+    color:white;
+    font-weight:bold;
+    cursor: pointer;
+}
+
+.calendar-day:hover {
+    background:#a00000;
+    color:white;
+}
+
+.start-date{
+background:#8B0000;
+color:white;
+}
+
+.end-date{
+background:#8B0000;
+color:white;
+}
+
+.range{
+background:#f3caca;
+}
+
+
+
+
+
+/* Calendar Container */
+.calendar-container { display: flex; gap: 40px; margin-top: 20px; }
+.calendar-left { flex: 1.5; }
+.calendar-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+.calendar-date-row { display: flex; gap: 10px; margin-bottom: 15px; }
+.calendar-date-row input { border: 1px solid #ccc; padding: 8px; border-radius: 8px; width: 120px; }
+
+
+/* Assignment Right Panel */
+.assignment-right { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+.availability-status { background-color: var(--success-green); padding: 15px; border-radius: 10px; color: #2d5a30; font-weight: bold; }
+.form-group label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 18px; }
+.form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 10px; background: #fdfdfd; }
+
+.btn-submit {
+  background: var(--pup-red);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+}
+
+.btn-submit:hover {
+  opacity: 0.9;
+}
+
+/* ===============================
+   REQUEST INFO
+================================ */
+
+.request-form {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  margin-top: 30px;
+}
+
+.form-card {
+  background: white;
+  padding: 40px 55px 40px 40px;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.form-card h3 {
+  margin-bottom: 18px;
+  font-size: 18px;
+}
+
+/* INPUT FIELDS */
+
+.form-card input,
+.form-card select,
+.form-card textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid #dcdcdc;
+  font-size: 14px;
+  box-sizing: border-box;
+  margin-bottom: 18px;
+}
+
+.form-card input:focus,
+.form-card select:focus,
+.form-card textarea:focus {
+  outline: none;
+  border-color: var(--pup-red);
+  box-shadow: 0 0 0 2px rgba(128, 0, 0, 0.1);
+}
+
+.form-card label {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 10px; /* space between text and input */
+  display: block;
+}
+
+/* TEXTAREA */
+
+.form-card textarea {
+  resize: none;
+  height: 110px;
+  margin-bottom: 25px;
+}
+
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.form-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* TWO COLUMN ROW */
+
+.form-row.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-top: 18px;
+}
+
+.form-row.two > div {
+  padding-right: 6px;
+}

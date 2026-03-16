@@ -112,17 +112,21 @@
         <!-- SAMPLE TICKET (for UI preview only) -->
         <!-- You may delete this later -->
 
+        {% for ticket in tickets %}
         <div class="ticket-card">
           <div>
-            <h4>Trip Ticket #TT-2026-0001</h4>
-
+            <h4>Trip Ticket #{{ ticket.id }}</h4>
+            <p>Vehicle: {{ ticket.vehicle_name }}</p>
             <p>Destination: Sample Destination</p>
 
-            <p>Date: Jan 20, 2026 | 09:00 AM</p>
+            <p> Date: {{ ticket.start_date }}</p>
           </div>
 
-          <a href="#" class="download-btn"> Download </a>
+          <a href="/download-trip/{{ ticket.id }}" class="download-btn">
+        Download
+         </a>
         </div>
+        {% endfor %}
       </div>
     </div>
 

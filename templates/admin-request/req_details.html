@@ -1,81 +1,68 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8">
     <title>New Request | Motor Pool</title>
 
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='css/user_dashboard.css') }}"
+      href="{{ url_for('static', filename='css/req_details.css') }}"
     />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/records.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/vehicle_inv.css') }}">
   </head>
 
+  <div class="main-container">
+
   <body>
-    <!-- ================= NAVBAR ================= -->
-    <div class="top-navbar">
-      <div class="nav-left">
+    <!-- ================= SIDE BAR ================= -->
+     <nav class="sidebar">
         <div class="logo-section">
           <img
             src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
+            alt="Logo"
           />
-
-          <div class="logo-text">
-            PUP<br />
-            Motor Pool<br />
-            Under GASS
-          </div>
         </div>
-      </div>
-
-      <div class="nav-center">
-        <div class="nav-links">
-          <a href="{{ url_for('user_home') }}">HOME</a>
-          <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
-          <a class="active" href="{{ url_for('user_new_request') }}"
-            >NEW REQUEST</a
-          >
-          <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
-          <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
-        </div>
-
-        <div class="nav-right">
-          <div class="profile">
-            <span class="icon" onclick="toggleProfile()">👤</span>
-
-            <div class="profile-dropdown" id="profileDropdown">
-              <p class="name" id="profileName">Loading...</p>
-              <p class="email">{{ email }}</p>
-              <hr />
-              <a href="#">Activity</a><br />
-              <a href="#">Change Password</a><br />
-              <a href="#" onclick="logout()" class="logout">Log Out</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ================= PAGE LAYOUT ================= -->
-    <div class="dashboard-layout">
-      <!-- SIDEBAR -->
-      <nav class="sidebar">
-        <img
-          src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-        />
 
         <ul class="inventory-selection">
           <li><a href="{{ url_for('reports')}}">REPORTS</a></li>
           <li><a href="{{ url_for('req_dashboard') }}">VEHICLE REQUEST DASHBOARD</a></li>
           <li><a class="active">VEHICLE REQUEST</a></li>
+          <li><a href="{{ url_for('admin_trip_tickets')}}">TRIP TICKET</a></li>
         </ul>
       </nav>
 
-      <!-- ================= CONTENT ================= -->
-      <div class="dashboard-content">
-        <h2>Vehicle Request Details</h2>
+<!-- CONTENT -->
+  <div class="content">
+  <!-- TOP NAV -->
+     <header class="top-nav">
+          <div class="nav-links">
+            <a href="{{ url_for('home') }}">HOME</a>
+            <a href="{{ url_for('inventory') }}">INVENTORY</a>
+            <a href="{{ url_for('records') }}" class="active">RECORDS</a>
+          </div>
 
-        <p class="subtitle" id="profileName">
+          <div class="user-profile">
+            <span class="icon">🔔</span>
+            <div class="profile">
+              <span class="icon" onclick="toggleProfile()">👤</span>
 
-        </p>
+              <div class="profile-dropdown" id="profileDropdown">
+                <p class="name" id="profileName">Loading...</p>
+                <p class="email" id="profileEmail"></p>
+                <hr />
+                <a href="#">Activity</a><br />
+                <a href="#">Change Password</a><br />
+                <a href="#" onclick="logout()" class="logout">Log Out</a>
+              </div>
+            </div>
+          </div>
+    </header>
+
+    <div class="page-header"></div>
+          <h1>VEHICLE REQUEST MANAGEMENT</h1>
+          <p>Manage and monitor all vehicle request submissions.</p>
+         
 
           <!-- REQUEST INFO -->
           <div class="form-card">
@@ -220,14 +207,18 @@
 
                         <div class="form-group">
                             <label>Assign Driver</label>
-                            <input type="text" id="driver_name" placeholder="Enter Driver Name">
-                            <input type="hidden" name="travel_date" id="travel_date">
+                            <input type="text" name="driver_name" id="driver_name" 
+                              placeholder="Enter Driver Name">
+                            <input type="hidden" name="start_date" id="start_date">
+                            <input type="hidden" name="end_date" id="end_date">
                         </div>
 
                         <button type="submit" class="btn-submit">View Trip Ticket</button>
                         </form>
                     </div>
                 </div>
+                </div>
+    </div>
 
     <!-- ================= FOOTER ================= -->
     <footer class="footer">
@@ -298,6 +289,8 @@
       const nextMonth = document.getElementById("nextMonth")
 
       let currentDate = new Date();
+      let startDate = null;
+      let endDate = null;
 
       function renderCalendar() {
 
@@ -321,29 +314,72 @@
           calendar.appendChild(empty);
         }
 
-        let selectedDate = null;
         for (let day=1; day<=daysInMonth; day++) {
           const cell = document.createElement("div");
           cell.classList.add("calendar-day");
           cell.textContent = day;
 
           cell.onclick = function() {
-            document.querySelectorAll(".calendar-day")
-                .forEach(d => d.classList.remove("selected"));
             
-            cell.classList.add("selected");
-
-            selectedDate =
+            const selected =
                 year + "-" +
                 String(month + 1).padStart(2, "0") + "-" +
                 String(day).padStart(2,"0");
 
-            console.log("Selected Date:", selectedDate);    
+            if (!startDate) {
+              startDate = selected;
+              document.getElementById("start_date").value = startDate;
+              cell.classList.add("start-date");
+            }
+
+            else if (!endDate) {
+              endDate = selected;
+              document.getElementById("end_date").value = endDate;
+              cell.classList.add("end-date");
+
+              highlightRange(year, month);
+            }
+
+            else {
+              startDate = selected;
+              endDate = null;
+
+              document.getElementById("start_date").value = startDate;
+              document.getElementById("end_date").value = "";
+
+              document.querySelectorAll(".calendar-day")
+              .forEach(d => d.classList.remove("start-date","end-date","range"));
+
+              cell.classList.add("start-date");
+            } 
           };
 
           calendar.appendChild(cell);
         }
       }
+
+      function highlightRange(year, month){
+
+              const cells = document.querySelectorAll(".calendar-day");
+
+              cells.forEach(cell => {
+
+                  const day = parseInt(cell.textContent);
+
+                  const date =
+                      year + "-" +
+                      String(month + 1).padStart(2, "0") + "-" +
+                      String(day).padStart(2, "0");
+
+                  if(date > startDate && date < endDate){
+
+                      cell.classList.add("range");
+
+                  }
+
+              });
+
+          }
       
       prevMonth.onclick = function() {
         currentDate.setMonth(currentDate.getMonth() - 1);
@@ -355,7 +391,7 @@
         renderCalendar();
       }
       renderCalendar();
-    </script>
 
+    </script>
   </body>
 </html>
