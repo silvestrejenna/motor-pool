@@ -1,46 +1,56 @@
-
-
 /* Summary Cards */
 .summary-container {
-    display: grid; 
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px; 
-    margin: 20px 0; 
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin: 20px 0;
 }
-.summary-card { 
-    background: #fff; 
-    padding: 15px; 
-    border-radius: 10px; 
-    border-left: 5px solid #800000; 
+.summary-card {
+  background: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  border-left: 5px solid #800000;
 }
 
 /* Sticky Table Logic */
-.table-wrapper { 
-    overflow-x: auto;
-    max-width: 100%; 
-    border-radius: 10px;
+.table-wrapper {
+  overflow-x: auto;
+  max-width: 100%;
+  border-radius: 10px;
 }
 
-.inventory-table { 
-    width: 100%; 
-    min-width: 1400px; 
-    border-collapse: collapse; 
+.table-wrapper {
+  width: 100%;
+  max-height: 400px; /* controls vertical height of table area */
+  overflow-x: auto; /* horizontal scroll */
+  overflow-y: auto; /* vertical scroll */
+}
+
+.inventory-table {
+  width: 100%;
+  min-width: 1400px;
+  border-collapse: collapse;
+}
+
+.inventory-table thead th {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 5;
 }
 
 .sticky-action {
-    position: sticky;
-    right: 0;
-    background: white !important;
-    z-index: 10;
-    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-    display: inline-block;
+  position: sticky;
+  right: 0;
+  background: white;
+  z-index: 10;
 }
 
 /* Scrollable Modal Logic */
 .scrollable-modal {
-    max-height: 90vh; /* Takes 80% of screen height */
-    overflow-y: auto; /* Enables vertical scroll */
-    width: 500px;
+  max-height: 90vh; /* Takes 80% of screen height */
+  overflow-y: auto; /* Enables vertical scroll */
+  width: 500px;
 }
 
 .modal-content {
@@ -52,13 +62,13 @@
 }
 
 .form-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding-right: 10px; /* Space for scrollbar */
-    width: 100%;
-    height: 100%;
-    z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 10px; /* Space for scrollbar */
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
 }
 
 .btn-save {
@@ -86,70 +96,122 @@
 
 /* Container for the buttons to keep them aligned */
 .sticky-action div {
-    display: flex;
-    gap: 8px; /* Space between buttons */
-    justify-content: center;
+  display: flex;
+  gap: 8px; /* Space between buttons */
+  justify-content: center;
 }
 
 /* Base button styles */
 .sticky-action button {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 5px;
-    font-size: 12px;
-    cursor: pointer;
-    text-decoration: none; 
-    display: inline-block; 
-    margin-bottom: 5px; 
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 5px;
 }
 
 /* Specific Colors for each action */
 .btn-edit {
-    background-color: #ffc107; /* Warning Yellow */
-    color: #000;
+  background-color: #ffc107; /* Warning Yellow */
+  color: #000;
 }
 
-
 .btn-cancel {
-    background-color: #6c757d; /* Secondary Gray */
-    color: white;
+  background-color: #6c757d; /* Secondary Gray */
+  color: white;
 }
 
 .btn-delete {
-    background-color: #dc3545; /* Danger Red */
-    color: white;
+  background-color: #dc3545; /* Danger Red */
+  color: white;
 }
 
 .close-btn {
-    cursor: pointer;
+  cursor: pointer;
 }
 /* Hover Effects */
-.btn-edit:hover { background-color: #e0a800; }
-.btn-update:hover { background-color: #218838; }
-.btn-cancel:hover { background-color: #5a6268; }
-.btn-delete:hover { background-color: #c82333; }
+.btn-edit:hover {
+  background-color: #e0a800;
+}
+.btn-update:hover {
+  background-color: #218838;
+}
+.btn-cancel:hover {
+  background-color: #5a6268;
+}
+.btn-delete:hover {
+  background-color: #c82333;
+}
 
 /* Active (Click) Effect */
 .sticky-action button:active {
-    transform: scale(0.95);
+  transform: scale(0.95);
+}
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  min-width: 250px;
+  background: var(--pup-red);
+  color: white;
+  padding: 20px 0;
+  height: auto;
+  position: sticky;
+  top: 0;
 }
 
+.logo-section {
+  text-align: center;
+  margin-bottom: 25px;
+}
 
+.logo-section img {
+  width: 80px;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar ul.inventory-selection li a {
+  color: white; /* Or whatever color your sidebar text uses */
+  text-decoration: none; /* Removes the underline */
+  display: block; /* Makes the entire menu item clickable */
+  width: 100%;
+}
+
+.sidebar ul.inventory-selection li a:hover {
+  color: #ffc107;
+}
+
+.sidebar li {
+  padding: 15px 25px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar li.active {
+  background: white;
+  color: var(--pup-red);
+}
+
+/*footer*/
 /* FOOTER */
 .footer {
-  margin-top: auto;
   background: #f3f0ee;
   padding: 40px 60px 20px;
   color: #333;
-  min-width: 1400px; 
 }
 
 .footer-content {
-  max-width: 1400px;
-  margin: 0 auto;
   display: grid;
   grid-template-columns: 1.5fr 1fr 1fr;
-  gap: 60px;
+  gap: 40px;
   align-items: start;
 }
 

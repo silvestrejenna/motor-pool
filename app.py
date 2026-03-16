@@ -1733,13 +1733,14 @@ def insert_annex_b3_rows(doc, rows):
 @app.route("/generate_report", methods=["POST"])
 @role_required("Admin", "Staff")
 def generate_report():
+
     report_type = request.form.get("report_type")
     month = request.form.get("month")
     year = request.form.get("year")
 
     if not report_type:
         return redirect(url_for("reports"))
-    
+
     if report_type != "monthly_monitoring":
         if not month or not year:
             return redirect(url_for("reports"))
@@ -1752,10 +1753,11 @@ def generate_report():
     print("Generating report:", report_type, month, year)
 
     # Output file setup
-    output_filename = f"{report_type}_{month}_{year}.docx"
+    output_filename = f"{report_type}_{month_name}_{year}.docx"
     output_path = os.path.join("reports_output", output_filename)
-    os.makedirs("reports_output", exist_ok=True)
 
+    os.makedirs("reports_output", exist_ok=True)
+    
     # ===============================
     # GAS & RFID REPORT (CURRENT)
     # ===============================
@@ -1918,13 +1920,16 @@ def generate_report():
             return redirect(url_for("reports"))
 
 
-        # Convert string → datetime object
         dt = datetime.strptime(monitoring_date, "%Y-%m-%d")
 
-        # ✅ AUTO EXTRACT FROM DATE PICKER
         month = dt.month
         year = dt.year
+        month_name = calendar.month_name[month]
 
+        # regenerate filename
+        output_filename = f"{report_type}_{month_name}_{year}.docx"
+        output_path = os.path.join("reports_output", output_filename)
+        
         # ✅ FORMAT FOR DOCUMENT
         monitoring_date = dt.strftime("%B %d, %Y")
 
