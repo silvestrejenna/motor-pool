@@ -1,12 +1,18 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Maintenance & PMS Log</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/vehicle_inv.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/maintenance.css') }}">
-</head>
-<body>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/vehicle_inv.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/maintenance.css') }}"
+    />
+  </head>
+  <body>
     <div class="main-container">
       <!-- ================= SIDEBAR ================= -->
       <nav class="sidebar">
@@ -24,14 +30,14 @@
           <li>
             <a href="{{ url_for('tools_equipment') }}">TOOLS & EQUIPMENT</a>
           </li>
-          <li><a href="{{ url_for('parts_supplies') }}">PARTS & SUPPLIES</a></li>
+          <li>
+            <a href="{{ url_for('parts_supplies') }}">PARTS & SUPPLIES</a>
+          </li>
           <li><a href="{{ url_for('reports') }}">REPORTS</a></li>
         </ul>
       </nav>
 
-      
-
-    <!-- ================= CONTENT ================= -->
+      <!-- ================= CONTENT ================= -->
       <div class="content">
         <!-- TOP NAV -->
         <header class="top-nav">
@@ -42,8 +48,6 @@
           </div>
 
           <div class="user-profile">
-            <span class="icon">🔔</span>
-
             <div class="profile">
               <span class="icon" onclick="toggleProfile()">👤</span>
 
@@ -53,171 +57,183 @@
                 <hr />
                 <a href="#">Activity</a><br />
                 <a href="#">Change Password</a><br />
-                <a href="#" onclick="logout()" class="logout">Log Out</a>
+                <a
+                  href="{{ url_for('logout') }}"
+                  onclick="logout()"
+                  class="logout"
+                  >Log Out</a
+                >
               </div>
             </div>
           </div>
         </header>
 
-<!-- ================= INVENTORY ================= -->
-    <div class="inventory-section">
-        <div class="toggle-container">
+        <!-- ================= INVENTORY ================= -->
+        <div class="inventory-section">
+          <div class="toggle-container">
             <div class="toggle-switch">
-                <button id="m-btn" class="active" onclick="switchTab('maintenance')">Maintenance Log</button>
-                <button id="p-btn" onclick="switchTab('pms')">PMS log</button>
+              <button
+                id="m-btn"
+                class="active"
+                onclick="switchTab('maintenance')"
+              >
+                Maintenance Log
+              </button>
+              <button id="p-btn" onclick="switchTab('pms')">PMS log</button>
             </div>
-        </div>
+          </div>
 
-        <div id="maintenance-section">
+          <div id="maintenance-section">
             <div class="header-area">
-                <h1>MAINTENANCE LOG</h1>
-                {% if session['user_role'] == 'Admin' %}
-                <button class="btn-add-maroon" onclick="openModal('m-modal')">Add Maintenance Record</button>
-                {% endif %}
+              <h1>MAINTENANCE LOG</h1>
+              <button class="btn-add-maroon" onclick="openModal('m-modal')">
+                Add Maintenance Record
+              </button>
             </div>
             <div class="stats-cards">
-                <div class="card">
-                    <h3>Total This Month</h3>
-                    <p class="val">{{ m_count }}</p>
-                </div>
-                <div class="card">
-                    <h3>Total Maintenance Cost This Month</h3>
-                    <p class="val">₱{{ "{:,.2f}".format(total_m_cost) }}</p>
-                </div>
+              <div class="card">
+                <h3>Total This Month</h3>
+                <p class="val">{{ m_count }}</p>
+              </div>
+              <div class="card">
+                <h3>Total Maintenance Cost This Month</h3>
+                <p class="val">₱{{ "{:,.2f}".format(total_m_cost) }}</p>
+              </div>
             </div>
             <div class="table-card">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Vehicle</th>
-                            <th>Problem</th>
-                            <th>Action Taken</th>
-                            <th>Cost</th>
-                            <th>Mechanic</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in m_records %}
-                        <tr id="m-row-{{ row[0] }}">
-                            <td class="m-date">{{ row[1] }}</td>
-                            <td class="m-vehicle"><strong>{{ row[2] }}</strong></td>
-                            <td class="m-problem">{{ row[3] }}</td>
-                            <td class="m-action_taken">{{ row[4] }}</td>
-                            <td class="m-cost">₱{{ row[5] }}</td>
-                            <td class="m-mechanic">{{ row[6] }}</td>
-
-                            {% if session['user_role'] == 'Admin' %}
-                            <td class="action-buttons">
-                                <button class="btn-edit" onclick="editMRow('{{ row[0] }}')">Edit</button>
-                                <button class="btn-update" id="m-upd-{{ row[0] }}" style="display:none"
-                                    onclick="updateMRow('{{ row[0] }}')">Update</button>
-                                <button class="btn-cancel" id="m-cancel-{{ row[0] }}" style="display:none" onclick="cancelMEdit('{{ row[0] }}')">Cancel</button>
-                                <form action="/delete_maintenance/{{ row[0] }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this record?');" style="display:inline;">
-                                    <button type="submit" class="btn-delete">Delete</button>
-                            </form>
-                            </td>
-                            {% endif %}
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Vehicle</th>
+                    <th>Problem</th>
+                    <th>Action Taken</th>
+                    <th>Cost</th>
+                    <th>Mechanic</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in m_records %}
+                  <tr>
+                    <td>{{ row[1] }}</td>
+                    <td><strong>{{ row[2] }}</strong></td>
+                    <td>{{ row[3] }}</td>
+                    <td>{{ row[4] }}</td>
+                    <td>₱{{ row[5] }}</td>
+                    <td>{{ row[6] }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
-        </div>
+          </div>
 
-        <div id="pms-section" style="display:none;">
+          <div id="pms-section" style="display: none">
             <div class="header-area">
-                <h1>PREVENTIVE MAINTENANCE LOG</h1>
-                {% if session['user_role'] == 'Admin' %}
-                <button class="btn-add-maroon" onclick="openModal('p-modal')">Add PMS Record</button>
-                {% endif %}
+              <h1>PREVENTIVE MAINTENANCE LOG</h1>
+              <button class="btn-add-maroon" onclick="openModal('p-modal')">
+                Add PMS Record
+              </button>
             </div>
             <div class="table-card">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Vehicle</th>
-                            <th>Last PMS</th>
-                            <th>KM</th>
-                            <th>Oil (L)</th>
-                            <th>Next PMS</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in p_records %}
-                        <tr id="p-row-{{ row[0] }}">
-                            <td class="p-vehicle"><strong>{{ row[1] }}</strong></td>
-                            <td class="p-last" data-date="{{ row[2] }}">{{ row[2] }}</td>
-                            <td class="p-km">{{ row[3] }}km</td>
-                            <td class="p-oil">{{ row[4] }}L</td>
-                            <td class="p-next" data-date="{{ row[5] }}">{{ row[5] }}</td>
-
-                            {% if session['user_role'] == 'Admin' %}
-                            <td class="action-buttons">
-                                <button class="btn-edit" onclick="editPMS('{{ row[0] }}')">Edit</button>
-                                <button class="btn-update" id="p-upd-{{ row[0] }}" style="display:none"
-                                    onclick="updatePMS('{{ row[0] }}')">Update</button>
-                                <button class="btn-cancel" id="p-cancel-{{ row[0] }}" style="display:none" 
-                                    onclick="cancelPMS('{{ row[0] }}')">Cancel</button>
-                                <form action="/delete_pms/{{ row[0] }}" method="POST" 
-                                    onsubmit="return confirm('Are you sure you want to delete this record?');" style="display:inline;">
-                                    <button type="submit" class="btn-delete">Delete</button>
-                            </form>
-                            </td>
-                            {% endif %}
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Vehicle</th>
+                    <th>Last PMS</th>
+                    <th>KM</th>
+                    <th>Oil (L)</th>
+                    <th>Next PMS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in p_records %}
+                  <tr>
+                    <td><strong>{{ row[1] }}</strong></td>
+                    <td>{{ row[2] }}</td>
+                    <td>{{ row[3] }}km</td>
+                    <td>{{ row[4] }}L</td>
+                    <td>{{ row[5] }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
+          </div>
         </div>
-    </div>
 
-    <div id="m-modal" class="modal">
-        <div class="modal-content">
+        <div id="m-modal" class="modal">
+          <div class="modal-content">
             <h2>New Maintenance Record</h2>
             <form action="/add_maintenance" method="POST">
-                <input type="date" name="date" required>
-                <select name="vehicle_name">
-                    <option value="" disabled selected>Select Vehicle</option>
-                    {% for v in vehicles %}
-                    <option value="{{ v[1] }}">{{ v[1] }}</option>
-                    {% endfor %}
-                </select>
-                <input type="text" name="problem" placeholder="Problem">
-                <textarea name="action_taken" placeholder="Action Taken"></textarea>
-                <input type="number" name="cost" placeholder="Cost">
-                <input type="text" name="mechanic" placeholder="Mechanic">
-                <button type="submit" class="save-btn">Save Record</button>
-                <button type="button" class="m-btn" onclick="closeModal('m-modal')">Cancel</button>
+              <input type="date" name="date" required />
+              <select name="vehicle_name">
+                {% for v in vehicles %}
+                <option value="{{ v[1] }}">{{ v[1] }}</option>
+                {% endfor %}
+              </select>
+              <input type="text" name="problem" placeholder="Problem" />
+              <textarea
+                name="action_taken"
+                placeholder="Action Taken"
+              ></textarea>
+              <input type="number" name="cost" placeholder="Cost" />
+              <input type="text" name="mechanic" placeholder="Mechanic" />
+              <button type="submit" class="save-btn">Save Record</button>
+              <button type="button" onclick="closeModal('m-modal')">
+                Cancel
+              </button>
             </form>
+          </div>
         </div>
-    </div>
 
-    <div id="p-modal" class="modal">
-        <div class="modal-content">
+        <div id="p-modal" class="modal">
+          <div class="modal-content">
             <h2>New PMS Record</h2>
             <form action="/add_pms" method="POST">
-                <select name="vehicle_name">
-                    <option value="" disabled selected>Select Vehicle</option>
-                    {% for v in vehicles %}
-                    <option value="{{ v[1] }}">{{ v[1] }}</option>
-                    {% endfor %}
-                </select>
-                <label>Last PMS Date</label>
-                <input type="date" name="last_pms_date" required>
-                <input type="number" name="km" placeholder="KM Reading" required>
-                <input type="number" step="0.01" name="oil_liters" placeholder="Oil (Liters)">
-                <label>Next PMS Date</label>
-                <input type="date" name="next_pms_date" required>
-                <button type="submit" class="save-btn">Save PMS Record</button>
-                <button type="button" class="m-btn" onclick="closeModal('p-modal')">Cancel</button>
+              <select name="vehicle_name" required>
+                <option value="" disabled selected>Select Vehicle</option>
+                {% for v in vehicles %}
+                <option value="{{ v[1] }}">{{ v[1] }}</option>
+                {% endfor %}
+              </select>
+              <label>Last PMS Date</label>
+              <input type="date" name="last_pms_date" required />
+              <input
+                type="number"
+                name="km"
+                placeholder="KM Reading"
+                required
+              />
+              <input
+                type="number"
+                step="0.01"
+                name="oil_liters"
+                placeholder="Oil (Liters)"
+              />
+              <label>Next PMS Date</label>
+              <input type="date" name="next_pms_date" required />
+              <button
+                type="submit"
+                class="save-btn"
+                style="background-color: #ffb84d; color: black"
+              >
+                Save PMS Record
+              </button>
+              <button
+                type="button"
+                class="cancel-btn"
+                onclick="closeModal('p-modal')"
+              >
+                Cancel
+              </button>
             </form>
+          </div>
         </div>
+      </div>
     </div>
 
+    <!-- ================= FOOTER ================= -->
     <!-- ================= FOOTER ================= -->
     <footer class="footer">
       <div class="footer-content">
@@ -226,7 +242,7 @@
             src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
             class="footer-logo"
           />
-          <p>
+          <p class="footer-desc">
             A Web-Based Inventory and Record Management System for
             <strong>Motor Pool</strong>
           </p>
@@ -252,7 +268,8 @@
         © 2025 Polytechnic University of the Philippines. Under G.A.S.S.
       </div>
     </footer>
-    <script src="{{ url_for('static', filename='js/maintenance.js') }}"></script>
-</body>
-</html>
 
+    <script src="{{ url_for('static', filename='js/vehicle_inv.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/maintenance.js') }}"></script>
+  </body>
+</html>

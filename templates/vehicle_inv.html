@@ -1,9 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <title>Vehicle Inventory | Motor Pool</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/vehicle_inv.css') }}"
@@ -13,6 +12,7 @@
   <body>
     <div class="main-container">
       <!-- ================= SIDEBAR ================= -->
+
       <nav class="sidebar">
         <div class="logo-section">
           <img
@@ -48,8 +48,6 @@
           </div>
 
           <div class="user-profile">
-            <span class="icon">🔔</span>
-
             <div class="profile">
               <span class="icon" onclick="toggleProfile()">👤</span>
 
@@ -59,7 +57,12 @@
                 <hr />
                 <a href="#">Activity</a><br />
                 <a href="#">Change Password</a><br />
-                <a href="#" onclick="logout()" class="logout">Log Out</a>
+                <a
+                  href="{{ url_for('logout') }}"
+                  onclick="logout()"
+                  class="logout"
+                  >Log Out</a
+                >
               </div>
             </div>
           </div>
@@ -74,11 +77,9 @@
                 Monitor and manage the status and availability of all vehicles
               </p>
             </div>
-            {% if session['user_role'] == 'Admin' %}
             <button class="btn-add" onclick="toggleModal()">
               Add Vehicle Record
             </button>
-            {% endif %}
           </div>
 
           <div class="table-card">
@@ -94,9 +95,7 @@
                   <th>Type</th>
                   <th>Status</th>
                   <th>Mileage</th>
-                  {% if session['user_role'] == 'Admin' %}
                   <th>Actions</th>
-                  {% endif %}
                 </tr>
               </thead>
 
@@ -107,7 +106,8 @@
 
                   <td class="v-name">
                     <a
-                      href="{{ url_for('inventory') }}"
+                      href="{{ url_for('vehicle_details', vehicle_id=vehicle[0]) }}"
+                      class="vehicle-link"
                       style="
                         color: #800000;
                         font-weight: bold;
@@ -131,7 +131,6 @@
                   <td class="v-mileage">{{ vehicle[6] }} km</td>
 
                   <td class="actions">
-                    {% if session['user_role'] == 'Admin' %}
                     <div class="action-buttons">
                       <button
                         class="btn-edit"
@@ -161,13 +160,12 @@
                       <a
                         href="{{ url_for('delete_vehicle', id=vehicle[0]) }}"
                         class="btn-delete"
-                        onclick="return confirm('Delete this record?')"
+                        onclick="return confirm('Delete this record?');"
                       >
                         Delete
                       </a>
                     </div>
                   </td>
-                  {% endif %}
                 </tr>
                 {% endfor %}
               </tbody>
@@ -175,42 +173,35 @@
           </div>
         </section>
       </div>
-    </div>
 
-    <!-- ================= ADD MODAL ================= -->
-    <div id="addModal" class="modal-overlay">
-      <div class="modal-content">
-        <!--<span class="close-btn" onclick="toggleModal()">&times;</span> -->
-        <h2>New Vehicle Record</h2>
+      <!-- ================= ADD MODAL ================= -->
+      <div id="addModal" class="modal-overlay">
+        <div class="modal-content">
+          <span class="close-btn" onclick="toggleModal()">&times;</span>
+          <h2>New Vehicle Record</h2>
 
-        <form action="{{ url_for('add_vehicle') }}" method="POST">
-              <label>Vehicle Name</label>
-              <input type="text" name="name" required />
+          <form action="{{ url_for('add_vehicle') }}" method="POST">
+            <label>Vehicle Name</label>
+            <input type="text" name="name" required />
 
-              <label>Plate Number</label>
-              <input type="text" name="plate_number" required />
+            <label>Plate Number</label>
+            <input type="text" name="plate_number" required />
 
-              <label>Color</label>
-              <input type="text" name="color" />
+            <label>Color</label>
+            <input type="text" name="color" />
 
-              <label>Type</label>
-              <input type="text" name="type" />
-              <label>Status</label>
-              <select name="status">
-                <option value="" disabled selected>Select status</option>
-                <option>For Repair</option>
-                <option>For PMS</option>
-                <option>For repair & PMS</option>
-                <option>Condition</option>
-                <option>Disposal</option>
-              </select>
+            <label>Type</label>
+            <input type="text" name="type" />
 
-              <label>Mileage</label>
-              <input type="number" name="mileage" />
+            <label>Status</label>
+            <textarea name="status"></textarea>
 
-          <button type="submit" class="btn-save">Save Record</button>
-          <button type="button" class="modal-cancel" onclick="closeDrawer()">Cancel</button>
-        </form>
+            <label>Mileage</label>
+            <input type="number" name="mileage" />
+
+            <button type="submit" class="btn-save">Save Record</button>
+          </form>
+        </div>
       </div>
     </div>
 
@@ -222,7 +213,7 @@
             src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
             class="footer-logo"
           />
-          <p>
+          <p class="footer-desc">
             A Web-Based Inventory and Record Management System for
             <strong>Motor Pool</strong>
           </p>
@@ -242,7 +233,7 @@
         </div>
       </div>
 
-      <hr />
+      <hr class="footer-divider" />
 
       <div class="footer-bottom">
         © 2025 Polytechnic University of the Philippines. Under G.A.S.S.
