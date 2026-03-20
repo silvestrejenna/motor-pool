@@ -1,4 +1,6 @@
 import email
+from fileinput import filename
+from pydoc import doc
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 from dotenv import load_dotenv
@@ -2581,18 +2583,20 @@ def requests():
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cur.execute("""
-         SELECT
-                vr.id,
-                u.full_name,
-                vr. office,
-                vr. destination,
-                vr.created_at,
-                vr.status
+        SELECT
+            vr.id,
+            u.full_name,
+            vr.office,
+            vr.destination,
+            vr.created_at,
+            vr.status
         FROM vehicle_requests vr
         JOIN users u ON vr.user_id = u.id
         ORDER BY vr.created_at DESC
-""")
+    """)
+
     vehicle_requests = cur.fetchall()
+
     cur.close()
     conn.close()
 
@@ -2616,12 +2620,11 @@ def req_details(req_id):
 
         cur.execute("""
             INSERT INTO trip_tickets
-                    (vehicle_name, driver_name, start_date, end_date)
-            VALUES (%s, %s, %s, %s)
-            """, (vehicle_name, driver_name, start_date, end_date))
+            (request_id, vehicle_name, driver_name, start_date, end_date)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (req_id, vehicle_name, driver_name, start_date, end_date))
         
         conn.commit()
-
         cur.close()
         conn.close()
 
@@ -2629,13 +2632,11 @@ def req_details(req_id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cur.execute("""
-            SELECT vr.*, u.full_name, vr.id, vr.office, vr.vehicle_type, 
-                vr.destination, vr.purpose, start_date, end_date, time, passengers,
-                office, contact
-            FROM vehicle_requests vr
-            JOIN users u ON vr.user_id = u.id
-            WHERE vr.id = %s
-            """, (req_id,))
+        SELECT vr.*, u.full_name
+        FROM vehicle_requests vr
+        JOIN users u ON vr.user_id = u.id
+        WHERE vr.id = %s
+    """, (req_id,))
     
     req_data = cur.fetchone()
 
@@ -2646,16 +2647,15 @@ def req_details(req_id):
     cur = conn.cursor()
 
     cur.execute("""
-            SELECT vehicle_id, name, plate_number
-            FROM vehicle
-            ORDER BY name
-               """)
+        SELECT vehicle_id, name, plate_number
+        FROM vehicle
+        ORDER BY name
+    """)
     
     vehicles = cur.fetchall()
 
     cur.close()
     conn.close()
-
 
     return render_template(
         "admin-request/req_details.html",
@@ -2668,11 +2668,15 @@ def req_details(req_id):
 @role_required("Admin", "Staff")
 def generate_trip_ticket(req_id):
 
+    import os
+    from docx import Document
+
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cur.execute("""
         SELECT
+            tt.request_id,
             tt.driver_name,
             tt.vehicle_name,
             v.plate_number,
@@ -2681,43 +2685,72 @@ def generate_trip_ticket(req_id):
             vr.purpose,
             vr.destination,
             u.full_name
-                
         FROM trip_tickets tt
         JOIN vehicle_requests vr ON vr.id = tt.request_id
         JOIN users u ON vr.user_id = u.id
-        JOIN vehicles v ON v.vehicle_name = tt.vehicle_name
-        WHERE WHERE vr.id = %s
+        JOIN vehicle v ON v.name = tt.vehicle_name
+        WHERE vr.id = %s
         LIMIT 1
-                """, (req_id,))
-    
-    data = cur.fetchone()
+    """, (req_id,))
 
+    data = cur.fetchone()
     cur.close()
     conn.close()
-    doc = Document("report_template/trip_ticket_mnla.docx")
+
+    if not data:
+        return "No trip ticket data found", 404
+
+    # ✅ ALWAYS USE UUID (request_id)
+    filename = f"trip_ticket_{data['request_id']}.docx"
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    TEMPLATE_PATH = os.path.join(BASE_DIR, "report_template", "trip-ticket_mnla.docx")
+    OUTPUT_DIR = os.path.join(BASE_DIR, "reports_output")
+
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    filepath = os.path.join(OUTPUT_DIR, filename)
+
+    doc = Document(TEMPLATE_PATH)
+    print("FILE SHOULD BE SAVED HERE:", filepath)
+    print("FILE EXISTS AFTER SAVE:", os.path.exists(filepath))
 
     for p in doc.paragraphs:
         if "{{driver_name}}" in p.text:
             p.text = p.text.replace("{{driver_name}}", data["driver_name"])
-
         if "{{vehicle_name}}" in p.text:
             p.text = p.text.replace("{{vehicle_name}}", data["vehicle_name"])
-
         if "{{purpose}}" in p.text:
             p.text = p.text.replace("{{purpose}}", data["purpose"])
-
         if "{{DATE}}" in p.text:
             p.text = p.text.replace("{{DATE}}", str(data["start_date"]))
-
         if "{{full_name}}" in p.text:
             p.text = p.text.replace("{{full_name}}", data["full_name"])
 
-    filename = f"trip_ticket_{req_id}.docx"
-    filepath = os.path.join("reports_output", filename)
+    try:
+        doc.save(filepath)
+        print("✅ FILE SAVED:", filepath)
+        print("EXISTS AFTER SAVE:", os.path.exists(filepath))
+    except Exception as e:
+        print("❌ ERROR SAVING FILE:", e)
 
-    doc.save(filepath)
+    # ✅ SAVE CORRECT FILENAME
+    conn = get_db_connection()
+    cur = conn.cursor()
 
-    return redirect("/admin/trip-tickets")
+    cur.execute("""
+        UPDATE vehicle_requests
+        SET trip_ticket_file = %s
+        WHERE id = %s
+    """, (filename, data["request_id"]))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    print("Saved file:", filename)
+
+    return redirect(url_for("admin_trip_tickets"))
 
 
 @app.route("/admin/trip-tickets")
@@ -2728,10 +2761,17 @@ def admin_trip_tickets():
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cur.execute("""
-        SELECT *
-        FROM trip_tickets
-        ORDER BY start_date DESC
-    """)
+    SELECT 
+        tt.id,
+        tt.request_id,
+        tt.vehicle_name,
+        tt.start_date,
+        vr.destination,
+        vr.trip_ticket_file AS file
+    FROM trip_tickets tt
+    JOIN vehicle_requests vr ON vr.id = tt.request_id
+    ORDER BY tt.start_date DESC
+""")
 
     tickets = cur.fetchall()
 
@@ -2741,14 +2781,86 @@ def admin_trip_tickets():
     return render_template("admin-request/trip_ticket.html", tickets=tickets)
 
 
-@app.route("/download-trip/<filename>")
+@app.route("/download-trip/<path:filename>")
 def download_trip(filename):
+    import os
+    from docx import Document
+    import psycopg2.extras
 
-    return send_from_directory(
-        directory="reports_output",
-        path=filename,
-        as_attachment=True
-    )
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    directory = os.path.join(BASE_DIR, "reports_output")
+    filepath = os.path.join(directory, filename)
+
+    print("DOWNLOADING:", filename)
+    print("FULL PATH:", filepath)
+    print("EXISTS BEFORE:", os.path.exists(filepath))
+
+    # ✅ IF FILE DOES NOT EXIST → GENERATE IT
+    if not os.path.exists(filepath):
+
+        print("⚠️ File missing. Generating now...")
+
+        # 🔥 Extract req_id from filename
+        # example: trip_ticket_14.docx → 14
+        ticket_id = filename.replace("trip_ticket_", "").replace(".docx", "")
+
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        cur.execute("""
+            SELECT
+                tt.request_id,
+                tt.driver_name,
+                tt.vehicle_name,
+                v.plate_number,
+                tt.start_date,
+                tt.end_date,
+                vr.purpose,
+                vr.destination,
+                u.full_name
+            FROM trip_tickets tt
+            JOIN vehicle_requests vr ON vr.id = tt.request_id
+            JOIN users u ON vr.user_id = u.id
+            JOIN vehicle v ON v.name = tt.vehicle_name
+            WHERE tt.id = %s
+            LIMIT 1
+        """, (ticket_id,))
+
+        data = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not data:
+            return f"❌ No data found for request {req_id}", 404
+
+        TEMPLATE_PATH = os.path.join(BASE_DIR, "report_template", "trip-ticket_mnla.docx")
+
+        if not os.path.exists(TEMPLATE_PATH):
+            return "❌ Template file missing", 500
+
+        doc = Document(TEMPLATE_PATH)
+
+        for p in doc.paragraphs:
+            if "{{driver_name}}" in p.text:
+                p.text = p.text.replace("{{driver_name}}", data["driver_name"])
+            if "{{vehicle_name}}" in p.text:
+                p.text = p.text.replace("{{vehicle_name}}", data["vehicle_name"])
+            if "{{purpose}}" in p.text:
+                p.text = p.text.replace("{{purpose}}", data["purpose"])
+            if "{{DATE}}" in p.text:
+                p.text = p.text.replace("{{DATE}}", str(data["start_date"]))
+            if "{{full_name}}" in p.text:
+                p.text = p.text.replace("{{full_name}}", data["full_name"])
+
+        os.makedirs(directory, exist_ok=True)
+        doc.save(filepath)
+
+        print("✅ FILE GENERATED:", filepath)
+
+    print("EXISTS AFTER:", os.path.exists(filepath))
+
+    # ✅ NOW DOWNLOAD
+    return send_from_directory(directory, filename, as_attachment=True)
 
 
 
