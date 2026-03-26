@@ -2663,6 +2663,22 @@ def req_details(req_id):
     )
 
     #=====================TRIP TICKET===========================
+ #=====================TRIP TICKET TEMPLATE OPTION===========================
+def is_metro_mnla(destination):
+    if not destination:
+        return False
+    
+    destination = destination.strip().lower()
+    metro_mnla_places = [
+        "manila", "quezon city", "qc", "caloocan", "las piñas", "las pinas",
+        "makati", "taguig city", "malabon", "mandaluyong", "marikina",
+        "muntinlupa", "navotas", "parañaque", "pasay", "pasig", "pateros",
+        "san juan", "valenzuela", "metro manila", "ncr"
+    ]
+    for place in metro_mnla_places:
+        if place in destination:
+            return True
+    return False
 @app.route("/generate_trip_ticket/<req_id>")
 @role_required("Admin", "Staff")
 def generate_trip_ticket(req_id):
@@ -2704,7 +2720,12 @@ def generate_trip_ticket(req_id):
     filename = f"trip_ticket_{data['request_id']}.docx"
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    TEMPLATE_PATH = os.path.join(BASE_DIR, "report_template", "trip-ticket_mnla.docx")
+    if is_metro_mnla(data["destination"]):
+        template_file = "trip-ticket_mnla.docx"
+    else:
+        template_file = "trip-ticket_outmnl.docx"
+    TEMPLATE_PATH = os.path.join(BASE_DIR, "report_template", template_file)
+    print("USING TEMPLATE:", template_file)
     OUTPUT_DIR = os.path.join(BASE_DIR, "reports_output")
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -2842,9 +2863,16 @@ def download_trip(filename):
         conn.close()
 
         if not data:
-            return f"❌ No data found for request {req_id}", 404
+            return f"❌ No data found for request {ticket_id}", 404
 
-        TEMPLATE_PATH = os.path.join(BASE_DIR, "report_template", "trip-ticket_mnla.docx")
+        if is_metro_mnla(data["destination"]):
+            template_file = "trip-ticket_mnla.docx"
+        else:
+            template_file = "trip-ticket_outmnl.docx"
+
+        print("USING TEMPLATE:", template_file)
+
+        TEMPLATE_PATH = os.path.join(BASE_DIR, "report_template", template_file)
 
         if not os.path.exists(TEMPLATE_PATH):
             return "❌ Template file missing", 500
@@ -2869,6 +2897,8 @@ def download_trip(filename):
                 p.text = p.text.replace("{{driver_name}}", data["driver_name"])
             if "{{vehicle_name}}" in p.text:
                 p.text = p.text.replace("{{vehicle_name}}", data["vehicle_name"])
+            if "{{plate_number}}" in p.text:
+                p.text = p.text.replace("{{plate_number}}", data["plate_nnumber"])
             if "{{purpose}}" in p.text:
                 p.text = p.text.replace("{{purpose}}", data["purpose"])
             if "{{DATE}}" in p.text:
@@ -2880,9 +2910,11 @@ def download_trip(filename):
             for row in table.rows:
                 for cell in row.cells:
                     if "{{driver_name}}" in cell.text:
-                        cell.text = cell.text.replace("{{driver_name)}}", str(data["driver_name"] or ""))
+                        cell.text = cell.text.replace("{{driver_name}}", str(data["driver_name"] or ""))
                     if "{{vehicle_name}}" in cell.text:
                         cell.text = cell.text.replace("{{vehicle_name}}", str(data["vehicle_name"] or ""))
+                    if "{{plate_number}}" in cell.text:
+                        cell.text = cell.text.replace("{{plate_number}}", str(data["plate_number"] or ""))
                     if "{{purpose}}" in cell.text:
                         cell.text = cell.text.replace("{{purpose}}", str(data["purpose"] or ""))
                     if "{{destination}}" in cell.text:
