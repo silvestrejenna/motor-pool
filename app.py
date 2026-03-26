@@ -1,7 +1,6 @@
 import email
 from fileinput import filename
 from pydoc import doc
-
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 from dotenv import load_dotenv
 from email.mime.text import MIMEText
@@ -2676,24 +2675,25 @@ def generate_trip_ticket(req_id):
 
     cur.execute("""
         SELECT
-            tt.request_id,
+            vr.id AS request_id,
+            vr.destination,
+            vr.purpose,
+            vr.start_date,
+            vr.end_date,
+            u.full_name,
             tt.driver_name,
             tt.vehicle_name,
-            v.plate_number,
-            tt.start_date,
-            tt.end_date,
-            vr.purpose,
-            vr.destination,
-            u.full_name
-        FROM trip_tickets tt
-        JOIN vehicle_requests vr ON vr.id = tt.request_id
+            v.plate_number
+        FROM vehicle_requests vr
+        LEFT JOIN trip_tickets tt ON tt.request_id = vr.id 
         JOIN users u ON vr.user_id = u.id
-        JOIN vehicle v ON v.name = tt.vehicle_name
+        LEFT JOIN vehicle v ON v.name = tt.vehicle_name
         WHERE vr.id = %s
         LIMIT 1
     """, (req_id,))
 
     data = cur.fetchone()
+    print("DATA FROM DB:", data)
     cur.close()
     conn.close()
 
@@ -2716,17 +2716,22 @@ def generate_trip_ticket(req_id):
     print("FILE EXISTS AFTER SAVE:", os.path.exists(filepath))
 
     for p in doc.paragraphs:
-        if "{{driver_name}}" in p.text:
-            p.text = p.text.replace("{{driver_name}}", data["driver_name"])
-        if "{{vehicle_name}}" in p.text:
-            p.text = p.text.replace("{{vehicle_name}}", data["vehicle_name"])
-        if "{{purpose}}" in p.text:
-            p.text = p.text.replace("{{purpose}}", data["purpose"])
-        if "{{DATE}}" in p.text:
-            p.text = p.text.replace("{{DATE}}", str(data["start_date"]))
         if "{{full_name}}" in p.text:
             p.text = p.text.replace("{{full_name}}", data["full_name"])
 
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                if "{{driver_name}}" in cell.text:
+                    cell.text = cell.text.replace("{{driver_name}}", data["driver_name"])
+                if "{{vehicle_name}}" in cell.text:
+                    cell.text = cell.text.replace("{{vehicle_name}}", data["vehicle_name"])
+                if "{{purpose}}" in cell.text:
+                    cell.text = cell.text.replace("{{purpose}}", data["purpose"])
+                if "{{destination}}" in cell.text:
+                    cell.text = cell.text.replace("{{destination}}", data["destination"])
+                if "{{start_date}}" in cell.text:
+                    cell.text = cell.text.replace("{{start_date}}", str(data["start_date"]))
     try:
         doc.save(filepath)
         print("✅ FILE SAVED:", filepath)
@@ -2786,6 +2791,11 @@ def download_trip(filename):
     import os
     from docx import Document
     import psycopg2.extras
+    from datetime import date
+
+    today = date.today().strftime("%B %d, %Y")
+    user_id = session.get("user_id")
+
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     directory = os.path.join(BASE_DIR, "reports_output")
@@ -2827,6 +2837,7 @@ def download_trip(filename):
         """, (ticket_id,))
 
         data = cur.fetchone()
+        print("DOWNLOAD DATA:", data)
         cur.close()
         conn.close()
 
@@ -2840,6 +2851,19 @@ def download_trip(filename):
 
         doc = Document(TEMPLATE_PATH)
 
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        cur.execute("""
+            SELECT full_name FROM users WHERE id = %s
+        """, (user_id,))
+
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        prepared_by = user["full_name"] if user else ""
+
         for p in doc.paragraphs:
             if "{{driver_name}}" in p.text:
                 p.text = p.text.replace("{{driver_name}}", data["driver_name"])
@@ -2848,9 +2872,23 @@ def download_trip(filename):
             if "{{purpose}}" in p.text:
                 p.text = p.text.replace("{{purpose}}", data["purpose"])
             if "{{DATE}}" in p.text:
-                p.text = p.text.replace("{{DATE}}", str(data["start_date"]))
+                p.text = p.text.replace("{{DATE}}", today)
             if "{{full_name}}" in p.text:
-                p.text = p.text.replace("{{full_name}}", data["full_name"])
+                p.text = p.text.replace("{{full_name}}", prepared_by)
+
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    if "{{driver_name}}" in cell.text:
+                        cell.text = cell.text.replace("{{driver_name)}}", str(data["driver_name"] or ""))
+                    if "{{vehicle_name}}" in cell.text:
+                        cell.text = cell.text.replace("{{vehicle_name}}", str(data["vehicle_name"] or ""))
+                    if "{{purpose}}" in cell.text:
+                        cell.text = cell.text.replace("{{purpose}}", str(data["purpose"] or ""))
+                    if "{{destination}}" in cell.text:
+                        cell.text = cell.text.replace("{{destination}}", str(data["destination"] or ""))
+                    if "{{start_date}}" in cell.text:
+                        cell.text = cell.text.replace("{{start_date}}", str(data["start_date"] or ""))
 
         os.makedirs(directory, exist_ok=True)
         doc.save(filepath)
