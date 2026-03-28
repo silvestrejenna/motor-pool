@@ -2952,7 +2952,49 @@ def download_trip(filename):
     # ✅ NOW DOWNLOAD
     return send_from_directory(directory, filename, as_attachment=True)
 
+@app.route("/get_vehicle_schedule")
+@role_required("Admin", "Staff", "Client")
+def get_vehicle_schedule():
+    year = request.args.get("year", type=int)
+    month = request.args.get("month", type=int)
 
+    if not year or not month:
+        return jsonify({"error": "Missing year or month"}), 400
+    
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur.execute("""
+            SELECT 
+                vs.schedule_date,
+                v.name AS vehicle_name,
+                v.plate_number
+            FROM vehicle_schedule vs
+            JOIN vehicle v ON vs.vehicle_id = v.vehicle_id
+            WHERE EXTRACT(YEAR FROM vs.schedule_date) = %s
+                AND EXTRACT(MONTH FROM vs.schedule_date) = %s
+            ORDER BY vs.schedule_date ASC, v.name ASC
+                """, (year, month))
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    grouped = {}
+
+    for row in rows:
+        date_key = row["schedule_date"].strftime("%Y-%m-%d")
+
+        if date_key not in grouped:
+            grouped[date_key] = []
+
+        grouped[date_key].append({
+            "vehicle_name": row["vehicle_name"],
+            "plate_number": row["plate_number"]
+        })
+
+    return jsonify(grouped)
+
+#=============================================================================
 
 @app.route('/auth/user')
 def auth_user():
