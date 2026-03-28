@@ -16,6 +16,7 @@
                 <li><a href="{{ url_for('records') }}">REPORTS</a></li>
                 <a href="#" class="active">VEHICLE REQUESTS DASHBOARD</a>
                 <li><a href="{{ url_for('requests')}}">VEHICLE REQUESTS</a></li>
+                <li><a href="{{ url_for('admin_trip_tickets')}}">TRIP TICKET</a></li>
             </nav>
         </aside>
 
@@ -76,7 +77,7 @@
                 </option>
 
                 {% for vehicle in vehicles %}
-                  <option value="{{ vehicle[1] }}">
+                  <option value="{{ vehicle[0] }}">
                     {{ vehicle[1] }}
                   </option>
                 {% endfor %}
