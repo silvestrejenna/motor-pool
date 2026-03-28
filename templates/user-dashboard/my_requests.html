@@ -136,11 +136,14 @@
 
               {% elif r.status == "approved" %}
               <span class="status approved">Approved</span>
+
+              {% if r.trip_ticket_file %}
               <a
-                href="{{ url_for('download_trip', filename=ticket.file) }}"
+                href="{{ url_for('download_trip', filename=r.trip_ticket_file) }}"
                 class="download-btn"
-                >Download Ticket</a
-              >
+                >Download Ticket</a>
+
+              {% endif %}
 
               {% elif r.status == "disapproved" %}
               <span class="status disapproved">Disapproved</span>

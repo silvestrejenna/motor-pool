@@ -198,7 +198,7 @@
                             <select id="vehicleSelect" name="vehicles">
                                 <option value="" disabled selected>Select Vehicle</option>
                                 {% for vehicle in vehicles %}
-                                <option value="{{ vehicle[1] }}">
+                                <option value="{{ vehicle[0] }}">
                                     {{ vehicle[1] }}
                                 </option>
                                 {% endfor %}

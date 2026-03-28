@@ -14,6 +14,7 @@ from datetime import datetime
 from functools import wraps
 import bcrypt, random, smtplib
 import calendar
+from datetime import datetime, timedelta
 
 
 
@@ -2609,7 +2610,8 @@ def requests():
 def req_details(req_id):
 
     if request.method == "POST":
-        vehicle_name = request.form["vehicles"]
+        vehicle_id = request.form["vehicles"]
+        print("TYPE:", type(vehicle_id))
         driver_name = request.form["driver_name"]
         start_date = request.form["start_date"]
         end_date = request.form["end_date"]
@@ -2619,9 +2621,26 @@ def req_details(req_id):
 
         cur.execute("""
             INSERT INTO trip_tickets
-            (request_id, vehicle_name, driver_name, start_date, end_date)
+            (request_id, vehicle_id, driver_name, start_date, end_date)
             VALUES (%s, %s, %s, %s, %s)
-        """, (req_id, vehicle_name, driver_name, start_date, end_date))
+        """, (req_id, vehicle_id, driver_name, start_date, end_date))
+
+        start = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+        current_day = start
+        while current_day <= end:
+            cur.execute("""
+                        INSERT INTO vehicle_schedule (vehicle_id, request_id, schedule_date)
+                        VALUES (%s, %s, %s)
+                        """, (vehicle_id, req_id, current_day))
+            current_day += timedelta(days=1)
+
+            cur.execute("""
+                    UPDATE vehicle_requests
+                    SET status = 'approved'
+                    WHERE id = %s
+                        """, (req_id,))
         
         conn.commit()
         cur.close()
@@ -2655,6 +2674,7 @@ def req_details(req_id):
 
     cur.close()
     conn.close()
+    print("VEHICLES FROM DB:", vehicles)
 
     return render_template(
         "admin-request/req_details.html",

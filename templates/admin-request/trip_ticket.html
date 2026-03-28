@@ -66,22 +66,11 @@
         </div>
 
         <ul class="inventory-selection">
-          <li>
-            <a href="{{ url_for('user_home') }}">HOME</a>
-          </li>
+          <li><a href="{{ url_for('reports')}}">REPORTS</a></li>
 
-          <li>
-            <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
-          </li>
+           <li><a href="{{ url_for('req_dashboard') }}">VEHICLE REQUEST DASHBOARD</a></li>
 
-          <li>
-            <a href="{{ url_for('user_new_request') }}">NEW REQUEST</a>
-          </li>
-
-          <li>
-            <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
-          </li>
-
+          <li><a href="{{ url_for('requests')}}">VEHICLE REQUESTS</a></li>
           <li class="active">
             <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
           </li>
