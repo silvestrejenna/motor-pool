@@ -121,8 +121,10 @@
       const nextMonth = document.getElementById("nextMonth")
 
       let currentDate = new Date();
+      let scheduleData = {};
 
-      function renderCalendar() {
+      async function renderCalendar() {
+      await loadScheduleData();
 
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
@@ -147,7 +149,27 @@
         for (let day=1; day<=daysInMonth; day++) {
           const cell = document.createElement("div");
           cell.classList.add("calendar-day");
-          cell.textContent = day;
+
+          const dateKey = 
+            year + "-" +
+            String(month +1).padStart(2, "0") + "-" +
+            String(day).padStart(2, "0");
+          
+          const dayNumber = document.createElement("div");
+          dayNumber.classList.add("day-number");
+          dayNumber.textContent = day;
+          cell.appendChild(dayNumber);
+
+          if (scheduleData[dateKey]) {
+            cell.classList.add("booked-day");
+
+            scheduleData[dateKey].forEach(item =>{
+              const booking = document.createElement("div");
+              booking.classList.add("booking-item");
+              booking.textContent = `${item.vehicle_name} (${item.plate_number})`;
+              cell.appendChild(booking);
+            });
+          }
 
           calendar.appendChild(cell);
         }
@@ -161,6 +183,14 @@
       nextMonth.onclick = function() {
         currentDate.setMonth(currentDate.getMonth() + 1);
         renderCalendar();
+      }
+
+      async function loadScheduleData() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + 1;
+
+        const res = await fetch(`/get_vehicle_schedule?year=${year}&month=${month}`);
+        scheduleData = await res.json();
       }
       renderCalendar();
     </script>

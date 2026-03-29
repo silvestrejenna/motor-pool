@@ -5,12 +5,15 @@
   --pup-red: #800000;
   --light-bg: #f5f5f5;
   --card-bg: rgba(255, 255, 255, 0.9);
+  --bg-gray: #f5f5f5;
+  --maroon: #800000;
+  --success-green: #eaf7ea;
 }
 
 body {
   margin: 0;
   font-family: "Segoe UI", sans-serif;
-  background: var(--light-bg);
+  background: var(--bg-gray);
 }
 
 /* ===============================
@@ -346,13 +349,34 @@ body {
   background: white;
   padding: 30px;
   border-radius: 12px;
+  margin-top: 20px;
 }
 
 .calendar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
+}
+
+.calendar-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: bold;
+}
+
+.calendar-controls button {
+  background: var(--pup-red);
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.calendar-controls button:hover {
+  background: #a00000;
 }
 
 #calendar {
@@ -363,43 +387,44 @@ body {
 }
 
 .calendar-day {
-  padding: 15px;
-  text-align: center;
-  background: #eee;
-  border-radius: 8px;
-}
-
-.calendar-day.unavailable {
-  background: var(--pup-red);
-  color: white;
-}
-
-.calendar-controls {
+  min-height: 100px;
+  padding: 8px;
+  border-radius: 10px;
+  background: #f1f1f1;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.day-number {
   font-weight: bold;
+  font-size: 14px;
+  color: #333;
+  background: #ffffff;
+  padding: 2px 6px;
+  border-radius: 6px;
+  z-index: 2;
 }
 
-.calendar-contorols button {
-  background: #8b0000;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 5px;
-  cursor: pointer;
+.booked-day {
+  background: #ffe8e8;
+  border: 1px solid #d33;
 }
 
-.calendar-contorols button:hover {
-  background: #a00000;
+.booking-item {
+  font-size: 11px;
+  background: #fff;
+  border-radius: 6px;
+  padding: 2px 6px;
+  line-height: 1.2;
+  color: #222;
+  width: 100%;
+  box-sizing: border-box;
 }
-
-.selected{
-  background:880000;
-  color: #8b0000;
-}
-
-.selected
 
 /* ===============================
    FORM DESIGN (FIXED)
@@ -727,31 +752,4 @@ body {
   justify-content: space-between;
   font-size: 13px;
   color: #555;
-}
-
-
-/* Calendar Container */
-.calendar-container { display: flex; gap: 40px; margin-top: 20px; }
-.calendar-left { flex: 1.5; }
-.calendar-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
-.calendar-date-row { display: flex; gap: 10px; margin-bottom: 15px; }
-.calendar-date-row input { border: 1px solid #ccc; padding: 8px; border-radius: 8px; width: 120px; }
-
-
-/* Assignment Right Panel */
-.assignment-right { flex: 1; display: flex; flex-direction: column; gap: 20px; }
-.availability-status { background-color: var(--success-green); padding: 15px; border-radius: 10px; color: #2d5a30; font-weight: bold; }
-.form-group label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 18px; }
-.form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 10px; background: #fdfdfd; }
-
-.btn-view-ticket { 
-    background-color: var(--maroon); 
-    color: white; 
-    border: none; 
-    padding: 15px; 
-    border-radius: 10px; 
-    font-size: 18px; 
-    font-weight: bold; 
-    cursor: pointer; 
-    margin-top: auto;
 }

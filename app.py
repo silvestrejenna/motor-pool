@@ -2616,17 +2616,32 @@ def req_details(req_id):
         start_date = request.form["start_date"]
         end_date = request.form["end_date"]
 
+        start = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end = datetime.strptime(end_date, "%Y-%m-%d").date()
+
         conn = get_db_connection()
         cur = conn.cursor()
+
+        cur.execute("""
+                SELECT schedule_date
+                FROM vehicle_schedule
+                WHERE vehicle_id = %s
+                    AND schedule_date BETWEEN %s AND %s
+                    """, (vehicle_id, start, end))
+        
+        conflicts = cur.fetchall()
+
+        if conflicts:
+                flash("Selected vehicle is not available for the chosen dates. Please select a different vehicle or adjust the dates.")
+                cur.close()
+                conn.close()
+                return "Selected vehicle is already booked on one or more chosen dates.", 400 #===redirect(url_for("req_details", req_id=req_id))
 
         cur.execute("""
             INSERT INTO trip_tickets
             (request_id, vehicle_id, driver_name, start_date, end_date)
             VALUES (%s, %s, %s, %s, %s)
         """, (req_id, vehicle_id, driver_name, start_date, end_date))
-
-        start = datetime.strptime(start_date, "%Y-%m-%d").date()
-        end = datetime.strptime(end_date, "%Y-%m-%d").date()
 
         current_day = start
         while current_day <= end:
@@ -2718,12 +2733,12 @@ def generate_trip_ticket(req_id):
             vr.end_date,
             u.full_name,
             tt.driver_name,
-            tt.vehicle_name,
+            v.name AS vehicle_name,
             v.plate_number
         FROM vehicle_requests vr
         LEFT JOIN trip_tickets tt ON tt.request_id = vr.id 
         JOIN users u ON vr.user_id = u.id
-        LEFT JOIN vehicle v ON v.name = tt.vehicle_name
+        LEFT JOIN vehicle v ON v.vehicle_id = tt.vehicle_id
         WHERE vr.id = %s
         LIMIT 1
     """, (req_id,))
@@ -2810,12 +2825,13 @@ def admin_trip_tickets():
     SELECT 
         tt.id,
         tt.request_id,
-        tt.vehicle_name,
+        v.name AS vehicle_name,
         tt.start_date,
         vr.destination,
         vr.trip_ticket_file AS file
     FROM trip_tickets tt
     JOIN vehicle_requests vr ON vr.id = tt.request_id
+    JOIN vehicle v ON v.vehicle_id = tt.vehicle_id
     ORDER BY tt.start_date DESC
 """)
 
@@ -2862,7 +2878,7 @@ def download_trip(filename):
             SELECT
                 tt.request_id,
                 tt.driver_name,
-                tt.vehicle_name,
+                v.name AS vehicle_name,
                 v.plate_number,
                 tt.start_date,
                 tt.end_date,
@@ -2872,7 +2888,7 @@ def download_trip(filename):
             FROM trip_tickets tt
             JOIN vehicle_requests vr ON vr.id = tt.request_id
             JOIN users u ON vr.user_id = u.id
-            JOIN vehicle v ON v.name = tt.vehicle_name
+            JOIN vehicle v ON v.vehicle_id = tt.vehicle_id
             WHERE tt.id = %s
             LIMIT 1
         """, (ticket_id,))
@@ -2952,7 +2968,49 @@ def download_trip(filename):
     # ✅ NOW DOWNLOAD
     return send_from_directory(directory, filename, as_attachment=True)
 
+@app.route("/get_vehicle_schedule")
+@role_required("Admin", "Staff", "Client")
+def get_vehicle_schedule():
+    year = request.args.get("year", type=int)
+    month = request.args.get("month", type=int)
 
+    if not year or not month:
+        return jsonify({"error": "Missing year or month"}), 400
+    
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur.execute("""
+            SELECT 
+                vs.schedule_date,
+                v.name AS vehicle_name,
+                v.plate_number
+            FROM vehicle_schedule vs
+            JOIN vehicle v ON vs.vehicle_id = v.vehicle_id
+            WHERE EXTRACT(YEAR FROM vs.schedule_date) = %s
+                AND EXTRACT(MONTH FROM vs.schedule_date) = %s
+            ORDER BY vs.schedule_date ASC, v.name ASC
+                """, (year, month))
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    grouped = {}
+
+    for row in rows:
+        date_key = row["schedule_date"].strftime("%Y-%m-%d")
+
+        if date_key not in grouped:
+            grouped[date_key] = []
+
+        grouped[date_key].append({
+            "vehicle_name": row["vehicle_name"],
+            "plate_number": row["plate_number"]
+        })
+
+    return jsonify(grouped)
+
+#=============================================================================
 
 @app.route('/auth/user')
 def auth_user():

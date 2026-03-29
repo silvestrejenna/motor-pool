@@ -23,10 +23,17 @@
 }
 
 .calendar-day {
-  padding: 15px;
-  text-align: center;
-  background: #eee;
-  border-radius: 8px;
+  min-height: 100px;
+  padding: 8px;
+  border-radius: 10px;
+  background: #f1f1f1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 6px;
+  overflow: hidden;
+  position: relative;
 }
 
 .calendar-day.unavailable {
@@ -87,6 +94,32 @@ color:white;
 
 .range{
 background:#f3caca;
+}
+
+.day-number {
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+  background: #ffffff;
+  padding: 2px 6px;
+  border-radius: 6px;
+  z-index: 2;
+}
+
+.booked-day {
+  background: #ffe8e8;
+  border: 1px solid #d33;
+}
+
+.booking-item {
+  font-size: 11px;
+  background: #fff;
+  border-radius: 6px;
+  padding: 2px 6px;
+  line-height: 1.2;
+  color: #222;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 
