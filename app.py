@@ -2255,10 +2255,30 @@ def user_new_request():
             (user_id, vehicle_type, destination, purpose, start_date, end_date, time, days,
                     passengers, office, status)
             VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'pending')
+            RETURNING id
         """,
         (user_id, vehicle_type, destination, purpose, start_date, end_date, time, days,
          passengers, office)
         )
+
+        new_request_id = cur.fetchone()[0]
+        requester_name = session.get("user_fullname") or "A user"
+
+        cur.execute("""
+                SELECT id
+                FROM users
+                WHERE role IN ('Admin', 'Staff')
+            """)
+        admin_staff_users = cur.fetchall()
+
+        message = f"{requester_name} has submitted a new vehicle request (ID: {new_request_id})."
+
+        for admin_user in admin_staff_users:
+            admin_id = admin_user[0]
+            cur.execute("""
+                        INSERT INTO notifications (user_id, request_id, message, type)
+                        VALUES (%s, %s, %s, %s)
+                        """, (admin_id, new_request_id, message, "new_request"))
 
         conn.commit()
 
@@ -3009,6 +3029,30 @@ def get_vehicle_schedule():
         })
 
     return jsonify(grouped)
+
+
+@app.route("/get_notifications")
+@role_required("Admin", "Staff", "Client")
+def get_notifications():
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    user_id = session.get("user_id")
+
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur.execute("""
+                SELECT id, message, type, is_read, created_at, request_id
+                FROM notifications
+                WHERE user_id = %s
+                ORDER BY created_at DESC
+                """, (user_id,))
+    notifications = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return jsonify(notifications)
 
 #=============================================================================
 
