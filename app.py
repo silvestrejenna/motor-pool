@@ -3030,7 +3030,7 @@ def get_vehicle_schedule():
 
     return jsonify(grouped)
 
-
+#============================ NOTIFICATION =======================================================================
 @app.route("/get_notifications")
 @role_required("Admin", "Staff", "Client")
 def get_notifications():
@@ -3053,6 +3053,28 @@ def get_notifications():
     conn.close()
 
     return jsonify(notifications)
+
+
+@app.route("/get_unread_notif_count")
+def get_unread_notif_count():
+    if "user_id" not in session:
+        return jsonify({"count": 0})
+    
+    user_id = session.get("user_id")
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+                SELECT COUNT(*)
+                FROM notifications
+                WHERE user_id = %s AND is_read = FALSE
+                """, (user_id,))
+    count = cur.fetchone()[0]
+    cur.close()
+    conn.close()
+
+    return jsonify({"count": count})
 
 #=============================================================================
 
