@@ -32,8 +32,15 @@
 
         <div class="nav-right">
           <div class="user-profile">
-            <span class="icon">🔔</span>
+            <div class="notification-wrapper">
+              <span class="icon" id="notifBell">🔔</span>
+              <span id="notifBadge" class="notif-badge hidden">0</span>
 
+              <div id="notifDropdown" class="notif-dropdown hidden">
+                <p class="notif-title">Notifications</p>
+                <div id="notifList"></div>
+              </div>
+          </div>
             <div class="profile">
               <span class="icon" onclick="toggleProfile()">👤</span>
 
@@ -158,6 +165,82 @@
           dropdown.classList.remove("show");
         }
       });
+
+      async function logout() {
+        await fetch("/logout", { method: "POST" });
+        window.location.href = "/login";
+      }
+
+      const bell = document.getElementById("notifBell");
+      const dropdown = document.getElementById("notifDropdown");
+      const notifList = document.getElementById("notifList");
+      const notifBadge = document.getElementById("notifBadge");
+
+      if (bell) {
+        bell.addEventListener("click", async () => {
+          dropdown.classList.toggle("hidden");
+
+          if (!dropdown.classList.contains("hidden")) {
+            await loadNotifications();
+          }
+        });
+      }
+
+      async function loadNotifications() {
+        try {
+          const res = await fetch("/get_notifications");
+          const data = await res.json();
+
+          notifList.innerHTML = "";
+
+          if (data.length === 0) {
+            notifList.innerHTML = "<p class='no-notifs'>No notifications</p>";
+            return;
+          }
+
+          data.forEach(notif => {
+            const div = document.createElement("div");
+            div.classList.add("notif-item");
+            div.textContent = notif.message;
+            div.style.cursor = "pointer";
+
+            div.addEventListener("click", async () => {
+              try {
+                await fetch(`/mark_notif_read/${notif.id}`, { method: "POST" });
+                if (notif.type === "approved") {
+                  window.location.href = "/user_my_requests";
+                }
+              } catch (err) {
+                console.error("Error marking notification as read:", err);
+              }
+          });          
+            notifList.appendChild(div);
+          });
+        } catch (err) {
+          console.error("Error loading notifications:", err);
+          notifList.innerHTML = "<p class='error'>Error loading notifications</p>";
+        }
+      }
+
+      async function loadUnreadCount() {
+        try {
+          const res = await fetch("/get_unread_notif_count");
+          const data = await res.json();
+
+          const badge = document.getElementById("notifBadge");
+
+          console.log("Unread count:", data.count);
+
+          if (data.count > 0) {
+            notifBadge.textContent = data.count;
+            notifBadge.classList.remove("hidden");
+          } else {
+            notifBadge.classList.add("hidden");
+          }
+        } catch (err) {
+          console.error("Error loading unread count:", err);
+        }
+      }
     </script>
   </body>
 </html>

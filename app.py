@@ -2676,7 +2676,28 @@ def req_details(req_id):
                     SET status = 'approved'
                     WHERE id = %s
                         """, (req_id,))
-        
+
+            cur.execute("""
+                        SELECT user_id
+                        FROM vehicle_requests
+                        WHERE id = %s
+                        """, (req_id,))
+            owner_row = cur.fetchone()
+
+            print("OWNER ROW:", owner_row)
+            print("REQUEST ID:", req_id)
+
+            if owner_row:
+                requester_user_id = owner_row[0]
+                print("Requester User ID:", requester_user_id)
+
+                approval_message = f"Your vehicle request (ID: {req_id}) has been approved and trip ticket is now ready for retrieval. Please come to the motor pool office to get your trip ticket. Please come to the motor pool office."
+            
+            cur.execute("""
+                        INSERT INTO notifications (user_id, request_id, message, type)
+                        VALUES (%s, %s, %s, %s)
+                        """, (requester_user_id, req_id, approval_message, "approved"))
+
         conn.commit()
         cur.close()
         conn.close()
@@ -3075,6 +3096,38 @@ def get_unread_notif_count():
     conn.close()
 
     return jsonify({"count": count})
+
+#============================ MARK NOTIFICATION AS READ =======================================================================
+@app.route("/mark_notification_read/<notif_id>")
+@role_required("Admin", "Staff", "Client")
+def mark_notification_read(notif_id):
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    # 1. mark as read
+    cur.execute("""
+        UPDATE notifications
+        SET is_read = TRUE
+        WHERE id = %s
+        RETURNING request_id
+    """, (notif_id,))
+
+    result = cur.fetchone()
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    if not result:
+        return jsonify({"error": "Notification not found"}), 404
+
+    request_id = result[0]
+
+    # 2. return redirect URL
+    return jsonify({
+        "redirect_url": f"/admin-request/req_details/{request_id}"
+    })
 
 #=============================================================================
 
