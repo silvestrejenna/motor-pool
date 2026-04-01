@@ -249,3 +249,14 @@ body {
   justify-content: center;
   box-sizing: border-box;
 }
+
+.notif-item {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.notif-item:hover {
+  background-color: #f5f5f5;
+}
