@@ -35,7 +35,15 @@
 
         <div class="nav-right">
           <div class="user-profile">
-            <span class="icon">🔔</span>
+            <div class="notification-wrapper">
+              <span class="icon" id="notifBell">🔔</span>
+              <span id="notifBadge" class="notif-badge hidden">0</span>
+
+              <div id="notifDropdown" class="notif-dropdown hidden">
+                <p class="notif-title">Notifications</p>
+                <div id="notifList"></div>
+              </div>
+            </div>
             <div class="profile">
               <span class="icon" onclick="toggleProfile()">👤</span>
 
@@ -116,18 +124,28 @@
         <div class="ticket-card">
           <div>
             <h4>Trip Ticket #{{ ticket.id }}</h4>
-            <p>Vehicle: {{ ticket.vehicle_name }}</p>
-            <p>Destination: Sample Destination</p>
 
-            <p> Date: {{ ticket.start_date }}</p>
+            <p style="color: red">FILE: {{ ticket.trip_ticket_file }}</p>
+
+            <p>Vehicle: {{ ticket.vehicle_name }}</p>
+            <p>Destination: {{ ticket.destination }}</p>
+
+            <p>Date: {{ ticket.start_date }}</p>
           </div>
 
-          <a href="/download-trip/{{ ticket.id }}" class="download-btn">
-        Download
-         </a>
+          {% if ticket.trip_ticket_file %}
+          <a
+            href="{{ url_for('download_trip', filename=ticket.file) }}"
+            class="download-btn"
+          >
+            Download
+          </a>
+          {% else %}
+          <span>No file</span>
+          {% endif %}
         </div>
         {% endfor %}
-      </div>  
+      </div>
     </div>
 
     <!-- ================= FOOTER ================= -->

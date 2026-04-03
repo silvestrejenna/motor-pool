@@ -1,13 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reports - Motor Pool</title>
-    <link rel="stylesheet" href="../static/css/vehicle_inv.css">
-    <link rel="stylesheet" href="../static/css/reports.css">
-</head>
-<body>
+    <link rel="stylesheet" href="../static/css/vehicle_inv.css" />
+    <link rel="stylesheet" href="../static/css/reports.css" />
+  </head>
+  <body>
     <div class="main-container">
       <!-- ================= SIDEBAR ================= -->
       <nav class="sidebar">
@@ -31,10 +31,8 @@
             <a href="{{ url_for('parts_supplies') }}">PARTS & SUPPLIES</a>
           </li>
           <li class="active">REPORTS</li>
-          <li><a href="{{ url_for('req_dashboard') }}">VEHICLE REQUEST</a></li>
         </ul>
       </nav>
-
 
       <!-- ================= CONTENT ================= -->
       <div class="content">
@@ -47,8 +45,15 @@
           </div>
 
           <div class="user-profile">
-            <span class="icon">🔔</span>
+            <div class="notification-wrapper">
+              <span class="icon" id="notifBell">🔔</span>
+              <span id="notifBadge" class="notif-badge hidden">0</span>
 
+              <div id="notifDropdown" class="notif-dropdown hidden">
+                <p class="notif-title">Notifications</p>
+                <div id="notifList"></div>
+              </div>
+            </div>
             <div class="profile">
               <span class="icon" onclick="toggleProfile()">👤</span>
 
@@ -58,151 +63,119 @@
                 <hr />
                 <a href="#">Activity</a><br />
                 <a href="#">Change Password</a><br />
-                <a href="#" onclick="logout()" class="logout">Log Out</a>
+                <a
+                  href="{{ url_for('logout') }}"
+                  onclick="logout()"
+                  class="logout"
+                  >Log Out</a
+                >
               </div>
             </div>
           </div>
         </header>
 
-
         <!-- ================= INVENTORY ================= -->
         <section class="generate-section">
-            <div class="card">
-                <h3>Generate New Report</h3>
+          <div class="card">
+            <h3>Generate New Report</h3>
 
-                <form id="reportForm" 
-                    class="control-grid"
-                    method="POST" 
-                    action="{{ url_for('generate_report') }}">
+            <form
+              id="reportForm"
+              class="control-grid"
+              method="POST"
+              action="{{ url_for('generate_report') }}"
+            >
+              <select id="reportType" name="report_type" required>
+                <option value="" disabled selected>Report Type</option>
+                <option value="monthly_monitoring">Monthly Monitoring</option>
+                <option value="vehicle">Vehicle Inventory</option>
+                <option value="gas_rfid">Gasoline & RFID</option>
+                <option value="maintenance_log">Maintenance Log</option>
+                <option value="pms_log">PMS Log</option>
+                <option value="tools_equipment">Tools & Equipment</option>
+                <option value="parts_supplies">Parts & Supplies</option>
+              </select>
 
-                    <select id="reportType" name="report_type" class="control-grid" required>
-                        <option value="" disabled selected>Report Type</option>
-                        <option value="monthly_monitoring">Monthly Monitoring</option>
-                        <option value="vehicle">Vehicle Inventory</option>
-                        <option value="gas_rfid">Gasoline & RFID</option>
-                        <option value="maintenance_log">Maintenance Log</option>
-                        <option value="pms_log">PMS Log</option>
-                        <option value="tools_equipment">Tools & Equipment</option>
-                        <option value="parts_supplies">Parts & Supplies</option>
-                    </select>
+              <select id="reportMonth" name="month">
+                <option value="" disabled selected>Month</option>
+                <option value="1">January</option>
+                ...
+              </select>
 
-                  <div id="defaultFields" class="control-grid">
-                    <select id="reportMonth" name="month" required>
-                        <option value="" disabled selected>Month</option>
-                        <option value="1">January</option>
-                        <option value="2">February</option>
-                        <option value="3">March</option>
-                        <option value="4">April</option>
-                        <option value="5">May</option>
-                        <option value="6">June</option>
-                        <option value="7">July</option>
-                        <option value="8">August</option>
-                        <option value="9">September</option>
-                        <option value="10">October</option>
-                        <option value="11">November</option>
-                        <option value="12">December</option>
-                      </select>
+              <select id="reportYear" name="year">
+                <option value="" disabled selected>Year</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+              </select>
 
-                    <select id="reportYear" name="year" required>
-                        <option value="" disabled selected>Year</option>
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
-                        <option value="2026">2026</option>
-                    </select>
-                  </div>
+              <input type="date" name="monitoring_date" />
 
-                  <div id="monthlyFields" class="control-grid" style="display: none;">
-                    
-                    <label>Date of Monitoring</label>
-                    <input type="date" id="monitoringDate" name="monitoring_date" required>
+              <select name="m_week">
+                <option value="1">1st Week</option>
+                <option value="2">2nd Week</option>
+                <option value="3">3rd Week</option>
+                <option value="4">4th Week</option>
+              </select>
 
-                    <select name="m_month">
-                        <option value="" disabled selected>Monitoring Month</option>
-                        <option value="1">January</option>
-                        <option value="2">February</option>
-                        <option value="3">March</option>
-                        <option value="4">April</option>
-                        <option value="5">May</option>
-                        <option value="6">June</option>
-                        <option value="7">July</option>
-                        <option value="8">August</option>
-                        <option value="9">September</option>
-                        <option value="10">October</option>
-                        <option value="11">November</option>
-                        <option value="12">December</option>
-                    </select>
-
-                    <select name="m_week">
-                        <option value="" disabled selected>Monitoring Week</option>
-                        <option value="1">1st Week to 2nd Week</option>
-                        <option value="2">2nd Week to 3rd Week</option>
-                        <option value="3">3rd Week to 4th Week</option>
-                        <option value="4">4th Week to 5th Week</option>
-                    </select>
-                  </div>
-                  
-                    <button class="btn-add" type="submit">Generate Report</button>
-
-                </form>
-            </div>
+              <button class="btn-add" type="submit">Generate Report</button>
+            </form>
+          </div>
         </section>
 
         <section class="stats-grid">
-            <div class="stat-card">
-                <span class="label">Total Reports</span>
-                <span class="value">{{ total_reports }}</span>
-                <span class="subtext">Generated this year</span>
-            </div>
-            <div class="stat-card">
-                <span class="label">This Month</span>
-                <span class="value">{{ reports_this_month }}</span>
-                <span class="subtext">Reports generated in {{ month_name }}</span>
-            </div>
-            <div class="stat-card">
-                <span class="label">Most Generated</span>
-                <span class="value">{{ most_generated_title }}</span>
-                <span class="subtext">Report category</span>
-            </div>
+          <div class="stat-card">
+            <span class="label">Total Reports</span>
+            <span class="value">127</span>
+            <span class="subtext">Generated this year</span>
+          </div>
+          <div class="stat-card">
+            <span class="label">This Month</span>
+            <span class="value">18</span>
+            <span class="subtext">Reports generated in October</span>
+          </div>
+          <div class="stat-card">
+            <span class="label">Most Viewed</span>
+            <span class="value">Fuel</span>
+            <span class="subtext">Report category</span>
+          </div>
         </section>
 
         <section class="recent-reports">
-            <div class="card">
-                <h3>Recent Reports</h3>
-                {% if recent_reports %}
-                  {% for report in recent_reports %}
-                    <div class="report-item">
-                        <div class="report-info">
-                          <img
-                            src="{{ url_for('static', filename='images/file.png') }}"
-                            alt="File"
-                            class="file-icon"
-                          >
-                          <div>
-                            <strong>{{ report.report_type|upper }} REPORT</strong>
-                            <p>
-                              Period: {{ report.month }}/{{ report.year }}
-                              • Generated: {{ report.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
-                            </p>
-                          </div>
-                        </div>
-
-                      <div class="report-actions">
-                      <a
-                        href="{{ url_for('download_report', filename=report.file_name) }}"
-                        class="btn-add">
-                        Download
-                      </a>
-
-                     </div>
-                  </div>
-                {% endfor %}
-              {% else %}
-                <p>No reports generated yet.</p>
-              {% endif %}
-
+          <div class="card">
+            <h3>Recent Reports</h3>
+            {% if recent_reports %} {% for report in recent_reports %}
+            <div class="report-item">
+              <div class="report-info">
+                <img
+                  src="{{ url_for('static', filename='images/file.png') }}"
+                  alt="File"
+                  class="file-icon"
+                />
+                <div>
+                  <strong>{{ report.report_type|upper }} REPORT</strong>
+                  <p>
+                    Period: {{ report.month }}/{{ report.year }} • Generated: {{
+                    report.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                  </p>
                 </div>
+              </div>
+
+              <div class="report-actions">
+                <a
+                  href="{{ url_for('download_report', filename=report.file_name) }}"
+                  class="btn-add"
+                >
+                  Download
+                </a>
+              </div>
+            </div>
+            {% endfor %} {% else %}
+            <p>No reports generated yet.</p>
+            {% endif %}
+          </div>
         </section>
-    </div>
+      </div>
     </div>
 
     <!-- ================= FOOTER ================= -->
@@ -249,5 +222,5 @@
     </footer>
 
     <script src="{{ url_for('static', filename='js/reports.js') }}"></script>
-</body>
+  </body>
 </html>

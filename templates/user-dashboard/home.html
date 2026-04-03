@@ -40,7 +40,7 @@
                 <p class="notif-title">Notifications</p>
                 <div id="notifList"></div>
               </div>
-          </div>
+            </div>
             <div class="profile">
               <span class="icon" onclick="toggleProfile()">👤</span>
 
@@ -198,7 +198,7 @@
             return;
           }
 
-          data.forEach(notif => {
+          data.forEach((notif) => {
             const div = document.createElement("div");
             div.classList.add("notif-item");
             div.textContent = notif.message;
@@ -213,12 +213,13 @@
               } catch (err) {
                 console.error("Error marking notification as read:", err);
               }
-          });          
+            });
             notifList.appendChild(div);
           });
         } catch (err) {
           console.error("Error loading notifications:", err);
-          notifList.innerHTML = "<p class='error'>Error loading notifications</p>";
+          notifList.innerHTML =
+            "<p class='error'>Error loading notifications</p>";
         }
       }
 

@@ -34,8 +34,15 @@
 
         <div class="nav-right">
           <div class="user-profile">
-            <span class="icon">🔔</span>
+            <div class="notification-wrapper">
+              <span class="icon" id="notifBell">🔔</span>
+              <span id="notifBadge" class="notif-badge hidden">0</span>
 
+              <div id="notifDropdown" class="notif-dropdown hidden">
+                <p class="notif-title">Notifications</p>
+                <div id="notifList"></div>
+              </div>
+            </div>
             <div class="profile">
               <span class="icon" onclick="toggleProfile()">👤</span>
 
@@ -141,11 +148,10 @@
               <a
                 href="{{ url_for('download_trip', filename=r.trip_ticket_file) }}"
                 class="download-btn"
-                >Download Ticket</a>
+                >Download Ticket</a
+              >
 
-              {% endif %}
-
-              {% elif r.status == "disapproved" %}
+              {% endif %} {% elif r.status == "disapproved" %}
               <span class="status disapproved">Disapproved</span>
 
               {% endif %}
