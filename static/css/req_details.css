@@ -1,4 +1,3 @@
-
 /* ===============================
    CALENDAR
 ================================ */
@@ -61,39 +60,39 @@
   background: #a00000;
 }
 
-.btn-edit-cal { 
-  background-color: var(--maroon); 
-  color: white; 
-  border: none; 
-  padding: 8px 20px; 
-  border-radius: 8px; 
-  cursor: pointer; 
+.btn-edit-cal {
+  background-color: var(--maroon);
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-.calendar-day.selected{
-    background:#8B0000;
-    color:white;
-    font-weight:bold;
-    cursor: pointer;
+.calendar-day.selected {
+  background: #8b0000;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
 }
 
 .calendar-day:hover {
-    background:#a00000;
-    color:white;
+  background: #a00000;
+  color: white;
 }
 
-.start-date{
-background:#8B0000;
-color:white;
+.start-date {
+  background: #8b0000;
+  color: white;
 }
 
-.end-date{
-background:#8B0000;
-color:white;
+.end-date {
+  background: #8b0000;
+  color: white;
 }
 
-.range{
-background:#f3caca;
+.range {
+  background: #f3caca;
 }
 
 .day-number {
@@ -122,23 +121,62 @@ background:#f3caca;
   box-sizing: border-box;
 }
 
-
-
-
-
 /* Calendar Container */
-.calendar-container { display: flex; gap: 40px; margin-top: 20px; }
-.calendar-left { flex: 1.5; }
-.calendar-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
-.calendar-date-row { display: flex; gap: 10px; margin-bottom: 15px; }
-.calendar-date-row input { border: 1px solid #ccc; padding: 8px; border-radius: 8px; width: 120px; }
-
+.calendar-container {
+  display: flex;
+  gap: 40px;
+  margin-top: 20px;
+}
+.calendar-left {
+  flex: 1.5;
+}
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+.calendar-date-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.calendar-date-row input {
+  border: 1px solid #ccc;
+  padding: 8px;
+  border-radius: 8px;
+  width: 120px;
+}
 
 /* Assignment Right Panel */
-.assignment-right { flex: 1; display: flex; flex-direction: column; gap: 20px; }
-.availability-status { background-color: var(--success-green); padding: 15px; border-radius: 10px; color: #2d5a30; font-weight: bold; }
-.form-group label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 18px; }
-.form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 10px; background: #fdfdfd; }
+.assignment-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.availability-status {
+  background-color: var(--success-green);
+  padding: 15px;
+  border-radius: 10px;
+  color: #2d5a30;
+  font-weight: bold;
+}
+
+.form-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+.form-group input,
+.form-group select {
+  width: 85%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: #fdfdfd;
+  margin-bottom: 15px;
+}
 
 .btn-submit {
   background: var(--pup-red);
@@ -169,6 +207,7 @@ background:#f3caca;
   padding: 40px 55px 40px 40px;
   border-radius: 14px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
 }
 
 .form-card h3 {
@@ -212,7 +251,6 @@ background:#f3caca;
   height: 110px;
   margin-bottom: 25px;
 }
-
 
 .form-row {
   display: grid;

@@ -199,7 +199,6 @@ body {
   color: white;
   padding: 20px 0;
   height: auto;
-  min-height: 100vh;
 }
 
 .logo-image {
@@ -309,18 +308,29 @@ body {
 .dashboard-layout {
   display: flex;
   min-height: calc(100vh - 80px);
+  width: 100%;
+  margin: 0 auto;
 }
 
 .dashboard-content {
-  flex: 1;
-  padding: 30px 60px 60px 60px;
-  max-width: 1200px;
+  flex-grow: 1;
+  padding: 30px 60px;
 }
+
+.dashboard-content > * {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 .subtitle {
   color: #777;
   margin-bottom: 30px;
 }
 
+.content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+}
 /* ===============================
    STATS
 ================================ */
@@ -349,7 +359,6 @@ body {
   background: white;
   padding: 30px;
   border-radius: 12px;
-  margin-top: 20px;
 }
 
 .calendar-header {

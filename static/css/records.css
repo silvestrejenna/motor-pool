@@ -83,6 +83,10 @@ body {
   flex-direction: column;
 }
 
+.content-padding {
+  padding: 30px;
+}
+
 /* ===============================
    TOP NAV (UNCHANGED)
 ================================ */

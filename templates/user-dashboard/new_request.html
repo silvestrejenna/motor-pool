@@ -1,123 +1,106 @@
 <!doctype html>
 <html>
-  <head>
-    <title>New Request | Motor Pool</title>
 
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/user_dashboard.css') }}"
-    />
-  </head>
+<head>
+  <title>New Request | Motor Pool</title>
 
-  <body>
-    <!-- ================= NAVBAR ================= -->
-    <div class="top-navbar">
-      <div class="nav-left">
-        <div class="logo-section">
-          <img
-            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-          />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/user_dashboard.css') }}" />
+</head>
 
-          <div class="logo-text">PUP Motor Pool Under GASS</div>
-        </div>
+<body>
+  <!-- ================= NAVBAR ================= -->
+  <div class="top-navbar">
+    <div class="nav-left">
+      <div class="logo-section">
+        <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" />
+
+        <div class="logo-text">PUP Motor Pool Under GASS</div>
+      </div>
+    </div>
+
+    <div class="nav-center">
+      <div class="nav-links">
+        <a href="{{ url_for('user_home') }}">HOME</a>
+        <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
+        <a class="active" href="{{ url_for('user_new_request') }}">NEW REQUEST</a>
+        <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
+        <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
       </div>
 
-      <div class="nav-center">
-        <div class="nav-links">
-          <a href="{{ url_for('user_home') }}">HOME</a>
-          <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
-          <a class="active" href="{{ url_for('user_new_request') }}"
-            >NEW REQUEST</a
-          >
-          <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
-          <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
-        </div>
+      <div class="nav-right">
+        <div class="user-profile">
+          <div class="notification-wrapper">
+            <span class="icon" id="notifBell">🔔</span>
+            <span id="notifBadge" class="notif-badge hidden">0</span>
 
-        <div class="nav-right">
-          <div class="user-profile">
-            <div class="notification-wrapper">
-              <span class="icon" id="notifBell">🔔</span>
-              <span id="notifBadge" class="notif-badge hidden">0</span>
-
-              <div id="notifDropdown" class="notif-dropdown hidden">
-                <p class="notif-title">Notifications</p>
-                <div id="notifList"></div>
-              </div>
+            <div id="notifDropdown" class="notif-dropdown hidden">
+              <p class="notif-title">Notifications</p>
+              <div id="notifList"></div>
             </div>
-            <div class="profile">
-              <span class="icon" onclick="toggleProfile()">👤</span>
+          </div>
+          <div class="profile">
+            <span class="icon" onclick="toggleProfile()">👤</span>
 
-              <div class="profile-dropdown" id="profileDropdown">
-                <p class="name" id="profileName">Loading...</p>
-                <p class="email">{{ email }}</p>
-                <hr />
-                <a href="#">Activity</a><br />
-                <a href="#">Change Password</a><br />
-                <a
-                  href="{{ url_for('logout') }}"
-                  onclick="logout()"
-                  class="logout"
-                  >Log Out</a
-                >
-              </div>
+            <div class="profile-dropdown" id="profileDropdown">
+              <p class="name" id="profileName">Loading...</p>
+              <p class="email">{{ email }}</p>
+              <hr />
+              <a href="#">Activity</a><br />
+              <a href="#">Change Password</a><br />
+              <a href="{{ url_for('logout') }}" onclick="logout()" class="logout">Log Out</a>
             </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- ================= PAGE LAYOUT ================= -->
-    <div class="dashboard-layout">
-      <!-- SIDEBAR -->
-      <nav class="sidebar">
-        <div class="logo-image">
-          <img
-            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-          />
-        </div>
+  <!-- ================= PAGE LAYOUT ================= -->
+  <div class="dashboard-layout">
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="logo-image">
+        <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" />
+      </div>
 
-        <ul class="inventory-selection">
-          <li>
-            <a href="{{ url_for('user_home') }}">HOME</a>
-          </li>
+      <ul class="inventory-selection">
+        <li>
+          <a href="{{ url_for('user_home') }}">HOME</a>
+        </li>
 
-          <li>
-            <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
-          </li>
+        <li>
+          <a href="{{ url_for('user_dashboard') }}">DASHBOARD</a>
+        </li>
 
-          <li class="active">
-            <a href="{{ url_for('user_new_request') }}">NEW REQUEST</a>
-          </li>
+        <li class="active">
+          <a href="{{ url_for('user_new_request') }}">NEW REQUEST</a>
+        </li>
 
-          <li>
-            <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
-          </li>
+        <li>
+          <a href="{{ url_for('user_my_requests') }}">MY REQUEST</a>
+        </li>
 
-          <li>
-            <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
-          </li>
-        </ul>
-      </nav>
+        <li>
+          <a href="{{ url_for('user_trip_tickets') }}">TRIP TICKETS</a>
+        </li>
+      </ul>
+    </nav>
 
-      <!-- ================= CONTENT ================= -->
-      <div class="dashboard-content">
-        <h2>New Vehicle Request</h2>
+    <!-- ================= CONTENT ================= -->
+    <div class="dashboard-content">
+      <h2>New Vehicle Request</h2>
 
-        <p class="subtitle">
-          Fill out the form to request a vehicle for your trip
-        </p>
+      <p class="subtitle">
+        Fill out the form to request a vehicle for your trip
+      </p>
 
-        <form
-          class="request-form"
-          method="POST"
-          action="{{ url_for('user_new_request') }}"
-        >
-          <!-- REQUEST INFO -->
-          <div class="form-card">
-            <h3>Request Information</h3>
+      <form class="request-form" method="POST" action="{{ url_for('user_new_request') }}">
+        <!-- REQUEST INFO -->
+        <div class="form-card">
+          <h3>Request Information</h3>
 
-            <label>Type of Vehicle *</label>
-            <!--               <select name="vehicles">
+          <label>Type of Vehicle *</label>
+          <!--               <select name="vehicles">
                 <option value="" disabled selected>
                   Select Vehicle
                 </option>
@@ -129,186 +112,227 @@
                 {% endfor %}
               </select>
 -->
-            <input
-              type="text"
-              name="vehicle_type"
-              placeholder="Please provide us the type of vehicle"
-              required
-            />
+          <input type="text" name="vehicle_type" placeholder="Please provide us the type of vehicle" required />
+        </div>
+
+        <!-- TRIP DETAILS -->
+        <div class="form-card">
+          <h3>Trip Details</h3>
+
+          <label>Trip Destination *</label>
+
+          <input type="text" name="destination" placeholder="e.g. Provincial Capitol, Batangas City" required />
+
+          <label>Purpose of Trip *</label>
+
+          <textarea name="purpose" placeholder="Describe the purpose of your trip" required></textarea>
+
+          <div class="form-row">
+            <div>
+              <label>Date of Travel *</label>
+              <input type="date" name="start_date" required />
+              <label>To</label>
+              <input type="date" name="end_date" required />
+            </div>
+
+            <div>
+              <label>Time of Departure *</label>
+
+              <input type="time" name="time" required />
+              <label>To</label>
+              <input type="time" name="time" required />
+            </div>
+
+            <div>
+              <label>Number of Days *</label>
+
+              <input type="number" name="days" min="1" required />
+            </div>
+
+            <div>
+              <label>Number of Passengers *</label>
+
+              <input type="number" name="passengers" min="1" required />
+            </div>
           </div>
+        </div>
 
-          <!-- TRIP DETAILS -->
-          <div class="form-card">
-            <h3>Trip Details</h3>
+        <!-- REQUESTOR -->
+        <div class="form-card">
+          <h3>Requestor Information</h3>
 
-            <label>Trip Destination *</label>
+          <div class="form-row two">
+            <div>
+              <label>Requestor Name *</label>
 
-            <input
-              type="text"
-              name="destination"
-              placeholder="e.g. Provincial Capitol, Batangas City"
-              required
-            />
+              <input type="text" value="{{ firstname }}" readonly placeholder="Enter Fullname" />
+            </div>
 
-            <label>Purpose of Trip *</label>
-
-            <textarea
-              name="purpose"
-              placeholder="Describe the purpose of your trip"
-              required
-            ></textarea>
-
-            <div class="form-row">
-              <div>
-                <label>Date of Travel *</label>
-                <input type="date" name="start_date" required />
-                <label>To</label>
-                <input type="date" name="end_date" required />
-              </div>
-
-              <div>
-                <label>Time of Departure *</label>
-
-                <input type="time" name="time" required />
-                <label>To</label>
-                <input type="time" name="time" required />
-              </div>
-
-              <div>
-                <label>Number of Days *</label>
-
-                <input type="number" name="days" min="1" required />
-              </div>
-
-              <div>
-                <label>Number of Passengers *</label>
-
-                <input type="number" name="passengers" min="1" required />
-              </div>
+            <div>
+              <label>Office / Department *</label>
+              <input type="text" name="office" placeholder="Enter Office/Department Name" required />
             </div>
           </div>
 
-          <!-- REQUESTOR -->
-          <div class="form-card">
-            <h3>Requestor Information</h3>
+          <label>Contact Number *</label>
 
-            <div class="form-row two">
-              <div>
-                <label>Requestor Name *</label>
+          <input type="text" name="contact_number" placeholder="Enter reachable number" required />
+        </div>
 
-                <input
-                  type="text"
-                  value="{{ firstname }}"
-                  readonly
-                  placeholder="Enter Fullname"
-                />
-              </div>
+        <!-- CONFIRM -->
+        <div class="form-card">
+          <div class="checkbox-container">
+            <input type="checkbox" id="confirmCheck" required />
 
-              <div>
-                <label>Office / Department *</label>
-                <input
-                  type="text"
-                  name="office"
-                  placeholder="Enter Office/Department Name"
-                  required
-                />
-              </div>
-            </div>
-
-            <label>Contact Number *</label>
-
-            <input
-              type="text"
-              name="contact_number"
-              placeholder="Enter reachable number"
-              required
-            />
+            <label for="confirmCheck">
+              I confirm that all details provided are accurate and complete
+            </label>
           </div>
+        </div>
 
-          <!-- CONFIRM -->
-          <div class="form-card">
-            <div class="checkbox-container">
-              <input type="checkbox" id="confirmCheck" required />
+        <!-- BUTTONS -->
+        <div class="form-actions">
+          <a href="{{ url_for('user_dashboard') }}" class="btn-cancel">
+            Cancel
+          </a>
+          <button type="submit" class="btn-submit">Submit Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-              <label for="confirmCheck">
-                I confirm that all details provided are accurate and complete
-              </label>
-            </div>
-          </div>
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div>
+        <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" class="footer-logo" />
 
-          <!-- BUTTONS -->
-          <div class="form-actions">
-            <a href="{{ url_for('user_dashboard') }}" class="btn-cancel">
-              Cancel
-            </a>
-            <button type="submit" class="btn-submit">Submit Request</button>
-          </div>
-        </form>
+        <p>
+          A Web-Based Inventory and Record Management System for
+          <strong>Motor Pool</strong>
+        </p>
+      </div>
+
+      <div>
+        <h4>MENU</h4>
+
+        <a href="{{ url_for('user_home') }}">Home</a>
+        <a href="{{ url_for('user_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('user_new_request') }}">Request</a>
+        <a href="{{ url_for('user_trip_tickets') }}">Trip Ticket</a>
+      </div>
+
+      <div>
+        <h4>CONTACT US</h4>
+
+        <p>📧 motorpool@pup.edu.ph</p>
+        <p>📞 (02) 5335-1787</p>
       </div>
     </div>
 
-    <!-- ================= FOOTER ================= -->
-    <footer class="footer">
-      <div class="footer-content">
-        <div>
-          <img
-            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-            class="footer-logo"
-          />
+    <hr class="footer-divider" />
 
-          <p>
-            A Web-Based Inventory and Record Management System for
-            <strong>Motor Pool</strong>
-          </p>
-        </div>
+    <div class="footer-bottom">
+      <span>© 2025 Polytechnic University of the Philippines</span>
+      <span>Terms of Services and Privacy Policy</span>
+    </div>
+  </footer>
 
-        <div>
-          <h4>MENU</h4>
+  <script>
+    async function loadUserProfile() {
+      const res = await fetch("/auth/user");
+      if (!res.ok) {
+        window.location.href = "/";
+        return;
+      }
+      const user = await res.json();
+      document.getElementById("profileName").textContent = user.full_name;
+      document.getElementById("profileEmail").textContent = user.email;
+    }
 
-          <a href="{{ url_for('user_home') }}">Home</a>
-          <a href="{{ url_for('user_dashboard') }}">Dashboard</a>
-          <a href="{{ url_for('user_new_request') }}">Request</a>
-          <a href="{{ url_for('user_trip_tickets') }}">Trip Ticket</a>
-        </div>
+    loadUserProfile();
 
-        <div>
-          <h4>CONTACT US</h4>
+    function toggleProfile() {
+      document.getElementById("profileDropdown").classList.toggle("show");
+    }
 
-          <p>📧 motorpool@pup.edu.ph</p>
-          <p>📞 (02) 5335-1787</p>
-        </div>
-      </div>
+    async function logout() {
+      await fetch("/logout", { method: "POST" });
+      window.location.href = "/";
+    }
 
-      <hr class="footer-divider" />
+    const bell = document.getElementById("notifBell");
+    const dropdown = document.getElementById("notifDropdown");
+    const notifList = document.getElementById("notifList");
+    const notifBadge = document.getElementById("notifBadge");
 
-      <div class="footer-bottom">
-        <span>© 2025 Polytechnic University of the Philippines</span>
-        <span>Terms of Services and Privacy Policy</span>
-      </div>
-    </footer>
+    if (bell) {
+      bell.addEventListener("click", async () => {
+        dropdown.classList.toggle("hidden");
 
-    <script>
-      async function loadUserProfile() {
-        const res = await fetch("/auth/user");
-        if (!res.ok) {
-          window.location.href = "/";
+        if (!dropdown.classList.contains("hidden")) {
+          await loadNotifications();
+        }
+      });
+    }
+
+    async function loadNotifications() {
+      try {
+        const res = await fetch("/get_notifications");
+        const data = await res.json();
+
+        notifList.innerHTML = "";
+
+        if (data.length === 0) {
+          notifList.innerHTML = "<p class='no-notifs'>No notifications</p>";
           return;
         }
-        const user = await res.json();
-        document.getElementById("profileName").textContent = user.full_name;
-        document.getElementById("profileEmail").textContent = user.email;
-      }
 
-      loadUserProfile();
+        data.forEach((notif) => {
+          const div = document.createElement("div");
+          div.classList.add("notif-item");
+          div.textContent = notif.message;
+          div.style.cursor = "pointer";
 
-      function toggleProfile() {
-        document.getElementById("profileDropdown").classList.toggle("show");
+          div.addEventListener("click", async () => {
+            try {
+              await fetch(`/mark_notif_read/${notif.id}`, { method: "POST" });
+              if (notif.type === "approved") {
+                window.location.href = "/user_my_requests";
+              }
+            } catch (err) {
+              console.error("Error marking notification as read:", err);
+            }
+          });
+          notifList.appendChild(div);
+        });
+      } catch (err) {
+        console.error("Error loading notifications:", err);
+        notifList.innerHTML =
+          "<p class='error'>Error loading notifications</p>";
       }
+    }
 
-      async function logout() {
-        await fetch("/logout", { method: "POST" });
-        window.location.href = "/";
+    async function loadUnreadCount() {
+      try {
+        const res = await fetch("/get_unread_notif_count");
+        const data = await res.json();
+
+        const badge = document.getElementById("notifBadge");
+
+        console.log("Unread count:", data.count);
+
+        if (data.count > 0) {
+          notifBadge.textContent = data.count;
+          notifBadge.classList.remove("hidden");
+        } else {
+          notifBadge.classList.add("hidden");
+        }
+      } catch (err) {
+        console.error("Error loading unread count:", err);
       }
-    </script>
-  </body>
+    }
+  </script>
+</body>
+
 </html>

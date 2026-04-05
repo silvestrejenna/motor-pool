@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Records - Motor Pool</title>
@@ -7,302 +8,296 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/records.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/vehicle_inv.css')}}">
 </head>
+
 <body>
 
-<div class="main-container">
+  <div class="main-container">
 
-  <!-- SIDEBAR -->
-  <!-- ================= SIDEBAR ================= -->
-      <nav class="sidebar">
-        <div class="logo-section">
-          <img
-            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-            alt="Logo"
-          />
+    <!-- SIDEBAR -->
+    <!-- ================= SIDEBAR ================= -->
+    <nav class="sidebar">
+      <div class="logo-section">
+        <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" alt="Logo" />
+      </div>
+
+      <ul class="inventory-selection">
+        <li class="active">RECORDS</li>
+        <li><a href="{{ url_for('req_dashboard') }}">VEHICLE REQUEST DASHBOARD</a></li>
+      </ul>
+    </nav>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <!-- TOP NAV -->
+      <header class="top-nav">
+        <div class="nav-links">
+          <a href="{{ url_for('home') }}">HOME</a>
+          <a href="{{ url_for('inventory') }}">INVENTORY</a>
+          <a href="{{ url_for('records') }}" class="active">RECORDS</a>
         </div>
 
-        <ul class="inventory-selection">
-          <li><a class="active">REPORTS</a></li>
-          <li><a href="{{ url_for('req_dashboard') }}">VEHICLE REQUEST</a></li>
-        </ul>
-      </nav>
+        <div class="user-profile">
+          <div class="notification-wrapper">
+            <span class="icon" id="notifBell">🔔</span>
+            <span id="notifBadge" class="notif-badge hidden">0</span>
 
-  <!-- CONTENT -->
-  <div class="content">
-  <!-- TOP NAV -->
-     <header class="top-nav">
-          <div class="nav-links">
-            <a href="{{ url_for('home') }}">HOME</a>
-            <a href="{{ url_for('inventory') }}">INVENTORY</a>
-            <a href="{{ url_for('records') }}" class="active">RECORDS</a>
-          </div>
-
-           <div class="user-profile">
-              <div class="notification-wrapper">
-                <span class="icon" id="notifBell">🔔</span>
-                <span id="notifBadge" class="notif-badge hidden">0</span>
-
-                <div id="notifDropdown" class="notif-dropdown hidden">
-                  <p class="notif-title">Notifications</p>
-                  <div id="notifList"></div>
-                </div>
-              </div>
-              <div class="profile">
-                <span class="icon" onclick="toggleProfile()">👤</span>
-
-              <div class="profile-dropdown" id="profileDropdown">
-                <p class="name" id="profileName">Loading...</p>
-                <p class="email" id="profileEmail"></p>
-                <hr />
-                <a href="#">Activity</a><br />
-                <a href="#">Change Password</a><br />
-                <a href="{{ url_for('logout') }}" onclick="logout()" class="logout">Log Out</a>
-              </div>
+            <div id="notifDropdown" class="notif-dropdown hidden">
+              <p class="notif-title">Notifications</p>
+              <div id="notifList"></div>
             </div>
           </div>
-        </header>
+          <div class="profile">
+            <span class="icon" onclick="toggleProfile()">👤</span>
 
-    <!-- STATS -->
-    <section class="stats-grid">
-      <div class="stat-card">
-        <span class="label">Total Records</span>
-        <span class="value">{{ total_reports }}</span>
-      </div>
+            <div class="profile-dropdown" id="profileDropdown">
+              <p class="name" id="profileName">Loading...</p>
+              <p class="email" id="profileEmail"></p>
+              <hr />
+              <a href="#">Activity</a><br />
+              <a href="#">Change Password</a><br />
+              <a href="{{ url_for('logout') }}" onclick="logout()" class="logout">Log Out</a>
+            </div>
+          </div>
+        </div>
+      </header>
 
-      <div class="stat-card">
-        <span class="label">This Month</span>
-        <span class="value">{{ this_month }}</span>
-      </div>
-    </section>
+      <!-- STATS -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <span class="label">Total Records</span>
+          <span class="value">{{ total_reports }}</span>
+        </div>
 
-    <!-- SEARCH & FILTER -->
-    <section class="card">
-      <h3>Search & Filter Records</h3>
+        <div class="stat-card">
+          <span class="label">This Month</span>
+          <span class="value">{{ this_month }}</span>
+        </div>
+      </section>
 
-      <form method="GET" class="control-grid">
-        <input type="text" name="search"
-               placeholder="Search by report type..."
-               value="{{ request.args.get('search','') }}">
+      <!-- SEARCH & FILTER -->
+      <section class="card">
+        <h3>Search & Filter Records</h3>
 
-        <select name="month">
-          <option value="">All Months</option>
-          {% for m in range(1,13) %}
-          <option value="{{ m }}" {% if request.args.get('month') == m|string %}selected{% endif %}>
-            {{ m }}
-          </option>
-          {% endfor %}
-        </select>
+        <form method="GET" class="control-grid">
+          <input type="text" name="search" placeholder="Search by report type..."
+            value="{{ request.args.get('search','') }}">
 
-        <select name="type">
-          <option value="">All Types</option>
-          <option value="vehicle">Vehicle</option>
-          <option value="gas_rfid">Gas & RFID</option>
-          <option value="maintenance_log">Maintenance</option>
-          <option value="pms_log">PMS</option>
-          <option value="tools_equipment">Tools</option>
-          <option value="parts_supplies">Parts</option>
-        </select>
+          <select name="month">
+            <option value="">All Months</option>
+            {% for m in range(1,13) %}
+            <option value="{{ m }}" {% if request.args.get('month')==m|string %}selected{% endif %}>
+              {{ m }}
+            </option>
+            {% endfor %}
+          </select>
 
-        <button class="btn-add">Apply</button>
-      </form>
-    </section>
+          <select name="type">
+            <option value="">All Types</option>
+            <option value="vehicle">Vehicle</option>
+            <option value="gas_rfid">Gas & RFID</option>
+            <option value="maintenance_log">Maintenance</option>
+            <option value="pms_log">PMS</option>
+            <option value="tools_equipment">Tools</option>
+            <option value="parts_supplies">Parts</option>
+          </select>
 
-    <!-- RECORDS LIST -->
-   <section class="card records-card">
-  <h3>Records</h3>
+          <button class="btn-add">Apply</button>
+        </form>
+      </section>
 
-  <table class="records-table">
-    <thead>
-      <tr>
-        <th>Record ID</th>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Month</th>
-        <th>Date Stored</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
+      <!-- RECORDS LIST -->
+      <section class="card records-card">
+        <h3>Records</h3>
 
-    <tbody>
-  {% for r in records %}
-  <tr>
-    <td>REC{{ "%03d"|format(r.report_id) }}</td>
-    <td>{{ r.report_type|replace('_',' ')|title }} Report</td>
-    <td>{{ r.report_type|replace('_',' ')|title }}</td>
-    <td>{{ r.month_name }}</td>
-    <td>{{ r.created_at.strftime('%Y-%m-%d') }}</td>
-    <td class="actions">
-      <a href="{{ url_for('download_report', filename=r.file_name) }}" class="icon-btn">⬇️</a>
-      <form method="POST"
-            action="{{ url_for('delete_record', id=r.report_id) }}"
-            onsubmit="return confirm('Delete this report?')">
-        <button class="icon-btn delete">🗑</button>
-      </form>
-    </td>
-  </tr>
-  {% endfor %}
-</tbody>
-  </table>
-</section>
+        <table class="records-table">
+          <thead>
+            <tr>
+              <th>Record ID</th>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Month</th>
+              <th>Date Stored</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for r in records %}
+            <tr>
+              <td>REC{{ "%03d"|format(r.report_id) }}</td>
+              <td>{{ r.report_type|replace('_',' ')|title }} Report</td>
+              <td>{{ r.report_type|replace('_',' ')|title }}</td>
+              <td>{{ r.month_name }}</td>
+              <td>{{ r.created_at.strftime('%Y-%m-%d') }}</td>
+              <td class="actions">
+                <a href="{{ url_for('download_report', filename=r.file_name) }}" class="icon-btn">⬇️</a>
+                <form method="POST" action="{{ url_for('delete_record', id=r.report_id) }}"
+                  onsubmit="return confirm('Delete this report?')">
+                  <button class="icon-btn delete">🗑</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
 
 
+    </div>
   </div>
-</div>
- <!-- ================= FOOTER ================= -->
-    <footer class="footer">
-      <div class="footer-content">
-        <div class="footer-left">
-          <img
-            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-            class="footer-logo"
-          />
-          <p>
-            A Web-Based Inventory and Record Management System for
-            <strong>Motor Pool</strong>
-          </p>
-        </div>
-
-        <div class="footer-center">
-          <h4>MENU</h4>
-          <a href="{{ url_for('home') }}">Home</a>
-          <a href="{{ url_for('inventory') }}">Inventory</a>
-          <a href="{{ url_for('records') }}">Record Management</a>
-        </div>
-
-        <div class="footer-right">
-          <h4>CONTACT US</h4>
-          <p>📧 motorpool@pup.edu.ph</p>
-          <p>📞 (02) 5335-1787</p>
-        </div>
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-left">
+        <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" class="footer-logo" />
+        <p>
+          A Web-Based Inventory and Record Management System for
+          <strong>Motor Pool</strong>
+        </p>
       </div>
 
-      <hr />
-
-      <div class="footer-bottom">
-        © 2025 Polytechnic University of the Philippines. Under G.A.S.S.
+      <div class="footer-center">
+        <h4>MENU</h4>
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('inventory') }}">Inventory</a>
+        <a href="{{ url_for('records') }}">Record Management</a>
       </div>
-    </footer>
-<script>
-function toggleProfile() {
-  document.getElementById("profileDropdown").classList.toggle("show");
-}
 
-function logout() {
-  fetch("/logout", { method: "POST" })
-    .then(() => window.location.href = "/");
-}
+      <div class="footer-right">
+        <h4>CONTACT US</h4>
+        <p>📧 motorpool@pup.edu.ph</p>
+        <p>📞 (02) 5335-1787</p>
+      </div>
+    </div>
 
-fetch("/auth/user")
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById("profileName").innerText = data.full_name;
-    document.getElementById("profileEmail").innerText = data.email;
-  });
+    <hr />
 
-   async function loadUserProfile() {
-        const res = await fetch("/auth/user");
-        if (!res.ok) {
-          window.location.href = "/";
-          return;
-        }
-        const user = await res.json();
-        document.getElementById("profileName").textContent = user.full_name;
-        document.getElementById("profileEmail").textContent = user.email;
-      }
+    <div class="footer-bottom">
+      © 2025 Polytechnic University of the Philippines. Under G.A.S.S.
+    </div>
+  </footer>
+  <script>
+    function toggleProfile() {
+      document.getElementById("profileDropdown").classList.toggle("show");
+    }
 
-      loadUserProfile();
+    function logout() {
+      fetch("/logout", { method: "POST" })
+        .then(() => window.location.href = "/");
+    }
 
-      function toggleProfile() {
-        document.getElementById("profileDropdown").classList.toggle("show");
-      }
-
-      async function logout() {
-        await fetch("/logout", { method: "POST" });
-        window.location.href = "/";
-      }
-
-      const bell = document.getElementById("notifBell");
-      const dropdown = document.getElementById("notifDropdown");
-      const notifList = document.getElementById("notifList");
-      const notifBadge = document.getElementById("notifBadge");
-
-      bell.addEventListener("click", async () => {
-        dropdown.classList.toggle("hidden");
-
-        if (!dropdown.classList.contains("hidden")) {
-          await loadNotifications();
-        }
+    fetch("/auth/user")
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("profileName").innerText = data.full_name;
+        document.getElementById("profileEmail").innerText = data.email;
       });
 
-      async function loadUnreadCount() {
-        try {
-          const res = await fetch("/get_unread_notif_count");
-          const data = await res.json();
-
-          const badge = document.getElementById("notifBadge");
-
-          console.log("Unread count:", data.count);
-
-          if (data.count > 0) {
-            badge.textContent = data.count;
-            badge.classList.remove("hidden");
-          } else {
-            badge.classList.add("hidden");
-          }
-        } catch (err) {
-          console.error("Error loading unread count:", err);
-        }
+    async function loadUserProfile() {
+      const res = await fetch("/auth/user");
+      if (!res.ok) {
+        window.location.href = "/";
+        return;
       }
+      const user = await res.json();
+      document.getElementById("profileName").textContent = user.full_name;
+      document.getElementById("profileEmail").textContent = user.email;
+    }
 
-      async function loadNotifications() {
-        try {
-          const res = await fetch("/get_notifications");
-          const data = await res.json();
-          notifList.innerHTML = "";
+    loadUserProfile();
 
-          if (data.length === 0) {
-            notifList.innerHTML = "<p>No notifications</p>";
-            return;
+    function toggleProfile() {
+      document.getElementById("profileDropdown").classList.toggle("show");
+    }
+
+    async function logout() {
+      await fetch("/logout", { method: "POST" });
+      window.location.href = "/";
+    }
+
+    const bell = document.getElementById("notifBell");
+    const dropdown = document.getElementById("notifDropdown");
+    const notifList = document.getElementById("notifList");
+    const notifBadge = document.getElementById("notifBadge");
+
+    bell.addEventListener("click", async () => {
+      dropdown.classList.toggle("hidden");
+
+      if (!dropdown.classList.contains("hidden")) {
+        await loadNotifications();
+      }
+    });
+
+    async function loadUnreadCount() {
+      try {
+        const res = await fetch("/get_unread_notif_count");
+        const data = await res.json();
+
+        const badge = document.getElementById("notifBadge");
+
+        console.log("Unread count:", data.count);
+
+        if (data.count > 0) {
+          badge.textContent = data.count;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+        }
+      } catch (err) {
+        console.error("Error loading unread count:", err);
+      }
+    }
+
+    async function loadNotifications() {
+      try {
+        const res = await fetch("/get_notifications");
+        const data = await res.json();
+        notifList.innerHTML = "";
+
+        if (data.length === 0) {
+          notifList.innerHTML = "<p>No notifications</p>";
+          return;
+        }
+
+        data.forEach((notif) => {
+          const div = document.createElement("div");
+          div.className = "notif-item";
+          div.textContent = notif.message;
+          div.style.cursor = "pointer";
+          div.style.pointerEvents = "auto";
+
+          if (!notif.is_read) {
+            div.style.fontWeight = "bold";
           }
 
-          data.forEach((notif) => {
-            const div = document.createElement("div");
-            div.className = "notif-item";
-            div.textContent = notif.message;
-            div.style.cursor = "pointer";
-            div.style.pointerEvents = "auto";
+          div.onclick = async function () {
+            console.log("CLICKED NOTIF:", notif.id);
 
-            if (!notif.is_read) {
-              div.style.fontWeight = "bold";
-            }
-
-            div.onclick = async function () {
-              console.log("CLICKED NOTIF:", notif.id);
-
-              div.onclick = function () {
-                console.log("CLICK WORKING");
-              };
-
-              try {
-                const res = await fetch(`/mark_notification_read/${notif.id}`);
-                const result = await res.json();
-
-                await loadUnreadCount();
-                window.location.href = result.redirect_url;
-              } catch (err) {
-                console.error("Error marking as read:", err);
-              }
+            div.onclick = function () {
+              console.log("CLICK WORKING");
             };
 
-            notifList.appendChild(div);
-          });
-        } catch (err) {
-          console.error("Error loading notifications:", err);
-          notifList.innerHTML = "<p>Failed to load notifications</p>";
-        }
+            try {
+              const res = await fetch(`/mark_notification_read/${notif.id}`);
+              const result = await res.json();
+
+              await loadUnreadCount();
+              window.location.href = result.redirect_url;
+            } catch (err) {
+              console.error("Error marking as read:", err);
+            }
+          };
+
+          notifList.appendChild(div);
+        });
+      } catch (err) {
+        console.error("Error loading notifications:", err);
+        notifList.innerHTML = "<p>Failed to load notifications</p>";
       }
-      window.onload = loadUnreadCount;
-</script>
+    }
+    window.onload = loadUnreadCount;
+  </script>
 
 </body>
+
 </html>
