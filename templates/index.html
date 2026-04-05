@@ -30,29 +30,32 @@
       </nav>
 
       <div class="nav-right">
-         <div class="user-profile">
-
+        <div class="user-profile">
           <div class="notification-wrapper">
-              <span class="icon" id="notifBell">🔔</span>
-              <span id="notifBadge" class="notif-badge hidden">0</span>
+            <span class="icon" id="notifBell">🔔</span>
+            <span id="notifBadge" class="notif-badge hidden">0</span>
 
-              <div id="notifDropdown" class="notif-dropdown hidden">
-                <p class="notif-title">Notifications</p>
-                <div id="notifList"></div>
-              </div>
+            <div id="notifDropdown" class="notif-dropdown hidden">
+              <p class="notif-title">Notifications</p>
+              <div id="notifList"></div>
+            </div>
           </div>
-        <div class="profile">
-          <span class="icon" onclick="toggleProfile()">👤</span>
+          <div class="profile">
+            <span class="icon" onclick="toggleProfile()">👤</span>
 
-          <div class="profile-dropdown" id="profileDropdown">
-            <p class="name" id="profileName">Loading...</p>
-            <p class="email" id="profileEmail"></p>
-            <hr />
-            <a href="#">Activity</a><br />
-            <a href="#">Change Password</a><br />
-            <a href="{{ url_for('logout') }}" onclick="logout()" class="logout"
-              >Log Out</a
-            >
+            <div class="profile-dropdown" id="profileDropdown">
+              <p class="name" id="profileName">Loading...</p>
+              <p class="email" id="profileEmail"></p>
+              <hr />
+              <a href="#">Activity</a><br />
+              <a href="#">Change Password</a><br />
+              <a
+                href="{{ url_for('logout') }}"
+                onclick="logout()"
+                class="logout"
+                >Log Out</a
+              >
+            </div>
           </div>
         </div>
       </div>
@@ -184,7 +187,7 @@
           console.error("Error loading unread count:", err);
         }
       }
-        
+
       async function loadNotifications() {
         try {
           const res = await fetch("/get_notifications");
@@ -196,7 +199,7 @@
             return;
           }
 
-          data.forEach(notif => {
+          data.forEach((notif) => {
             const div = document.createElement("div");
             div.className = "notif-item";
             div.textContent = notif.message;
@@ -211,8 +214,8 @@
               console.log("CLICKED NOTIF:", notif.id);
 
               div.onclick = function () {
-              console.log("CLICK WORKING");
-            };
+                console.log("CLICK WORKING");
+              };
 
               try {
                 const res = await fetch(`/mark_notification_read/${notif.id}`);
@@ -227,7 +230,6 @@
 
             notifList.appendChild(div);
           });
-
         } catch (err) {
           console.error("Error loading notifications:", err);
           notifList.innerHTML = "<p>Failed to load notifications</p>";

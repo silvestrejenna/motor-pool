@@ -1,245 +1,292 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Gasoline & RFID | Motor Pool</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/vehicle_inv.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/gas&rfid_inv.css') }}">
+  <meta charset="UTF-8" />
+  <title>Gasoline & RFID | Motor Pool</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/vehicle_inv.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/gas&rfid_inv.css') }}" />
 </head>
+
 <body>
-    <div class="main-container">
-        <nav class="sidebar">
-            <div class="logo-section">
-                <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" alt="Logo">
+  <div class="main-container">
+    <nav class="sidebar">
+      <div class="logo-section">
+        <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" alt="Logo" />
+      </div>
+      <ul class="inventory-selection">
+        <li><a href="{{ url_for('inventory') }}">VEHICLES</a></li>
+        <li class="active">GASOLINE & RFID</li>
+        <li>
+          <a href="{{ url_for('maintenance_pms') }}">MAINTENANCE & PMS LOG</a>
+        </li>
+        <li>
+          <a href="{{ url_for('tools_equipment') }}">TOOLS & EQUIPMENT</a>
+        </li>
+        <li>
+          <a href="{{ url_for('parts_supplies') }}">PARTS & SUPPLIES</a>
+        </li>
+        <li><a href="{{ url_for('reports') }}">REPORTS</a></li>
+      </ul>
+    </nav>
+
+    <div class="content">
+      <header class="top-nav">
+        <div class="nav-links">
+          <a href="{{ url_for('home') }}">HOME</a>
+          <a href="{{ url_for('inventory') }}" class="active">INVENTORY</a>
+          <a href="{{ url_for('records') }}">RECORDS</a>
+        </div>
+        <div class="user-profile">
+          <div class="notification-wrapper">
+            <span class="icon" id="notifBell">🔔</span>
+            <span id="notifBadge" class="notif-badge hidden">0</span>
+
+            <div id="notifDropdown" class="notif-dropdown hidden">
+              <p class="notif-title">Notifications</p>
+              <div id="notifList"></div>
             </div>
-            <ul class="inventory-selection">
-                <li><a href="{{ url_for('inventory') }}">VEHICLES</a></li>
-                <li class="active">GASOLINE & RFID</a></li>
-                <li><a href="{{ url_for('maintenance_pms') }}">MAINTENANCE & PMS LOG</a></li>
-                <li><a href="{{ url_for('tools_equipment') }}">TOOLS & EQUIPMENT</a></li>
-                <li><a href="{{ url_for('parts_supplies') }}">PARTS & SUPPLIES</a></li>
-                <li><a href="{{ url_for('reports') }}">REPORTS</a></li>
-            </ul>
-        </nav>
+          </div>
+          <div class="profile">
+            <span class="icon" onclick="toggleProfile()">👤</span>
 
-        <div class="content">
-            <header class="top-nav">
-                <div class="nav-links">
-                    <a href="{{ url_for('home') }}">HOME</a>
-                    <a href="{{ url_for('inventory') }}" class="active">INVENTORY</a>
-                    <a href="{{ url_for('records') }}">RECORDS</a>
-                </div>
-                <div class="user-profile">
-                    <span class="icon">🔔</span>
-
-
-                    <div class="profile">
-                    <span class="icon" onclick="toggleProfile()">👤</span>
-
-                    <div class="profile-dropdown" id="profileDropdown">
-                        <p class="name" id="profileName">Loading...</p>
-                        <p class="email" id="profileEmail"></p>
-                        <hr />
-                        <a href="#">Activity</a><br/>
-                        <a href="#">Change Password</a><br/>
-                        <a href="#" onclick="logout()" class="logout">Log Out</a>
-                    </div>
-                    </div>
-                </div>
-            </header>
-
-            <section class="inventory-section">
-                <div class="section-header">
-                    <h1>GASOLINE & RFID CONSUMPTION</h1>
-                   {% if session['user_role'] == 'Admin' %}<button class="btn-add" onclick="toggleFuelModal()">Add Fuel Record</button>{% endif %}
-                </div>
-
-                <div class="summary-container">
-                    <div class="summary-card"><h4>Total This Month</h4><p>{{ summary.total_fuel }}</p></div>
-                    <div class="summary-card"><h4>Average Per Vehicle</h4><p>{{ summary.avg_fuel }}</p></div>
-                    <div class="summary-card"><h4>Total RFID Easy Trip</h4><p>{{ summary.easytrip }}</p></div>
-                    <div class="summary-card"><h4>Total RFID Auto Sweep</h4><p>{{ summary.autosweep }}</p></div>
-                </div>
-
-                <div class="table-card">
-                    <div class="table-wrapper">
-                        <table class="inventory-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th><th>Vehicle</th><th>Date</th><th>Driver</th>
-                                    <th>Gas Bal</th><th>Purchased</th><th>After Trip</th>
-                                    <th>KM Start</th><th>KM End</th><th>KM Used</th>
-                                    <th>EasyTrip</th><th>AutoSweep</th>
-                                     {% if session['user_role'] == 'Admin' %}<th class="sticky-action">Actions</th>{% endif %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in records %}
-                                <tr id="row-{{ row[0] }}">
-                                    <td>F00{{ row[0] }}</td>
-                                    
-                                    <td>
-                                        <span class="view-mode">{{ row[13] }}</span>
-                                        <select class="edit-mode edit-input" name="v_name" style="display:none;">
-                                            {% for v in vehicles %}
-                                            <option value="{{ v[0] }}" {% if v[0] == row[13] %}selected{% endif %}>{{ v[0] }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </td>
-
-                                    <td>
-                                        <span class="view-mode">{{ row[2] }}</span>
-                                        <input type="date" class="edit-mode edit-input" name="date" value="{{ row[2] }}" style="display:none;">
-                                    </td>
-
-                                    <td>
-                                        <span class="view-mode">{{ row[3] }}</span>
-                                        <input type="text" class="edit-mode edit-input" name="driver" value="{{ row[3] }}" style="display:none;">
-                                    </td>
-
-                                    <td>
-                                        <span class="view-mode">{{ row[4] }}L</span>
-                                        <input type="number" step="0.01" class="edit-mode edit-input" name="gas_bal_tank" value="{{ row[4] }}" style="display:none;">
-                                    </td>
-
-                                    <td>
-                                        <span class="view-mode">{{ row[5] }}L</span>
-                                        <input type="number" step="0.01" class="edit-mode edit-input" name="purchased_trip" value="{{ row[5] }}" style="display:none;">
-                                    </td>
-
-                                    <td>
-                                        <span class="view-mode">{{ row[6] }}L</span>
-                                        <input type="number" step="0.01" class="edit-mode edit-input" name="bal_after_trip" value="{{ row[6] }}" style="display:none;">
-                                    </td>
-
-                                    <td>
-                                        <span class="view-mode">{{ row[7] }}</span>
-                                        <input type="number" class="edit-mode edit-input" name="km_beginning" 
-                                                value="{{ row[7] }}" style="display:none;"
-                                                oninput="calcEditKM('{{ row[0] }}')">
-                                    </td>
-
-                                    <td>
-                                        <span class="view-mode">{{ row[8] }}</span>
-                                        <input type="number" class="edit-mode edit-input" name="km_end" 
-                                                value="{{ row[8] }}" style="display:none;"
-                                                oninput="calcEditKM('{{ row[0] }}')">
-                                    </td>
-
-                                    <td>
-                                        <span class="view-mode">{{ row[9] }}</span>
-                                        <input type="number" class="edit-mode edit-input" name="km_used" 
-                                                value="{{ row[9] }}" style="display:none;" readonly>
-                                    </td>
-
-                                    <td>
-                                        <span class="view-mode">₱{{ row[10] }}</span>
-                                        <input type="number" step="0.01" class="edit-mode edit-input" name="easy_rfid_bal" value="{{ row[10] }}" style="display:none;">
-                                    </td>
-
-                                    <td>
-                                        <span class="view-mode">₱{{ row[11] }}</span>
-                                        <input type="number" step="0.01" class="edit-mode edit-input" name="auto_rfid_bal" value="{{ row[11] }}" style="display:none;">
-                                    </td>
-
-                                    {% if session['user_role'] == 'Admin' %}
-                                    <td class="sticky-action">
-                                        <div class="view-btns-{{ row[0] }}">
-                                            <button class="btn-edit" onclick="toggleEdit('{{ row[0] }}')">Edit</button>
-                                            <button class="btn-delete" onclick="deleteFuel('{{ row[0] }}')">Delete</button>
-                                        </div>
-
-                                        <div class="edit-btns-{{ row[0] }}" style="display:none;">
-                                            <button class="btn-update" onclick="saveUpdate('{{ row[0] }}')">Update</button>
-                                            <button class="btn-cancel" onclick="toggleEdit('{{ row[0] }}')">Cancel</button>
-                                            <button class="btn-delete" onclick="deleteFuel('{{ row[0] }}')">Delete</button>
-                                        </div>
-                                    </td>
-                                    {% endif %}
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
+            <div class="profile-dropdown" id="profileDropdown">
+              <p class="name" id="profileName">Loading...</p>
+              <p class="email" id="profileEmail"></p>
+              <hr />
+              <a href="#">Activity</a><br />
+              <a href="#">Change Password</a><br />
+              <a href="{{ url_for('logout') }}" onclick="logout()" class="logout">Log Out</a>
+            </div>
+          </div>
         </div>
-    </div>
+      </header>
 
-    <div id="fuelModal" class="modal-overlay">
-        <div class="modal-content scrollable-modal">
-            <h2>New Fuel Record</h2>
-            <form action="{{ url_for('add_fuel') }}" method="POST">
-                <div class="form-grid">
-                    <label>Vehicle</label>
-                    <select name="v_name" required>
-                        <option value="" disabled selected>Select Vehicle</option>
-                        {% for v in vehicles %}
-                        <option value="{{ v[0] }}">{{ v[0] }}</option>
-                        {% endfor %}
+      <section class="inventory-section">
+        <div class="section-header">
+          <h1>GASOLINE & RFID CONSUMPTION</h1>
+          <button class="btn-add" onclick="toggleFuelModal()">
+            Add Fuel Record
+          </button>
+        </div>
+
+        <div class="summary-container">
+          <div class="summary-card">
+            <h4>Total This Month</h4>
+            <p>{{ summary.total_fuel }}</p>
+          </div>
+          <div class="summary-card">
+            <h4>Average Per Vehicle</h4>
+            <p>{{ summary.avg_fuel }}</p>
+          </div>
+          <div class="summary-card">
+            <h4>Total RFID Easy Trip</h4>
+            <p>{{ summary.easytrip }}</p>
+          </div>
+          <div class="summary-card">
+            <h4>Total RFID Auto Sweep</h4>
+            <p>{{ summary.autosweep }}</p>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-wrapper">
+            <table class="inventory-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Vehicle</th>
+                  <th>Date</th>
+                  <th>Driver</th>
+                  <th>Gas Bal</th>
+                  <th>Purchased</th>
+                  <th>After Trip</th>
+                  <th>KM Start</th>
+                  <th>KM End</th>
+                  <th>KM Used</th>
+                  <th>EasyTrip</th>
+                  <th>AutoSweep</th>
+                  <th class="sticky-action">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in records %}
+                <tr id="row-{{ row[0] }}">
+                  <td>F00{{ row[0] }}</td>
+
+                  <td>
+                    <span class="view-mode">{{ row[13] }}</span>
+                    <select class="edit-mode edit-input" name="v_name" style="display: none">
+                      {% for v in vehicles %}
+                      <option value="{{ v[0] }}" {% if v[0]==row[13] %}selected{% endif %}>
+                        {{ v[0] }}
+                      </option>
+                      {% endfor %}
                     </select>
+                  </td>
 
-                    <label>Date</label><input type="date" name="date" required>
-                    <label>Driver</label><input type="text" name="driver" required>
-                    <label>Gas Balance (Tank)</label><input type="number" step="0.01" name="gas_bal_tank">
-                    <label>Purchased During Trip</label><input type="number" step="0.01" name="purchased_trip">
-                    <label>Balance After Trip</label><input type="number" step="0.01" name="bal_after_trip">
-                    <label>KM Beginning</label><input type="number" name="km_beginning" id="add_km_start"  oninput="calcAddKM()">
-                    <label>KM End</label><input type="number" name="km_end" id="add_km_end" oninput="calcAddKM()">
-                    <label>KM Used</label><input type="number" name="km_used" id="add_km_used" readonly placeholder="0">
-                    <label>RFID EasyTrip</label><input type="number" step="0.01" name="easy_rfid_bal">
-                    <label>RFID AutoSweep</label><input type="number" step="0.01" name="auto_rfid_bal">
-                    <label>Remarks</label><textarea name="remarks"></textarea>
-                </div>
-                <button type="submit" class="btn-save">Save Record</button>
-                <button type="button" class="modal-cancel" onclick="closeDrawer()">Cancel</button>
-            </form>
+                  <td>
+                    <span class="view-mode">{{ row[2] }}</span>
+                    <input type="date" class="edit-mode edit-input" name="date" value="{{ row[2] }}"
+                      style="display: none" />
+                  </td>
+
+                  <td>
+                    <span class="view-mode">{{ row[3] }}</span>
+                    <input type="text" class="edit-mode edit-input" name="driver" value="{{ row[3] }}"
+                      style="display: none" />
+                  </td>
+
+                  <td>
+                    <span class="view-mode">{{ row[4] }}L</span>
+                    <input type="number" step="0.01" class="edit-mode edit-input" name="gas_bal_tank"
+                      value="{{ row[4] }}" style="display: none" />
+                  </td>
+
+                  <td>
+                    <span class="view-mode">{{ row[5] }}L</span>
+                    <input type="number" step="0.01" class="edit-mode edit-input" name="purchased_trip"
+                      value="{{ row[5] }}" style="display: none" />
+                  </td>
+
+                  <td>
+                    <span class="view-mode">{{ row[6] }}L</span>
+                    <input type="number" step="0.01" class="edit-mode edit-input" name="bal_after_trip"
+                      value="{{ row[6] }}" style="display: none" />
+                  </td>
+
+                  <td>
+                    <span class="view-mode">{{ row[7] }}</span>
+                    <input type="number" class="edit-mode edit-input" name="km_beginning" value="{{ row[7] }}"
+                      style="display: none" oninput="calcEditKM('{{ row[0] }}')" />
+                  </td>
+
+                  <td>
+                    <span class="view-mode">{{ row[8] }}</span>
+                    <input type="number" class="edit-mode edit-input" name="km_end" value="{{ row[8] }}"
+                      style="display: none" oninput="calcEditKM('{{ row[0] }}')" />
+                  </td>
+
+                  <td>
+                    <span class="view-mode">{{ row[9] }}</span>
+                    <input type="number" class="edit-mode edit-input" name="km_used" value="{{ row[9] }}"
+                      style="display: none" readonly />
+                  </td>
+
+                  <td>
+                    <span class="view-mode">₱{{ row[10] }}</span>
+                    <input type="number" step="0.01" class="edit-mode edit-input" name="easy_rfid_bal"
+                      value="{{ row[10] }}" style="display: none" />
+                  </td>
+
+                  <td>
+                    <span class="view-mode">₱{{ row[11] }}</span>
+                    <input type="number" step="0.01" class="edit-mode edit-input" name="auto_rfid_bal"
+                      value="{{ row[11] }}" style="display: none" />
+                  </td>
+
+                  <td class="sticky-action">
+                    <div class="view-btns-{{ row[0] }}">
+                      <button class="btn-edit" onclick="toggleEdit('{{ row[0] }}')">
+                        Edit
+                      </button>
+                      <button class="btn-delete" onclick="deleteFuel('{{ row[0] }}')">
+                        Delete
+                      </button>
+                    </div>
+
+                    <div class="edit-btns-{{ row[0] }}" style="display: none">
+                      <button class="btn-update" onclick="saveUpdate('{{ row[0] }}')">
+                        Update
+                      </button>
+                      <button class="btn-cancel" onclick="toggleEdit('{{ row[0] }}')">
+                        Cancel
+                      </button>
+                      <button class="btn-delete" onclick="deleteFuel('{{ row[0] }}')">
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="fuelModal" class="modal-overlay">
+    <div class="modal-content scrollable-modal">
+      <span class="icon" class="close-btn" onclick="toggleFuelModal()">&times;</span>
+      <h2>New Fuel Record</h2>
+      <form action="{{ url_for('add_fuel') }}" method="POST">
+        <div class="form-grid">
+          <label>Vehicle</label>
+          <select name="v_name" required>
+            <option value="" disabled selected>Select Vehicle</option>
+            {% for v in vehicles %}
+            <option value="{{ v[0] }}">{{ v[0] }}</option>
+            {% endfor %}
+          </select>
+
+          <label>Date</label><input type="date" name="date" required />
+          <label>Driver</label><input type="text" name="driver" required />
+          <label>Gas Balance (Tank)</label><input type="number" step="0.01" name="gas_bal_tank" />
+          <label>Purchased During Trip</label><input type="number" step="0.01" name="purchased_trip" />
+          <label>Balance After Trip</label><input type="number" step="0.01" name="bal_after_trip" />
+          <label>KM Beginning</label><input type="number" name="km_beginning" id="add_km_start" oninput="calcAddKM()" />
+          <label>KM End</label><input type="number" name="km_end" id="add_km_end" oninput="calcAddKM()" />
+          <label>KM Used</label><input type="number" name="km_used" id="add_km_used" readonly placeholder="0" />
+          <label>RFID EasyTrip</label><input type="number" step="0.01" name="easy_rfid_bal" />
+          <label>RFID AutoSweep</label><input type="number" step="0.01" name="auto_rfid_bal" />
+          <label>Remarks</label><textarea name="remarks"></textarea>
+        </div>
+        <button type="submit" class="btn-save">Save Record</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <div class="footer-content">
+      <!-- LEFT -->
+      <div class="footer-left">
+        <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" alt="Motor Pool Logo"
+          class="footer-logo" />
+        <p class="footer-desc">
+          A Web-Based Inventory and Record Management System for
+          <strong>Motor Pool</strong>
+        </p>
+      </div>
+
+      <!-- CENTER -->
+      <div class="footer-center">
+        <h4>MENU</h4>
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('inventory') }}">Inventory</a>
+        <a href="{{ url_for('records') }}">Record Management</a>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="footer-right">
+        <h4>CONTACT US</h4>
+        <p>📧 motorpool@pup.edu.ph</p>
+        <p>📞 (02) 5335-1787</p>
+      </div>
     </div>
 
-    <!-- ================= FOOTER ================= -->
-    <footer class="footer">
-      <div class="footer-content">
-        <!-- LEFT -->
-        <div class="footer-left">
-          <img
-            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-            alt="Motor Pool Logo"
-            class="footer-logo"
-          />
-          <p class="footer-desc">
-            A Web-Based Inventory and Record Management System for
-            <strong>Motor Pool</strong>
-          </p>
-        </div>
+    <hr class="footer-divider" />
 
-        <!-- CENTER -->
-        <div class="footer-center">
-          <h4>MENU</h4>
-          <a href="{{ url_for('home') }}">Home</a>
-          <a href="{{ url_for('inventory') }}">Inventory</a>
-          <a href="{{ url_for('records') }}">Record Management</a>
-        </div>
+    <div class="footer-bottom">
+      <span>© 2025 Polytechnic University of the Philippines. Under
+        G.A.S.S.</span>
+      <span>Terms of Services and Privacy Policy</span>
+    </div>
+  </footer>
 
-        <!-- RIGHT -->
-        <div class="footer-right">
-          <h4>CONTACT US</h4>
-          <p>📧 motorpool@pup.edu.ph</p>
-          <p>📞 (02) 5335-1787</p>
-        </div>
-      </div>
-
-      <hr class="footer-divider" />
-
-      <div class="footer-bottom">
-        <span
-          >© 2025 Polytechnic University of the Philippines. Under
-          G.A.S.S.</span
-        >
-        <span>Terms of Services and Privacy Policy</span>
-      </div>
-    </footer>
-
-    <script src="{{ url_for('static', filename='js/gas&rfid_inv.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/gas&rfid_inv.js') }}"></script>
 </body>
+
 </html>

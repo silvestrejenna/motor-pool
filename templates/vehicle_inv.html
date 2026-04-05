@@ -46,23 +46,33 @@
             <a href="{{ url_for('inventory') }}" class="active">INVENTORY</a>
             <a href="{{ url_for('records') }}">RECORDS</a>
           </div>
+          <div class="nav-right">
+            <div class="user-profile">
+              <div class="notification-wrapper">
+                <span class="icon" id="notifBell">🔔</span>
+                <span id="notifBadge" class="notif-badge hidden">0</span>
 
-          <div class="user-profile">
-            <div class="profile">
-              <span class="icon" onclick="toggleProfile()">👤</span>
+                <div id="notifDropdown" class="notif-dropdown hidden">
+                  <p class="notif-title">Notifications</p>
+                  <div id="notifList"></div>
+                </div>
+              </div>
+              <div class="profile">
+                <span class="icon" onclick="toggleProfile()">👤</span>
 
-              <div class="profile-dropdown" id="profileDropdown">
-                <p class="name" id="profileName">Loading...</p>
-                <p class="email" id="profileEmail"></p>
-                <hr />
-                <a href="#">Activity</a><br />
-                <a href="#">Change Password</a><br />
-                <a
-                  href="{{ url_for('logout') }}"
-                  onclick="logout()"
-                  class="logout"
-                  >Log Out</a
-                >
+                <div class="profile-dropdown" id="profileDropdown">
+                  <p class="name" id="profileName">Loading...</p>
+                  <p class="email" id="profileEmail"></p>
+                  <hr />
+                  <a href="#">Activity</a><br />
+                  <a href="#">Change Password</a><br />
+                  <a
+                    href="{{ url_for('logout') }}"
+                    onclick="logout()"
+                    class="logout"
+                    >Log Out</a
+                  >
+                </div>
               </div>
             </div>
           </div>
