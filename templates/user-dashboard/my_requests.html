@@ -94,9 +94,10 @@
         <button class="tab" onclick="filterRequests('approved', this)">
           Approved
         </button>
-        <button class="tab" onclick="filterRequests('disapproved', this)">
-          Disapproved
+        <button class="tab" onclick="filterRequests('rejected', this)">
+          Rejected
         </button>
+
       </div>
 
       <!-- REQUEST LIST -->
@@ -114,7 +115,7 @@
 
         {% else %} {% for r in requests %}
 
-        <div class="request-card" data-status="{{ r.status }}">
+        <div class="request-card" data-status="{{ r.status|lower }}">
           <div class="request-info">
             <h4>{{ r.destination }}</h4>
 
@@ -125,6 +126,7 @@
           </div>
 
           <div class="request-actions">
+
             {% if r.status == "pending" %}
             <span class="status pending">Pending</span>
 
@@ -132,13 +134,19 @@
             <span class="status approved">Approved</span>
 
             {% if r.trip_ticket_file %}
-            <a href="{{ url_for('download_trip', filename=r.trip_ticket_file) }}" class="download-btn">Download
-              Ticket</a>
-
-            {% endif %} {% elif r.status == "disapproved" %}
-            <span class="status disapproved">Disapproved</span>
-
+            <a href="{{ url_for('download_trip', filename=r.trip_ticket_file) }}" class="download-btn">
+              Download Ticket
+            </a>
             {% endif %}
+
+            {% elif r.status == "rejected" %}
+            <span class="status rejected">Rejected</span>
+
+            <button class="view-reason-btn" onclick="openReasonModal('{{ r.rejection_reason | escape }}')">
+              View Reason
+            </button>
+            {% endif %}
+
           </div>
         </div>
 
@@ -146,7 +154,16 @@
       </div>
     </div>
   </div>
+  <div id="reasonModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Rejection Reason</h3>
+      <p id="reasonText"></p>
 
+      <div class="modal-actions">
+        <button onclick="closeReasonModal()" class="btn-cancel">Close</button>
+      </div>
+    </div>
+  </div>
   <!-- ================= FOOTER ================= -->
   <footer class="footer">
     <div class="footer-content">
@@ -314,6 +331,15 @@
       } catch (err) {
         console.error("Error loading unread count:", err);
       }
+    }
+
+    function openReasonModal(reason) {
+      document.getElementById("reasonText").textContent = reason;
+      document.getElementById("reasonModal").classList.remove("hidden");
+    }
+
+    function closeReasonModal() {
+      document.getElementById("reasonModal").classList.add("hidden");
     }
   </script>
 </body>

@@ -2624,14 +2624,45 @@ def requests():
         "admin-request/requests.html",
         vehicle_requests=vehicle_requests
     )
-
+# =========================
+# request details 
+# =========================
 @app.route('/admin-request/req_details/<req_id>', methods=["GET", "POST"])
 @role_required('Admin', 'Staff')
 def req_details(req_id):
 
+    # =========================
+    # POST: Generate Trip Ticket
+    # =========================
     if request.method == "POST":
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        # 🔒 CHECK STATUS FIRST
+        cur.execute("""
+            SELECT status FROM vehicle_requests
+            WHERE id = %s::uuid
+        """, (req_id,))
+
+        result = cur.fetchone()
+
+        if not result:
+            cur.close()
+            conn.close()
+            return "Request not found", 404
+
+        status = result[0]
+
+        if status != "pending":
+            cur.close()
+            conn.close()
+            return f"Cannot process. Already {status}.", 400
+
+        # =========================
+        # GET FORM DATA
+        # =========================
         vehicle_id = request.form["vehicles"]
-        print("TYPE:", type(vehicle_id))
         driver_name = request.form["driver_name"]
         start_date = request.form["start_date"]
         end_date = request.form["end_date"]
@@ -2639,69 +2670,84 @@ def req_details(req_id):
         start = datetime.strptime(start_date, "%Y-%m-%d").date()
         end = datetime.strptime(end_date, "%Y-%m-%d").date()
 
-        conn = get_db_connection()
-        cur = conn.cursor()
-
+        # =========================
+        # CHECK SCHEDULE CONFLICT
+        # =========================
         cur.execute("""
-                SELECT schedule_date
-                FROM vehicle_schedule
-                WHERE vehicle_id = %s
-                    AND schedule_date BETWEEN %s AND %s
-                    """, (vehicle_id, start, end))
-        
+            SELECT schedule_date
+            FROM vehicle_schedule
+            WHERE vehicle_id = %s
+            AND schedule_date BETWEEN %s AND %s
+        """, (vehicle_id, start, end))
+
         conflicts = cur.fetchall()
 
         if conflicts:
-                flash("Selected vehicle is not available for the chosen dates. Please select a different vehicle or adjust the dates.")
-                cur.close()
-                conn.close()
-                return "Selected vehicle is already booked on one or more chosen dates.", 400 #===redirect(url_for("req_details", req_id=req_id))
+            cur.close()
+            conn.close()
+            return "Vehicle already booked on selected dates.", 400
 
+        # =========================
+        # INSERT TRIP TICKET
+        # =========================
         cur.execute("""
             INSERT INTO trip_tickets
             (request_id, vehicle_id, driver_name, start_date, end_date)
             VALUES (%s, %s, %s, %s, %s)
         """, (req_id, vehicle_id, driver_name, start_date, end_date))
 
+        # =========================
+        # INSERT VEHICLE SCHEDULE
+        # =========================
         current_day = start
         while current_day <= end:
             cur.execute("""
-                        INSERT INTO vehicle_schedule (vehicle_id, request_id, schedule_date)
-                        VALUES (%s, %s, %s)
-                        """, (vehicle_id, req_id, current_day))
+                INSERT INTO vehicle_schedule (vehicle_id, request_id, schedule_date)
+                VALUES (%s, %s, %s)
+            """, (vehicle_id, req_id, current_day))
+
             current_day += timedelta(days=1)
 
-            cur.execute("""
-                    UPDATE vehicle_requests
-                    SET status = 'approved'
-                    WHERE id = %s
-                        """, (req_id,))
+        # =========================
+        # UPDATE STATUS → APPROVED
+        # =========================
+        cur.execute("""
+            UPDATE vehicle_requests
+            SET status = 'approved'
+            WHERE id = %s
+        """, (req_id,))
+
+        # =========================
+        # SEND NOTIFICATION
+        # =========================
+        cur.execute("""
+            SELECT user_id
+            FROM vehicle_requests
+            WHERE id = %s
+        """, (req_id,))
+
+        owner_row = cur.fetchone()
+
+        if owner_row:
+            requester_user_id = owner_row[0]
+
+            approval_message = f"Your vehicle request (ID: {req_id}) has been approved. Your trip ticket is ready."
 
             cur.execute("""
-                        SELECT user_id
-                        FROM vehicle_requests
-                        WHERE id = %s
-                        """, (req_id,))
-            owner_row = cur.fetchone()
-
-            print("OWNER ROW:", owner_row)
-            print("REQUEST ID:", req_id)
-
-            if owner_row:
-                requester_user_id = owner_row[0]
-                print("Requester User ID:", requester_user_id)
-
-                approval_message = f"Your vehicle request (ID: {req_id}) has been approved and trip ticket is now ready for retrieval. Please come to the motor pool office to get your trip ticket. Please come to the motor pool office."
-            
-            cur.execute("""
-                        INSERT INTO notifications (user_id, request_id, message, type)
-                        VALUES (%s, %s, %s, %s)
-                        """, (requester_user_id, req_id, approval_message, "approved"))
+                INSERT INTO notifications (user_id, request_id, message, type)
+                VALUES (%s, %s, %s, %s)
+            """, (requester_user_id, req_id, approval_message, "approved"))
 
         conn.commit()
         cur.close()
         conn.close()
 
+        # 🔄 Redirect after success
+        return redirect(url_for("req_details", req_id=req_id))
+
+    # =========================
+    # GET: Load Page
+    # =========================
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
@@ -2730,7 +2776,6 @@ def req_details(req_id):
 
     cur.close()
     conn.close()
-    print("VEHICLES FROM DB:", vehicles)
 
     return render_template(
         "admin-request/req_details.html",
@@ -2755,6 +2800,7 @@ def is_metro_mnla(destination):
         if place in destination:
             return True
     return False
+
 @app.route("/generate_trip_ticket/<req_id>")
 @role_required("Admin", "Staff")
 def generate_trip_ticket(req_id):
@@ -3142,7 +3188,54 @@ def auth_user():
         "position": session.get("user_position"),
         "role": session.get("user_role")
     }
+# =======================================================
+# REJECT REQUEST-admin side
+# =======================================================
+@app.route("/reject_request", methods=["POST"])
+def reject_request():
+    try:
+        data = request.json
+        request_id = str(data["request_id"])
+        reason = data["reason"]
 
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        # 🔒 CHECK STATUS FIRST
+        cur.execute("""
+            SELECT status FROM vehicle_requests
+            WHERE id = %s::uuid
+        """, (request_id,))
+        result = cur.fetchone()
+
+        if not result:
+            return jsonify({"success": False, "error": "Request not found"})
+
+        status = result[0]
+
+        if status != "pending":
+            return jsonify({
+                "success": False,
+                "error": f"Cannot reject. Already {status}."
+            })
+
+        # ✅ ONLY IF PENDING
+        cur.execute("""
+            UPDATE vehicle_requests
+            SET status = 'rejected',
+                rejection_reason = %s
+            WHERE id = %s::uuid
+        """, (reason, request_id))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"success": True})
+
+    except Exception as e:
+        print("ERROR:", e)
+        return jsonify({"success": False, "error": str(e)})
 # =======================================================
 # LOGOUT
 # =======================================================
