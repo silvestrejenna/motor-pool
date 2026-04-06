@@ -215,9 +215,28 @@
               <input type="hidden" name="start_date" id="start_date">
               <input type="hidden" name="end_date" id="end_date">
             </div>
+            <div id="formError" class="form-error" style="display: none;"></div>
+            <button type="submit" class="btn-submit" {% if request.status !="pending" %} disabled {% endif %}>
+              Generate Trip Ticket
+            </button>
 
-            <button type="submit" class="btn-submit">View Trip Ticket</button>
+            <button type="button" class="btn-reject" onclick="openRejectModal()" {% if request.status !="pending" %}
+              disabled {% endif %}>
+              Reject Request
+            </button>
           </form>
+          <div id="rejectModal" class="modal hidden">
+            <div class="modal-content">
+              <h3>Reject Request</h3>
+
+              <textarea id="rejectReason" placeholder="Enter reason for rejection..."></textarea>
+
+              <div class="modal-actions">
+                <button onclick="submitReject()" class="btn-confirm">Submit</button>
+                <button onclick="closeRejectModal()" class="btn-cancel">Cancel</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -226,27 +245,27 @@
 <!-- ================= FOOTER ================= -->
 <footer class="footer">
   <div class="footer-content">
-    <div>
-      <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" class="footer-logo" />
-
-      <p>
+    <!-- LEFT -->
+    <div class="footer-left">
+      <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" alt="Motor Pool Logo"
+        class="footer-logo" />
+      <p class="footer-desc">
         A Web-Based Inventory and Record Management System for
         <strong>Motor Pool</strong>
       </p>
     </div>
 
-    <div>
+    <!-- CENTER -->
+    <div class="footer-center">
       <h4>MENU</h4>
-
-      <a href="{{ url_for('user_home') }}">Home</a>
-      <a href="{{ url_for('user_dashboard') }}">Dashboard</a>
-      <a href="{{ url_for('user_new_request') }}">Request</a>
-      <a href="{{ url_for('user_trip_tickets') }}">Trip Ticket</a>
+      <a href="{{ url_for('home') }}">Home</a>
+      <a href="{{ url_for('inventory') }}">Inventory</a>
+      <a href="{{ url_for('records') }}">Record Management</a>
     </div>
 
-    <div>
+    <!-- RIGHT -->
+    <div class="footer-right">
       <h4>CONTACT US</h4>
-
       <p>📧 motorpool@pup.edu.ph</p>
       <p>📞 (02) 5335-1787</p>
     </div>
@@ -255,12 +274,15 @@
   <hr class="footer-divider" />
 
   <div class="footer-bottom">
-    <span>© 2025 Polytechnic University of the Philippines</span>
+    <span>© 2025 Polytechnic University of the Philippines. Under
+      G.A.S.S.</span>
     <span>Terms of Services and Privacy Policy</span>
   </div>
 </footer>
 
 <script>
+  const requestStatus = "{{ request.status|lower }}";
+
   async function loadUserProfile() {
     const res = await fetch("/auth/user");
     if (!res.ok) {
@@ -412,7 +434,6 @@
     const res = await fetch(`/get_vehicle_schedule?year=${year}&month=${month}`);
     scheduleData = await res.json();
   }
-  renderCalendar();
 
   const bell = document.getElementById("notifBell");
   const dropdown = document.getElementById("notifDropdown");
@@ -494,15 +515,101 @@
       notifList.innerHTML = "<p>Failed to load notifications</p>";
     }
   }
-  window.onload = loadUnreadCount;
-
   window.onload = function () {
     loadUnreadCount();
+    renderCalendar(); // 👉 ADD THIS LINE
 
-    // Pre-fill hidden inputs using existing data
     document.getElementById("start_date").value = "{{ request.start_date }}";
     document.getElementById("end_date").value = "{{ request.end_date }}";
   };
+
+  const form = document.querySelector("form");
+  const vehicleSelect = document.getElementById("vehicleSelect");
+  const driverInput = document.getElementById("driver_name");
+  const errorBox = document.getElementById("formError");
+
+  form.addEventListener("submit", function (e) {
+
+    const requestStatus = "{{ request.status|lower }}";
+
+    if (requestStatus !== "pending") {
+      e.preventDefault();
+      alert("This request is already finalized.");
+      return;  // ✅ NOW VALID
+    }
+    let errors = [];
+
+    // reset styles
+    vehicleSelect.classList.remove("input-error");
+    driverInput.classList.remove("input-error");
+    errorBox.style.display = "none";
+
+    // 🚨 CHECK FIRST: already approved
+    if (requestStatus === "approved") {
+      e.preventDefault();
+      errorBox.innerHTML = "Trip ticket already generated for this approved request.";
+      errorBox.style.display = "block";
+      return;
+    }
+
+    // validation
+    if (!vehicleSelect.value) {
+      errors.push("Please select a vehicle.");
+      vehicleSelect.classList.add("input-error");
+    }
+
+    if (!driverInput.value.trim()) {
+      errors.push("Please enter driver name.");
+      driverInput.classList.add("input-error");
+    }
+
+    if (errors.length > 0) {
+      e.preventDefault();
+      errorBox.innerHTML = errors.join("<br>");
+      errorBox.style.display = "block";
+    }
+  });
+
+  function openRejectModal() {
+    document.getElementById("rejectModal").classList.remove("hidden");
+  }
+
+  function closeRejectModal() {
+    document.getElementById("rejectModal").classList.add("hidden");
+  }
+
+  async function submitReject() {
+    const reason = document.getElementById("rejectReason").value.trim();
+
+    if (!reason) {
+      alert("Please provide a reason for rejection.");
+      return;
+    }
+
+    const requestId = "{{ request.id }}";
+
+    console.log("Sending ID:", requestId);
+
+    const res = await fetch("/reject_request", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        request_id: requestId,
+        reason: reason
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      alert("Request rejected successfully!");
+      location.reload();
+    } else {
+      alert("Error rejecting request: " + data.error);
+    }
+  }
 </script>
 </body>
 

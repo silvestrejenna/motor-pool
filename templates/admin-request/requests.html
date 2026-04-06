@@ -71,13 +71,13 @@
 
         <!-- SEARCH & FILTER -->
         <section class="search-section">
-          <input type="text" placeholder="search by name or ID..." class="search_input" />
+          <input type="text" id="searchInput" placeholder="search by name or ID..." class="search_input" />
 
-          <select class="status-filter">
-            <option>All Statuses</option>
-            <option>Pending</option>
-            <option>Approved</option>
-            <option>Rejected</option>
+          <select class="status-filter" id="statusFilter">
+            <option value="all">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
           </select>
         </section>
 
@@ -101,13 +101,15 @@
 
           <tbody>
             {% for r in vehicle_requests %}
-            <tr>
+            <tr class="request-row" data-status="{{ r.status|lower }}">
               <td>{{ r.full_name }}</td>
               <td>{{ r.office }}</td>
               <td>{{ r.destination }}</td>
               <td>{{ r.created_at }}</td>
               <td>
-                <span class="status-badge"> {{ r.status }} </span>
+                <span class="status-badge status-{{ r.status|lower }}">
+                  {{ r.status }}
+                </span>
               </td>
 
               <td>
@@ -274,6 +276,33 @@
       }
     }
     window.onload = loadUnreadCount;
+
+    const searchInput = document.getElementById("searchInput");
+    const filter = document.getElementById("statusFilter");
+
+    function filterTable() {
+      const searchValue = searchInput.value.toLowerCase();
+      const selectedStatus = filter.value;
+      const rows = document.querySelectorAll(".request-row");
+
+      rows.forEach((row) => {
+        const text = row.innerText.toLowerCase();
+        const status = row.getAttribute("data-status");
+
+        const matchesSearch = text.includes(searchValue);
+        const matchesStatus =
+          selectedStatus === "all" || status === selectedStatus;
+
+        if (matchesSearch && matchesStatus) {
+          row.style.display = "";
+        } else {
+          row.style.display = "none";
+        }
+      });
+    }
+
+    searchInput.addEventListener("keyup", filterTable);
+    filter.addEventListener("change", filterTable);
 
   </script>
 </body>

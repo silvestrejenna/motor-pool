@@ -333,3 +333,69 @@ body {
   background: white;
   color: var(--pup-red);
 }
+
+/* SEARCH SECTION */
+.search-section {
+  display: flex;
+  gap: 15px;
+  margin-top: 15px;
+  align-items: center;
+}
+
+/* SEARCH INPUT */
+.search_input {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+  transition: 0.2s;
+}
+
+.search_input:focus {
+  border-color: #800000;
+  box-shadow: 0 0 5px rgba(128, 0, 0, 0.2);
+}
+
+/* DROPDOWN */
+.status-filter {
+  padding: 12px 14px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  background-color: #fff;
+  transition: 0.2s;
+}
+
+.status-filter:hover {
+  border-color: #800000;
+}
+
+/* BASE BADGE */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+/* APPROVED - GREEN */
+.status-approved {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+/* PENDING - YELLOW */
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+/* REJECTED - RED */
+.status-rejected {
+  background-color: #f8d7da;
+  color: #721c24;
+}
