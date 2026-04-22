@@ -3076,6 +3076,7 @@ def get_vehicle_schedule():
             JOIN vehicle v ON vs.vehicle_id = v.vehicle_id
             WHERE EXTRACT(YEAR FROM vs.schedule_date) = %s
                 AND EXTRACT(MONTH FROM vs.schedule_date) = %s
+                AND vs.schedule_date >= CURRENT_DATE
             ORDER BY vs.schedule_date ASC, v.name ASC
                 """, (year, month))
     rows = cur.fetchall()
