@@ -420,3 +420,39 @@ body {
 .notif-item:hover {
   background-color: #f5f5f5;
 }
+/* --- TAB TOGGLE SYSTEM --- */
+.toggle-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.toggle-switch {
+  display: flex;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  background: white;
+  overflow: hidden;
+}
+
+.toggle-switch button {
+  padding: 10px 35px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+  font-size: 14px;
+}
+
+/* Active State for Maintenance (Maroon) */
+#m-btn.active {
+  background: #800000;
+  color: white;
+}
+
+/* Active State for PMS (Yellow) */
+#p-btn.active {
+  background: #800000;
+  color: white;
+}
