@@ -46,6 +46,9 @@ def require_login():
 
     if 'user_id' not in session and request.endpoint not in allowed_routes:
         return redirect(url_for('login'))
+    
+    if 'user_id' in session and session.get('user_role') in ['Admin', 'Staff']:
+        create_pending_request_notifications()
 
 ALLOWED_DOMAINS = ["@pup.edu.ph", "@iskolarngbayan.pup.edu.ph"]
 TEST_EMAILS = ["silvestrejennamae09@gmail.com"]
@@ -2717,6 +2720,13 @@ def req_details(req_id):
             WHERE id = %s
         """, (req_id,))
 
+        # 🧹 remove pending reminders
+        cur.execute("""
+            DELETE FROM notifications
+            WHERE request_id = %s
+            AND type = 'pending_reminder'
+        """, (req_id,))
+
         # =========================
         # SEND NOTIFICATION
         # =========================
@@ -3176,6 +3186,55 @@ def mark_notification_read(notif_id):
         "redirect_url": f"/admin-request/req_details/{request_id}"
     })
 
+#============================ CREATE PENDING REQUEST NOTIFICATIONS =======================================================================
+def create_pending_request_notifications():
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur.execute("""
+        SELECT id, office
+        FROM vehicle_requests
+        WHERE status = 'pending'
+        AND created_at <= NOW() - INTERVAL '1 hour'
+    """)
+
+    requests = cur.fetchall()
+
+    for req in requests:
+        message = f"Request #{req['id']} from {req['office']} needs approval"
+
+        # get all admins/staff
+        cur.execute("""
+            SELECT id FROM users
+            WHERE role IN ('Admin', 'Staff')
+        """)
+        admins = cur.fetchall()
+
+        for admin in admins:
+            # check duplicate per admin
+            cur.execute("""
+                SELECT 1 FROM notifications
+                WHERE request_id = %s
+                AND user_id = %s
+                AND created_at >= NOW() - INTERVAL '1 hour'
+            """, (req['id'], admin['id']))
+
+            exists = cur.fetchone()
+
+            if not exists:
+                cur.execute("""
+                    INSERT INTO notifications (user_id, request_id, message, type)
+                    VALUES (%s, %s, %s, %s)
+                """, (
+                    admin['id'],
+                    req['id'],
+                    message,
+                    "pending_reminder"
+                ))
+
+    conn.commit()
+    cur.close()
+    conn.close()
 #=============================================================================
 
 @app.route('/auth/user')
@@ -3228,6 +3287,12 @@ def reject_request():
             WHERE id = %s::uuid
         """, (reason, request_id))
 
+        cur.execute("""
+            DELETE FROM notifications
+            WHERE request_id = %s
+            AND type = 'pending_reminder'
+        """, (request_id,))
+
         conn.commit()
         cur.close()
         conn.close()
@@ -3237,6 +3302,7 @@ def reject_request():
     except Exception as e:
         print("ERROR:", e)
         return jsonify({"success": False, "error": str(e)})
+    
 # =======================================================
 # LOGOUT
 # =======================================================

@@ -371,18 +371,8 @@
   padding: 8px 12px;
 }
 
-/* REJECT REASON */
-.reason-preview {
-  color: #800000;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-.reason-full {
-  display: block;
-  margin-top: 5px;
-  background: #fff3f3;
-  padding: 8px;
-  border-radius: 6px;
-  font-size: 13px;
+.disabled-day {
+  background: #eee;
+  color: #aaa;
+  cursor: not-allowed;
 }
