@@ -338,9 +338,15 @@
       calendar.appendChild(empty);
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // normalize time
+
     for (let day = 1; day <= daysInMonth; day++) {
       const cell = document.createElement("div");
       cell.classList.add("calendar-day");
+
+      const cellDate = new Date(year, month, day);
+      cellDate.setHours(0, 0, 0, 0);
 
       const selected =
         year + "-" +
@@ -365,7 +371,18 @@
         });
       }
 
+      if (cellDate < today) {
+        cell.classList.add("disabled-day");
+        cell.style.pointerEvents = "none"; // ❌ cannot click
+        cell.style.opacity = "0.5";        // optional visual
+      }
+
       cell.onclick = function () {
+
+        const clickedDate = new Date(cell.dataset.date);
+        clickedDate.setHours(0, 0, 0, 0);
+
+        if (clickedDate < today) return; // 🚫 block past
 
         if (!startDate) {
           startDate = selected;
