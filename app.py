@@ -2271,7 +2271,7 @@ def user_new_request():
             """)
         admin_staff_users = cur.fetchall()
 
-        message = f"{requester_name} has submitted a new vehicle request (ID: {new_request_id})."
+        message = f"{requester_name} has submitted a new vehicle request for {vehicle_type}."
 
         for admin_user in admin_staff_users:
             admin_id = admin_user[0]
@@ -2721,7 +2721,7 @@ def req_details(req_id):
         # SEND NOTIFICATION
         # =========================
         cur.execute("""
-            SELECT user_id
+            SELECT user_id, vehicle_type
             FROM vehicle_requests
             WHERE id = %s
         """, (req_id,))
@@ -2730,20 +2730,21 @@ def req_details(req_id):
 
         if owner_row:
             requester_user_id = owner_row[0]
+            vehicle_name = owner_row[1]
 
-            approval_message = f"Your vehicle request (ID: {req_id}) has been approved. Your trip ticket is ready."
+            approval_message = f"Your vehilcle request for {vehicle_name} has been approved. Your trip ticket is ready."
 
             cur.execute("""
-                INSERT INTO notifications (user_id, request_id, message, type)
-                VALUES (%s, %s, %s, %s)
-            """, (requester_user_id, req_id, approval_message, "approved"))
+                INSERT INTO notifications (user_id, vehicle_name, request_id, message, type)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (requester_user_id, vehicle_name, req_id, approval_message, "approved"))
 
         conn.commit()
         cur.close()
         conn.close()
 
         # 🔄 Redirect after success
-        return redirect(url_for("req_details", req_id=req_id))
+        return redirect(url_for("req_details", vehicle_name=vehicle_name, req_id=req_id))
 
     # =========================
     # GET: Load Page
