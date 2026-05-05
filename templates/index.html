@@ -1,241 +1,254 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>PUP Motor Pool | Home</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-  </head>
+<head>
+  <meta charset="UTF-8" />
+  <title>PUP Motor Pool | Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <body>
-    <!-- ================= NAVBAR ================= -->
-    <header class="navbar">
-      <div class="nav-left">
-        <img
-          src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-          alt="Motor Pool Logo"
-          class="nav-logo"
-        />
-        <span class="nav-title">PUP Motor Pool Under GASS</span>
-      </div>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
 
-      <nav class="nav-center">
-        <a href="{{ url_for('home') }}" class="active">HOME</a>
-        <a href="{{ url_for('inventory') }}">INVENTORY</a>
-        <a href="{{ url_for('records') }}">RECORDS</a>
-      </nav>
+<body>
+  <!-- ================= NAVBAR ================= -->
+  <header class="navbar">
+    <div class="nav-left">
+      <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" alt="Motor Pool Logo" class="nav-logo" />
+      <span class="nav-title">PUP Motor Pool Under GASS</span>
+    </div>
 
-      <div class="nav-right">
-        <div class="user-profile">
-          <div class="notification-wrapper">
-            <span class="icon" id="notifBell">🔔</span>
-            <span id="notifBadge" class="notif-badge hidden">0</span>
+    <nav class="nav-center">
+      <a href="{{ url_for('home') }}" class="active">HOME</a>
+      <a href="{{ url_for('inventory') }}">INVENTORY</a>
+      <a href="{{ url_for('records') }}">RECORDS</a>
+    </nav>
 
-            <div id="notifDropdown" class="notif-dropdown hidden">
-              <p class="notif-title">Notifications</p>
-              <div id="notifList"></div>
-            </div>
+    <div class="nav-right">
+      <div class="user-profile">
+        <div class="notification-wrapper">
+          <span class="icon" id="notifBell">🔔</span>
+          <span id="notifBadge" class="notif-badge hidden">0</span>
+
+          <div id="notifDropdown" class="notif-dropdown hidden">
+            <p class="notif-title">Notifications</p>
+            <div id="notifList"></div>
           </div>
-          <div class="profile">
-            <span class="icon" onclick="toggleProfile()">👤</span>
+        </div>
+        <div class="profile">
+          <span class="icon" onclick="toggleProfile()">👤</span>
 
-            <div class="profile-dropdown" id="profileDropdown">
-              <p class="name" id="profileName">Loading...</p>
-              <p class="email" id="profileEmail"></p>
-              <hr />
-              <a href="#">Activity</a><br />
-              <a href="#">Change Password</a><br />
-              <a
-                href="{{ url_for('logout') }}"
-                onclick="logout()"
-                class="logout"
-                >Log Out</a
-              >
-            </div>
+          <div class="profile-dropdown" id="profileDropdown">
+            <p class="name" id="profileName">Loading...</p>
+            <p class="email" id="profileEmail"></p>
+            <hr />
+            <a href="#">Activity</a><br />
+            <a href="#">Change Password</a><br />
+            <a href="{{ url_for('logout') }}" onclick="logout()" class="logout">Log Out</a>
           </div>
         </div>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <!-- ================= HERO ================= -->
-    <section class="hero">
-      <img
-        src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-        class="hero-logo"
-      />
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" class="hero-logo" />
 
-      <h1>MOTOR POOL</h1>
+    <h1>MOTOR POOL</h1>
 
-      <p>
-        A Web-Based Inventory and Record Management System for the
-        Transportation and Motor Pool Section
-      </p>
+    <p>
+      A Web-Based Inventory and Record Management System for the
+      Transportation and Motor Pool Section
+    </p>
 
-      <div class="card-container">
-        <a href="{{ url_for('inventory') }}" class="card">
-          <h3>Inventory</h3>
-          <p>Manage vehicles, tools, and equipment</p>
-        </a>
+    <div class="card-container">
+      <a href="{{ url_for('inventory') }}" class="card">
+        <h3>Inventory</h3>
+        <p>Manage vehicles, tools, and equipment</p>
+      </a>
 
-        <a href="{{ url_for('records') }}" class="card">
-          <h3>Record Management</h3>
-          <p>Track fuel, maintenance, and usage records</p>
-        </a>
-      </div>
-    </section>
+      <a href="{{ url_for('records') }}" class="card">
+        <h3>Record Management</h3>
+        <p>Track fuel, maintenance, and usage records</p>
+      </a>
 
-    <!-- ================= FOOTER ================= -->
-    <footer class="footer">
-      <div class="footer-content">
-        <!-- LEFT -->
-        <div class="footer-left">
-          <img
-            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-            alt="Motor Pool Logo"
-            class="footer-logo"
-          />
-          <p class="footer-desc">
-            A Web-Based Inventory and Record Management System for
-            <strong>Motor Pool</strong>
-          </p>
-        </div>
+      <a href="/admin-request" id="reminderCard" class="card" style="display:none;">
+        <h3>Pending Approvals</h3>
+        <p id="reminderCount"></p>
+      </a>
+    </div>
 
-        <!-- CENTER -->
-        <div class="footer-center">
-          <h4>MENU</h4>
-          <a href="{{ url_for('home') }}">Home</a>
-          <a href="{{ url_for('inventory') }}">Inventory</a>
-          <a href="{{ url_for('records') }}">Record Management</a>
-        </div>
+  </section>
 
-        <!-- RIGHT -->
-        <div class="footer-right">
-          <h4>CONTACT US</h4>
-          <p>📧 motorpool@pup.edu.ph</p>
-          <p>📞 (02) 5335-1787</p>
-        </div>
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <div class="footer-content">
+      <!-- LEFT -->
+      <div class="footer-left">
+        <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" alt="Motor Pool Logo"
+          class="footer-logo" />
+        <p class="footer-desc">
+          A Web-Based Inventory and Record Management System for
+          <strong>Motor Pool</strong>
+        </p>
       </div>
 
-      <hr class="footer-divider" />
-
-      <div class="footer-bottom">
-        <span
-          >© 2025 Polytechnic University of the Philippines. Under
-          G.A.S.S.</span
-        >
-        <span>Terms of Services and Privacy Policy</span>
+      <!-- CENTER -->
+      <div class="footer-center">
+        <h4>MENU</h4>
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('inventory') }}">Inventory</a>
+        <a href="{{ url_for('records') }}">Record Management</a>
       </div>
-    </footer>
 
-    <!-- ================= SCRIPT ================= -->
-    <script>
-      async function loadUserProfile() {
-        const res = await fetch("/auth/user");
-        if (!res.ok) {
-          window.location.href = "/";
+      <!-- RIGHT -->
+      <div class="footer-right">
+        <h4>CONTACT US</h4>
+        <p>📧 motorpool@pup.edu.ph</p>
+        <p>📞 (02) 5335-1787</p>
+      </div>
+    </div>
+
+    <hr class="footer-divider" />
+
+    <div class="footer-bottom">
+      <span>© 2025 Polytechnic University of the Philippines. Under
+        G.A.S.S.</span>
+      <span>Terms of Services and Privacy Policy</span>
+    </div>
+  </footer>
+
+  <!-- ================= SCRIPT ================= -->
+  <script>
+    async function loadUserProfile() {
+      const res = await fetch("/auth/user");
+      if (!res.ok) {
+        window.location.href = "/";
+        return;
+      }
+      const user = await res.json();
+      document.getElementById("profileName").textContent = user.full_name;
+      document.getElementById("profileEmail").textContent = user.email;
+    }
+
+    loadUserProfile();
+
+    function toggleProfile() {
+      document.getElementById("profileDropdown").classList.toggle("show");
+    }
+
+    async function logout() {
+      await fetch("/logout", { method: "POST" });
+      window.location.href = "/";
+    }
+
+    const bell = document.getElementById("notifBell");
+    const dropdown = document.getElementById("notifDropdown");
+    const notifList = document.getElementById("notifList");
+    const notifBadge = document.getElementById("notifBadge");
+
+    bell.addEventListener("click", async () => {
+      dropdown.classList.toggle("hidden");
+
+      if (!dropdown.classList.contains("hidden")) {
+        await loadNotifications();
+      }
+    });
+
+    async function loadUnreadCount() {
+      try {
+        const res = await fetch("/get_unread_notif_count");
+        const data = await res.json();
+
+        const badge = document.getElementById("notifBadge");
+
+        console.log("Unread count:", data.count);
+
+        if (data.count > 0) {
+          badge.textContent = data.count;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+        }
+      } catch (err) {
+        console.error("Error loading unread count:", err);
+      }
+    }
+
+    async function loadNotifications() {
+      try {
+        const res = await fetch("/get_notifications");
+        const data = await res.json();
+        notifList.innerHTML = "";
+
+        if (data.length === 0) {
+          notifList.innerHTML = "<p>No notifications</p>";
           return;
         }
-        const user = await res.json();
-        document.getElementById("profileName").textContent = user.full_name;
-        document.getElementById("profileEmail").textContent = user.email;
-      }
 
-      loadUserProfile();
+        data.forEach((notif) => {
+          const div = document.createElement("div");
+          div.className = "notif-item";
+          div.textContent = notif.message;
+          div.style.cursor = "pointer";
+          div.style.pointerEvents = "auto";
 
-      function toggleProfile() {
-        document.getElementById("profileDropdown").classList.toggle("show");
-      }
-
-      async function logout() {
-        await fetch("/logout", { method: "POST" });
-        window.location.href = "/";
-      }
-
-      const bell = document.getElementById("notifBell");
-      const dropdown = document.getElementById("notifDropdown");
-      const notifList = document.getElementById("notifList");
-      const notifBadge = document.getElementById("notifBadge");
-
-      bell.addEventListener("click", async () => {
-        dropdown.classList.toggle("hidden");
-
-        if (!dropdown.classList.contains("hidden")) {
-          await loadNotifications();
-        }
-      });
-
-      async function loadUnreadCount() {
-        try {
-          const res = await fetch("/get_unread_notif_count");
-          const data = await res.json();
-
-          const badge = document.getElementById("notifBadge");
-
-          console.log("Unread count:", data.count);
-
-          if (data.count > 0) {
-            badge.textContent = data.count;
-            badge.classList.remove("hidden");
-          } else {
-            badge.classList.add("hidden");
-          }
-        } catch (err) {
-          console.error("Error loading unread count:", err);
-        }
-      }
-
-      async function loadNotifications() {
-        try {
-          const res = await fetch("/get_notifications");
-          const data = await res.json();
-          notifList.innerHTML = "";
-
-          if (data.length === 0) {
-            notifList.innerHTML = "<p>No notifications</p>";
-            return;
+          if (!notif.is_read) {
+            div.style.fontWeight = "bold";
           }
 
-          data.forEach((notif) => {
-            const div = document.createElement("div");
-            div.className = "notif-item";
-            div.textContent = notif.message;
-            div.style.cursor = "pointer";
-            div.style.pointerEvents = "auto";
+          div.onclick = async function () {
+            console.log("CLICKED NOTIF:", notif.id);
 
-            if (!notif.is_read) {
-              div.style.fontWeight = "bold";
-            }
-
-            div.onclick = async function () {
-              console.log("CLICKED NOTIF:", notif.id);
-
-              div.onclick = function () {
-                console.log("CLICK WORKING");
-              };
-
-              try {
-                const res = await fetch(`/mark_notification_read/${notif.id}`);
-                const result = await res.json();
-
-                await loadUnreadCount();
-                window.location.href = result.redirect_url;
-              } catch (err) {
-                console.error("Error marking as read:", err);
-              }
+            div.onclick = function () {
+              console.log("CLICK WORKING");
             };
 
-            notifList.appendChild(div);
-          });
-        } catch (err) {
-          console.error("Error loading notifications:", err);
-          notifList.innerHTML = "<p>Failed to load notifications</p>";
-        }
+            try {
+              const res = await fetch(`/mark_notification_read/${notif.id}`);
+              const result = await res.json();
+
+              await loadUnreadCount();
+              window.location.href = result.redirect_url;
+            } catch (err) {
+              console.error("Error marking as read:", err);
+            }
+          };
+
+          notifList.appendChild(div);
+        });
+      } catch (err) {
+        console.error("Error loading notifications:", err);
+        notifList.innerHTML = "<p>Failed to load notifications</p>";
       }
-      window.onload = loadUnreadCount;
-    </script>
-  </body>
+    }
+    window.onload = () => {
+      loadUnreadCount();
+      loadHomeReminders();
+    };
+
+    async function loadHomeReminders() {
+      try {
+        const res = await fetch("/get_home_reminders");
+        const data = await res.json();
+
+        const card = document.getElementById("reminderCard");
+        const count = document.getElementById("reminderCount");
+
+        // ✅ use data.count (NOT length)
+        if (data.count === 0) {
+          card.style.display = "none";
+          return;
+        }
+
+        card.style.display = "block";
+        count.textContent = `${data.count} pending request(s)`;
+
+      } catch (err) {
+        console.error("Error loading home reminders:", err);
+      }
+    }
+  </script>
+</body>
+
 </html>

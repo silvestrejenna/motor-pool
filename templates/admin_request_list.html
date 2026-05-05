@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Pending Requests</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pending_requests.css') }}">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <a href="/home" class="back-btn">✕</a>
+
+        <h2>Pending Requests</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Request ID</th>
+                    <th>Office</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% if requests %}
+                {% for req in requests %}
+                <tr onclick="window.location='/admin-request/req_details/{{ req.id }}'">
+                    <td>{{ req.id }}</td>
+                    <td>{{ req.office }}</td>
+                    <td><span class="status">pending</span></td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="3" style="text-align:center; padding:20px;">
+                        No pending requests 🎉
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+    </div>
+
+</body>
+
+</html>

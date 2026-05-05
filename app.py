@@ -3303,7 +3303,48 @@ def reject_request():
     except Exception as e:
         print("ERROR:", e)
         return jsonify({"success": False, "error": str(e)})
-    
+
+# =======================================================
+# HOMEPAGE APPROVAL REMINDERS
+# =======================================================   
+@app.route("/get_home_reminders")
+@role_required("Admin", "Staff")
+def get_home_reminders():
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    # ✅ GET REAL PENDING COUNT
+    cur.execute("""
+        SELECT COUNT(*) AS total
+        FROM vehicle_requests
+        WHERE status = 'pending'
+    """)
+    count = cur.fetchone()["total"]
+
+    cur.close()
+    conn.close()
+
+    return jsonify({"count": count})
+
+@app.route("/admin-request")
+@role_required("Admin", "Staff")
+def admin_request_list():
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur.execute("""
+        SELECT *
+        FROM vehicle_requests
+        WHERE status = 'pending'
+        ORDER BY created_at DESC
+    """)
+
+    requests = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template("admin_request_list.html", requests=requests)
 # =======================================================
 # LOGOUT
 # =======================================================
