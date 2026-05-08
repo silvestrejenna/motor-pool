@@ -1,267 +1,410 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Vehicle Inventory | Motor Pool</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/vehicle_inv.css') }}"
-    />
-  </head>
 
-  <body>
-    <div class="main-container">
-      <!-- ================= SIDEBAR ================= -->
+<head>
+  <meta charset="UTF-8" />
+  <title>Vehicle Inventory | Motor Pool</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/vehicle_inv.css') }}" />
+</head>
 
-      <nav class="sidebar">
-        <div class="logo-section">
-          <img
-            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-            alt="Logo"
-          />
+<body>
+  <div class="main-container">
+    <!-- ================= SIDEBAR ================= -->
+
+    <nav class="sidebar">
+      <div class="logo-section">
+        <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" alt="Logo" />
+      </div>
+
+      <ul class="inventory-selection">
+        <li class="active">VEHICLES</li>
+        <li><a href="{{ url_for('gas_rfid') }}">GASOLINE & RFID</a></li>
+        <li>
+          <a href="{{ url_for('maintenance_pms') }}">MAINTENANCE & PMS LOG</a>
+        </li>
+        <li>
+          <a href="{{ url_for('tools_equipment') }}">TOOLS & EQUIPMENT</a>
+        </li>
+        <li>
+          <a href="{{ url_for('parts_supplies') }}">PARTS & SUPPLIES</a>
+        </li>
+        <li><a href="{{ url_for('reports') }}">REPORTS</a></li>
+      </ul>
+    </nav>
+
+    <!-- ================= CONTENT ================= -->
+    <div class="content">
+      <!-- TOP NAV -->
+      <header class="top-nav">
+        <div class="nav-links">
+          <a href="{{ url_for('home') }}">HOME</a>
+          <a href="{{ url_for('inventory') }}" class="active">INVENTORY</a>
+          <a href="{{ url_for('records') }}">RECORDS</a>
         </div>
+        <div class="nav-right">
+          <div class="user-profile">
+            <div class="notification-wrapper">
+              <span class="icon" id="notifBell">🔔</span>
+              <span id="notifBadge" class="notif-badge hidden">0</span>
 
-        <ul class="inventory-selection">
-          <li class="active">VEHICLES</li>
-          <li><a href="{{ url_for('gas_rfid') }}">GASOLINE & RFID</a></li>
-          <li>
-            <a href="{{ url_for('maintenance_pms') }}">MAINTENANCE & PMS LOG</a>
-          </li>
-          <li>
-            <a href="{{ url_for('tools_equipment') }}">TOOLS & EQUIPMENT</a>
-          </li>
-          <li>
-            <a href="{{ url_for('parts_supplies') }}">PARTS & SUPPLIES</a>
-          </li>
-          <li><a href="{{ url_for('reports') }}">REPORTS</a></li>
-        </ul>
-      </nav>
-
-      <!-- ================= CONTENT ================= -->
-      <div class="content">
-        <!-- TOP NAV -->
-        <header class="top-nav">
-          <div class="nav-links">
-            <a href="{{ url_for('home') }}">HOME</a>
-            <a href="{{ url_for('inventory') }}" class="active">INVENTORY</a>
-            <a href="{{ url_for('records') }}">RECORDS</a>
-          </div>
-          <div class="nav-right">
-            <div class="user-profile">
-              <div class="notification-wrapper">
-                <span class="icon" id="notifBell">🔔</span>
-                <span id="notifBadge" class="notif-badge hidden">0</span>
-
-                <div id="notifDropdown" class="notif-dropdown hidden">
-                  <p class="notif-title">Notifications</p>
-                  <div id="notifList"></div>
-                </div>
+              <div id="notifDropdown" class="notif-dropdown hidden">
+                <p class="notif-title">Notifications</p>
+                <div id="notifList"></div>
               </div>
-              <div class="profile">
-                <span class="icon" onclick="toggleProfile()">👤</span>
+            </div>
+            <div class="profile">
+              <span class="icon" onclick="toggleProfile()">👤</span>
 
-                <div class="profile-dropdown" id="profileDropdown">
-                  <p class="name" id="profileName">Loading...</p>
-                  <p class="email" id="profileEmail"></p>
-                  <hr />
-                  <a href="#">Activity</a><br />
-                  <a href="#">Change Password</a><br />
-                  <a
-                    href="{{ url_for('logout') }}"
-                    onclick="logout()"
-                    class="logout"
-                    >Log Out</a
-                  >
-                </div>
+              <div class="profile-dropdown" id="profileDropdown">
+                <p class="name" id="profileName">Loading...</p>
+                <p class="email" id="profileEmail"></p>
+                <hr />
+                <a href="#">Activity</a><br />
+                <a href="#">Change Password</a><br />
+                <a href="{{ url_for('logout') }}" onclick="logout()" class="logout">Log Out</a>
               </div>
             </div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <!-- ================= INVENTORY ================= -->
+      <!-- ================= INVENTORY ================= -->
+      <div id="vehicle-table">
         <section class="inventory-section">
           <div class="section-header">
+
             <div>
               <h1>VEHICLE INVENTORY</h1>
+
               <p>
                 Monitor and manage the status and availability of all vehicles
               </p>
             </div>
-            <button class="btn-add" onclick="toggleModal()">
-              Add Vehicle Record
-            </button>
+
           </div>
 
-          <div class="table-card">
+          <!-- CENTER TOGGLE -->
+          <div class="toggle-container">
 
-            <div class="toggle-container">
             <div class="toggle-switch">
-              <button
-                id="v-btn"
-                class="active"
-                onclick="switchTab('Vehicle')"
-                >Vehicle</button>
-                <button id="rfid-btn" onclick="switchTab('rid')">RFID</button>
+
+              <button id="vehicle-btn" class="active" onclick="switchTab('vehicle')">
+
+                Vehicle
+
+              </button>
+
+              <button id="rfid-btn" onclick="switchTab('rfid')">
+
+                RFID
+
+              </button>
+
             </div>
+
           </div>
 
-            <h3>Fuel Records</h3>
+          <!-- RIGHT BUTTON -->
+          <div class="header-controls">
 
-            <table class="inventory-table">
-              <thead>
-                <tr>
-                  <th>Vehicle ID</th>
-                  <th>Name</th>
-                  <th>Plate Number</th>
-                  <th>Color</th>
-                  <th>Type</th>
-                  <th>Status</th>
-                  <th>Mileage</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
+            <button class="btn-add" id="main-add-btn" onclick="toggleModal()">
 
-              <tbody>
-                {% for vehicle in vehicles %}
-                <tr id="row-{{ vehicle[0] }}">
-                  <td>V00{{ vehicle[0] }}</td>
+              Add Vehicle Record
 
-                  <td class="v-name">
-                    <a
-                      href="{{ url_for('vehicle_details', vehicle_id=vehicle[0]) }}"
-                      class="vehicle-link"
-                      style="
+            </button>
+
+          </div>
+      </div>
+
+      <div class="table-card">
+
+
+
+
+        <div id="vehicle-content">
+          <h3>Fuel Records</h3>
+
+          <table class="inventory-table">
+            <thead>
+              <tr>
+                <th>Vehicle ID</th>
+                <th>Name</th>
+                <th>Plate Number</th>
+                <th>Color</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Mileage</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for vehicle in vehicles %}
+              <tr id="row-{{ vehicle[0] }}">
+                <td>V00{{ vehicle[0] }}</td>
+
+                <td class="v-name">
+                  <a href="{{ url_for('vehicle_details', vehicle_id=vehicle[0]) }}" class="vehicle-link" style="
                         color: #800000;
                         font-weight: bold;
                         text-decoration: none;
-                      "
-                    >
-                      {{ vehicle[1] }}
+                      ">
+                    {{ vehicle[1] }}
+                  </a>
+                </td>
+
+                <td class="v-plate">{{ vehicle[2] }}</td>
+                <td class="v-color">{{ vehicle[3] }}</td>
+                <td class="v-type">{{ vehicle[4] }}</td>
+
+                <td>
+                  <span class="status-pill {{ vehicle[5]|lower }} v-status">
+                    {{ vehicle[5] }}
+                  </span>
+                </td>
+
+                <td class="v-mileage">{{ vehicle[6] }} km</td>
+
+                <td class="actions">
+                  <div class="action-buttons">
+                    <button class="btn-edit" onclick="editRow('{{ vehicle[0] }}')">
+                      Edit
+                    </button>
+
+                    <button class="btn-update" id="upd-{{ vehicle[0] }}" style="display: none"
+                      onclick="updateRow('{{ vehicle[0] }}')">
+                      Update
+                    </button>
+
+                    <button class="btn-cancel" id="cancel-{{ vehicle[0] }}" style="display: none"
+                      onclick="cancelUpdate('{{ vehicle[0] }}')">
+                      Cancel
+                    </button>
+
+                    <a href="{{ url_for('delete_vehicle', id=vehicle[0]) }}" class="btn-delete"
+                      onclick="return confirm('Delete this record?');">
+                      Delete
                     </a>
-                  </td>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
 
-                  <td class="v-plate">{{ vehicle[2] }}</td>
-                  <td class="v-color">{{ vehicle[3] }}</td>
-                  <td class="v-type">{{ vehicle[4] }}</td>
+        <!-- ================= RFID TABLE ================= -->
+        <div id="rfid-table" style="display: none;">
 
-                  <td>
-                    <span class="status-pill {{ vehicle[5]|lower }} v-status">
-                      {{ vehicle[5] }}
-                    </span>
-                  </td>
+          <h3>RFID Records</h3>
 
-                  <td class="v-mileage">{{ vehicle[6] }} km</td>
 
-                  <td class="actions">
-                    <div class="action-buttons">
-                      <button
-                        class="btn-edit"
-                        onclick="editRow('{{ vehicle[0] }}')"
-                      >
-                        Edit
-                      </button>
+          <table class="rfid-custom-table">
 
-                      <button
-                        class="btn-update"
-                        id="upd-{{ vehicle[0] }}"
-                        style="display: none"
-                        onclick="updateRow('{{ vehicle[0] }}')"
-                      >
-                        Update
-                      </button>
+            <thead>
 
-                      <button
-                        class="btn-cancel"
-                        id="cancel-{{ vehicle[0] }}"
-                        style="display: none"
-                        onclick="cancelUpdate('{{ vehicle[0] }}')"
-                      >
-                        Cancel
-                      </button>
+              <!-- TOP HEADER -->
+              <tr>
+                <th rowspan="3">PUP VEHICLES</th>
+                <th rowspan="3">PLATE NUMBER</th>
 
-                      <a
-                        href="{{ url_for('delete_vehicle', id=vehicle[0]) }}"
-                        class="btn-delete"
-                        onclick="return confirm('Delete this record?');"
-                      >
-                        Delete
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                <th colspan="4" class="rfid-title">
+                  RFID
+                </th>
+                <th rowspan="3" class="actions-header">
+                  Actions
+                </th>
+
+              </tr>
+
+              <!-- MIDDLE HEADER -->
+              <tr>
+                <th colspan="2">AUTOSWEEP</th>
+                <th colspan="2">EASYTRIP</th>
+              </tr>
+
+              <!-- BOTTOM HEADER -->
+              <tr class="sub-header">
+                <th>Account Number</th>
+                <th>Card Number</th>
+                <th>Account Number</th>
+                <th>Card Number</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              {% for rfid in rfids %}
+              <tr id="rfid-row-{{ rfid[0] }}">
+
+                <td class="r-vehicle">
+                  {{ rfid[1] }}
+                </td>
+
+                <td class="r-plate">
+                  {{ rfid[2] }}
+                </td>
+
+                <td class="r-auto-acc">
+                  {{ rfid[3] }}
+                </td>
+
+                <td class="r-auto-card">
+                  {{ rfid[4] }}
+                </td>
+
+                <td class="r-easy-acc">
+                  {{ rfid[5] }}
+                </td>
+
+                <td class="r-easy-card">
+                  {{ rfid[6] }}
+                </td>
+
+                <td>
+
+                  <div class="rfid-actions">
+
+                    <button type="button" class="btn-edit" onclick="editRFIDRow('{{ rfid[0] }}')">
+                      Edit
+                    </button>
+
+                    <button type="button" class="btn-update" id="rfid-upd-{{ rfid[0] }}" style="display:none;"
+                      onclick="updateRFIDRow('{{ rfid[0] }}')">
+                      Update
+                    </button>
+
+                    <button type="button" class="btn-cancel" id="rfid-cancel-{{ rfid[0] }}" style="display:none;"
+                      onclick="cancelRFIDEdit('{{ rfid[0] }}')">
+                      Cancel
+                    </button>
+
+                    <button type="button" class="btn-delete" onclick="deleteRFIDRow('{{ rfid[0] }}')">
+                      Delete
+                    </button>
+
+                  </div>
+
+                </td>
+
+              </tr>
+              {% endfor %}
+
+            </tbody>
+
+          </table>
+
+        </div>
+      </div>
+      </section>
+    </div>
+
+    <!-- ================= ADD MODAL ================= -->
+    <div id="addModal" class="modal-overlay">
+      <div class="modal-content">
+        <span class="close-btn" onclick="toggleModal()">&times;</span>
+        <h2>New Vehicle Record</h2>
+
+        <form action="{{ url_for('add_vehicle') }}" method="POST">
+          <label>Vehicle Name</label>
+          <input type="text" name="name" required />
+
+          <label>Plate Number</label>
+          <input type="text" name="plate_number" required />
+
+          <label>Color</label>
+          <input type="text" name="color" />
+
+          <label>Type</label>
+          <input type="text" name="type" />
+
+          <label>Status</label>
+          <textarea name="status"></textarea>
+
+          <label>Mileage</label>
+          <input type="number" name="mileage" />
+
+          <button type="submit" class="btn-save">Save Record</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- ================= RFID MODAL ================= -->
+
+  <div id="rfidModal" class="modal-overlay">
+
+    <div class="modal-content">
+
+      <span class="close-btn" onclick="toggleRFIDModal()">
+        &times;
+      </span>
+
+      <h2>Add RFID Record</h2>
+
+      <form action="{{ url_for('add_rfid') }}" method="POST">
+
+        <label>Vehicle</label>
+        <input type="text" name="vehicle">
+
+        <label>Plate Number</label>
+        <input type="text" name="plate">
+
+        <label>Autosweep Account</label>
+        <input type="text" name="autosweep_account">
+
+        <label>Autosweep Card</label>
+        <input type="text" name="autosweep_card">
+
+        <label>Easytrip Account</label>
+        <input type="text" name="easytrip_account">
+
+        <label>Easytrip Card</label>
+        <input type="text" name="easytrip_card">
+
+        <button type="submit" class="btn-save">
+          Save RFID Record
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-left">
+        <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" class="footer-logo" />
+        <p class="footer-desc">
+          A Web-Based Inventory and Record Management System for
+          <strong>Motor Pool</strong>
+        </p>
       </div>
 
-      <!-- ================= ADD MODAL ================= -->
-      <div id="addModal" class="modal-overlay">
-        <div class="modal-content">
-          <span class="close-btn" onclick="toggleModal()">&times;</span>
-          <h2>New Vehicle Record</h2>
+      <div class="footer-center">
+        <h4>MENU</h4>
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('inventory') }}">Inventory</a>
+        <a href="{{ url_for('records') }}">Record Management</a>
+      </div>
 
-          <form action="{{ url_for('add_vehicle') }}" method="POST">
-            <label>Vehicle Name</label>
-            <input type="text" name="name" required />
-
-            <label>Plate Number</label>
-            <input type="text" name="plate_number" required />
-
-            <label>Color</label>
-            <input type="text" name="color" />
-
-            <label>Type</label>
-            <input type="text" name="type" />
-
-            <label>Status</label>
-            <textarea name="status"></textarea>
-
-            <label>Mileage</label>
-            <input type="number" name="mileage" />
-
-            <button type="submit" class="btn-save">Save Record</button>
-          </form>
-        </div>
+      <div class="footer-right">
+        <h4>CONTACT US</h4>
+        <p>📧 motorpool@pup.edu.ph</p>
+        <p>📞 (02) 5335-1787</p>
       </div>
     </div>
 
-    <!-- ================= FOOTER ================= -->
-    <footer class="footer">
-      <div class="footer-content">
-        <div class="footer-left">
-          <img
-            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-            class="footer-logo"
-          />
-          <p class="footer-desc">
-            A Web-Based Inventory and Record Management System for
-            <strong>Motor Pool</strong>
-          </p>
-        </div>
+    <hr class="footer-divider" />
 
-        <div class="footer-center">
-          <h4>MENU</h4>
-          <a href="{{ url_for('home') }}">Home</a>
-          <a href="{{ url_for('inventory') }}">Inventory</a>
-          <a href="{{ url_for('records') }}">Record Management</a>
-        </div>
+    <div class="footer-bottom">
+      © 2025 Polytechnic University of the Philippines. Under G.A.S.S.
+    </div>
+  </footer>
 
-        <div class="footer-right">
-          <h4>CONTACT US</h4>
-          <p>📧 motorpool@pup.edu.ph</p>
-          <p>📞 (02) 5335-1787</p>
-        </div>
-      </div>
+  <script src="{{ url_for('static', filename='js/vehicle_inv.js') }}"></script>
+</body>
 
-      <hr class="footer-divider" />
-
-      <div class="footer-bottom">
-        © 2025 Polytechnic University of the Philippines. Under G.A.S.S.
-      </div>
-    </footer>
-
-    <script src="{{ url_for('static', filename='js/vehicle_inv.js') }}"></script>
-  </body>
 </html>

@@ -181,6 +181,8 @@ body {
   padding: 25px;
   border-radius: 15px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-left: 30px;
+  margin-right: 30px;
 }
 
 .inventory-table {
@@ -455,4 +457,132 @@ body {
 #p-btn.active {
   background: #800000;
   color: white;
+}
+
+/* --- TAB TOGGLE SYSTEM --- */
+
+/* ACTIVE BUTTON */
+.toggle-switch button.active {
+  background: #800000;
+  color: white;
+}
+
+/* ================= RFID TABLE ================= */
+
+.rfid-custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 25px;
+  background: white;
+}
+
+.rfid-custom-table th,
+.rfid-custom-table td {
+  border: 1px solid #cfcfcf;
+  padding: 14px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.rfid-custom-table thead th {
+  font-weight: 600;
+}
+
+/* TOP RFID HEADER */
+.rfid-title {
+  background: #f4f4f4;
+}
+
+/* AUTOSWEEP + EASYTRIP */
+.rfid-custom-table thead tr:nth-child(2) th {
+  background: #fafafa;
+}
+
+/* ACCOUNT NUMBER + CARD NUMBER */
+.sub-header th {
+  background: #edf4fb;
+  font-size: 13px;
+}
+
+/* BODY */
+.rfid-custom-table tbody td {
+  height: 45px;
+  background: white;
+}
+
+/* RFID BUTTON SPACING */
+#rfid-table .btn-add {
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.actions-header {
+  min-width: 140px;
+  width: 140px;
+}
+
+/* RFID TABLE FIX */
+.rfid-custom-table {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+
+.rfid-custom-table th,
+.rfid-custom-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 1%;
+  padding: 4px;
+}
+
+/* ACTIONS COLUMN */
+.actions-header {
+  width: 120px;
+  min-width: 120px;
+}
+
+.rfid-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.rfid-actions button {
+  width: 80px;
+}
+
+.rfid-edit-input {
+  width: 100%;
+  box-sizing: border-box;
+
+  min-width: 0;
+  max-width: 100%;
+
+  padding: 2px 4px;
+  font-size: 12px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rfid-custom-table td {
+  min-width: 0;
+}
+
+.header-controls {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.toggle-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin: 10px 0;
 }
