@@ -1,10 +1,5 @@
 // static/js/vehicle_inv.js
 
-function toggleModal() {
-  const modal = document.getElementById("addModal");
-  modal.style.display = modal.style.display === "flex" ? "none" : "flex";
-}
-
 function editRow(id) {
   const row = document.getElementById(`row-${id}`);
   if (!row) return;
@@ -18,13 +13,13 @@ function editRow(id) {
 
   // Transform text into inputs
   // We use .trim() to ensure no accidental whitespace is carried over
-  nameCell.innerHTML = `<input type="text" id="edit-name-${id}" value="${nameCell.innerText.trim()}" style="width:100px">`;
-  plate.innerHTML = `<input type="text" id="edit-plate-${id}" value="${plate.innerText.trim()}" style="width:80px">`;
-  color.innerHTML = `<input type="text" id="edit-color-${id}" value="${color.innerText.trim()}" style="width:70px">`;
-  type.innerHTML = `<input type="text" id="edit-type-${id}" value="${type.innerText.trim()}" style="width:80px">`;
+  nameCell.innerHTML = `<input type="text" id="edit-name-${id}" value="${nameCell.textContent.trim()}" style="width:100%">`;
+  plate.innerHTML = `<input type="text" id="edit-plate-${id}" value="${plate.textContent.trim()}" style="width:80px">`;
+  color.innerHTML = `<input type="text" id="edit-color-${id}" value="${color.textContent.trim()}" style="width:70px">`;
+  type.innerHTML = `<input type="text" id="edit-type-${id}" value="${type.textContent.trim()}" style="width:80px">`;
 
   // Status handling
-  const statusText = status.innerText.trim();
+  const statusText = status.textContent.trim();
   status.parentElement.innerHTML = `<input type="text" id="edit-status-${id}" value="${statusText}" style="width:80px">`;
 
   // Mileage handling (remove " km" to get the number)
@@ -184,4 +179,183 @@ async function loadNotifications() {
     notifList.innerHTML = "<p>Failed to load notifications</p>";
   }
 }
-window.onload = loadUnreadCount;
+window.addEventListener("load", loadUnreadCount);
+
+// ================= TAB SWITCH =================
+
+function switchTab(tab) {
+  const vehicleTable = document.getElementById("vehicle-content");
+  const rfidTable = document.getElementById("rfid-table");
+
+  const vehicleBtn = document.getElementById("vehicle-btn");
+  const rfidBtn = document.getElementById("rfid-btn");
+
+  const addBtn = document.getElementById("main-add-btn");
+
+  if (!vehicleTable || !rfidTable) return;
+
+  if (tab === "vehicle") {
+    vehicleTable.style.display = "block";
+    rfidTable.style.display = "none";
+
+    if (vehicleBtn) vehicleBtn.classList.add("active");
+    if (rfidBtn) rfidBtn.classList.remove("active");
+
+    if (addBtn) {
+      addBtn.innerText = "Add Vehicle Record";
+      addBtn.onclick = toggleModal;
+    }
+  } else {
+    vehicleTable.style.display = "none";
+    rfidTable.style.display = "block";
+
+    if (rfidBtn) rfidBtn.classList.add("active");
+    if (vehicleBtn) vehicleBtn.classList.remove("active");
+
+    if (addBtn) {
+      addBtn.innerText = "Add RFID Record";
+      addBtn.onclick = toggleRFIDModal;
+    }
+  }
+}
+// ================= RFID MODAL =================
+
+function toggleRFIDModal() {
+  const modal = document.getElementById("rfidModal");
+
+  if (
+    modal.style.display === "flex" ||
+    getComputedStyle(modal).display === "flex"
+  ) {
+    modal.style.display = "none";
+  } else {
+    modal.style.display = "flex";
+  }
+}
+
+// ================= RFID EDIT =================
+
+function editRFIDRow(id) {
+  const row = document.getElementById(`rfid-row-${id}`);
+
+  // SAVE ORIGINAL VALUES
+  const vehicle = row.querySelector(".r-vehicle").textContent.trim();
+  const plate = row.querySelector(".r-plate").textContent.trim();
+
+  const autoAcc = row.querySelector(".r-auto-acc").textContent.trim();
+  const autoCard = row.querySelector(".r-auto-card").textContent.trim();
+
+  const easyAcc = row.querySelector(".r-easy-acc").textContent.trim();
+  const easyCard = row.querySelector(".r-easy-card").textContent.trim();
+
+  // CONVERT TO INPUTS
+  row.querySelector(".r-vehicle").innerHTML =
+    `<input type="text" class="vehicle-input" value="${vehicle}">`;
+
+  row.querySelector(".r-plate").innerHTML =
+    `<input type="text" class="plate-input" value="${plate}">`;
+
+  row.querySelector(".r-auto-acc").innerHTML =
+    `<input type="text" class="auto-acc-input" value="${autoAcc}">`;
+
+  row.querySelector(".r-auto-card").innerHTML =
+    `<input type="text" class="auto-card-input" value="${autoCard}">`;
+
+  row.querySelector(".r-easy-acc").innerHTML =
+    `<input type="text" class="easy-acc-input" value="${easyAcc}">`;
+
+  row.querySelector(".r-easy-card").innerHTML =
+    `<input type="text" class="easy-card-input" value="${easyCard}">`;
+
+  // BUTTON TOGGLE
+  row.querySelector(".btn-edit").style.display = "none";
+
+  document.getElementById(`rfid-upd-${id}`).style.display = "inline-block";
+  document.getElementById(`rfid-cancel-${id}`).style.display = "inline-block";
+}
+
+// ================= RFID CANCEL =================
+
+function cancelRFIDEdit(id) {
+  const row = document.getElementById(`rfid-row-${id}`);
+
+  // GET ORIGINAL VALUES
+  const vehicle = row.querySelector(".vehicle-input").defaultValue;
+
+  const plate = row.querySelector(".plate-input").defaultValue;
+
+  const autoAcc = row.querySelector(".auto-acc-input").defaultValue;
+
+  const autoCard = row.querySelector(".auto-card-input").defaultValue;
+
+  const easyAcc = row.querySelector(".easy-acc-input").defaultValue;
+
+  const easyCard = row.querySelector(".easy-card-input").defaultValue;
+
+  // RESTORE TEXT
+  row.querySelector(".r-vehicle").innerHTML = vehicle;
+
+  row.querySelector(".r-plate").innerHTML = plate;
+
+  row.querySelector(".r-auto-acc").innerHTML = autoAcc;
+
+  row.querySelector(".r-auto-card").innerHTML = autoCard;
+
+  row.querySelector(".r-easy-acc").innerHTML = easyAcc;
+
+  row.querySelector(".r-easy-card").innerHTML = easyCard;
+
+  // BUTTONS
+  row.querySelector(".btn-edit").style.display = "inline-block";
+
+  document.getElementById(`rfid-upd-${id}`).style.display = "none";
+
+  document.getElementById(`rfid-cancel-${id}`).style.display = "none";
+}
+
+function updateRFIDRow(id) {
+  const row = document.getElementById(`rfid-row-${id}`);
+
+  const vehicle = row.querySelector(".vehicle-input").value;
+  const plate = row.querySelector(".plate-input").value;
+
+  const autoAcc = row.querySelector(".auto-acc-input").value;
+  const autoCard = row.querySelector(".auto-card-input").value;
+
+  const easyAcc = row.querySelector(".easy-acc-input").value;
+  const easyCard = row.querySelector(".easy-card-input").value;
+
+  fetch(`/update_rfid/${id}`, {
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+
+    body: new URLSearchParams({
+      vehicle: vehicle,
+      plate: plate,
+
+      auto_acc: autoAcc,
+      auto_card: autoCard,
+
+      easy_acc: easyAcc,
+      easy_card: easyCard,
+    }),
+  }).then((response) => {
+    if (response.ok) {
+      alert("RFID record updated!");
+      location.reload();
+    } else {
+      alert("Update failed.");
+    }
+  });
+}
+
+function deleteRFIDRow(id) {
+  const confirmDelete = confirm("Delete this RFID record?");
+
+  if (confirmDelete) {
+    window.location.href = `/delete_rfid/${id}`;
+  }
+}

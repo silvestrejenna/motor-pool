@@ -261,6 +261,7 @@ def inventory():
 
     conn = get_db_connection()
     vehicles = []
+    rfids = []
     
     if conn:
         cur = conn.cursor()
@@ -270,10 +271,31 @@ def inventory():
             ORDER BY vehicle_id ASC
         """)
         vehicles = cur.fetchall()
+
+        # ================= RFID =================
+        cur.execute("""
+            SELECT
+                id,
+                vehicle_name,
+                plate_number,
+                autosweep_account,
+                autosweep_card,
+                easytrip_account,
+                easytrip_card
+            FROM rfid_records
+            ORDER BY id ASC
+        """)
+
+        rfids = cur.fetchall()
+
         cur.close()
         conn.close()
 
-    return render_template("vehicle_inv.html", vehicles=vehicles)
+    return render_template(
+        "vehicle_inv.html",
+        vehicles=vehicles,
+        rfids=rfids
+    )
 
 
 @app.route('/add_vehicle', methods=['POST'])
@@ -359,6 +381,138 @@ def update_vehicle(id):
             conn.close()
     
     return redirect(url_for('inventory'))
+
+# ================= RFID =================
+
+@app.route("/add_rfid", methods=["POST"])
+def add_rfid():
+
+    vehicle = request.form["vehicle"]
+    plate = request.form["plate"]
+
+    autosweep_account = request.form["autosweep_account"]
+    autosweep_card = request.form["autosweep_card"]
+
+    easytrip_account = request.form["easytrip_account"]
+    easytrip_card = request.form["easytrip_card"]
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO rfid_records
+        (
+            vehicle_name,
+            plate_number,
+            autosweep_account,
+            autosweep_card,
+            easytrip_account,
+            easytrip_card
+        )
+        VALUES (%s,%s,%s,%s,%s,%s)
+    """, (
+
+        vehicle,
+        plate,
+
+        autosweep_account,
+        autosweep_card,
+
+        easytrip_account,
+        easytrip_card
+
+    ))
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    return redirect(url_for("inventory"))
+
+# ================= UPDATE RFID =================
+
+@app.route("/update_rfid/<int:id>", methods=["POST"])
+@role_required('Admin')
+def update_rfid(id):
+
+    try:
+
+        vehicle = request.form.get("vehicle")
+        plate = request.form.get("plate")
+
+        auto_acc = request.form.get("auto_acc")
+        auto_card = request.form.get("auto_card")
+
+        easy_acc = request.form.get("easy_acc")
+        easy_card = request.form.get("easy_card")
+
+        print("RFID UPDATE DATA:")
+        print(vehicle)
+        print(plate)
+        print(auto_acc)
+        print(auto_card)
+        print(easy_acc)
+        print(easy_card)
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute("""
+            UPDATE rfid_records
+            SET
+                vehicle_name=%s,
+                plate_number=%s,
+                autosweep_account=%s,
+                autosweep_card=%s,
+                easytrip_account=%s,
+                easytrip_card=%s
+            WHERE id=%s
+        """, (
+            vehicle,
+            plate,
+            auto_acc,
+            auto_card,
+            easy_acc,
+            easy_card,
+            id
+        ))
+
+        conn.commit()
+
+        print("ROWS UPDATED:", cur.rowcount)
+
+        cur.close()
+        conn.close()
+
+        flash("RFID record updated!")
+
+    except Exception as e:
+
+        print("RFID UPDATE ERROR:", e)
+
+    return redirect(url_for("inventory"))
+
+
+# ================= DELETE RFID =================
+
+@app.route("/delete_rfid/<int:id>")
+def delete_rfid(id):
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        DELETE FROM rfid_records
+        WHERE id=%s
+    """, (id,))
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    return redirect(url_for("inventory"))
 
 # =======================================================
 # 🚗 VEHICLE INVENTORY - NEW CODE ENDS HERE
