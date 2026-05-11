@@ -95,6 +95,17 @@ function cancelUpdate(id) {
   location.reload();
 }
 
+function toggleModal() {
+  const modal = document.getElementById("addModal");
+  if (!modal) return;
+
+  if (modal.style.display === "flex" || getComputedStyle(modal).display === "flex") {
+    modal.style.display = "none";
+  } else {
+    modal.style.display = "flex";
+  }
+}
+
 function closeDrawer() {
   document.getElementById("addModal").style.display = "none";
 }
