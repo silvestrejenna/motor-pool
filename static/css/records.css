@@ -117,8 +117,59 @@ body {
   gap: 15px;
 }
 
+/* NOTIFICATION ICON */
 .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #333;
   cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.icon:hover {
+  color: #800000;
+}
+
+.icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* PROFILE ICON */
+.profile-icon {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 50%;
+  border: 2px solid #7b0000;
+  background: linear-gradient(135deg, #800000 0%, #7b0000 100%);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  padding: 0;
+  font-size: 22px;
+  box-shadow: 0 2px 8px rgba(128, 0, 0, 0.2);
+}
+
+.profile-icon:hover {
+  background: linear-gradient(135deg, #7b0000 0%, #600000 100%);
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(128, 0, 0, 0.35);
+}
+
+.profile-icon:active {
+  transform: scale(0.98);
+}
+
+.profile-icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 /* PROFILE DROPDOWN */
@@ -129,18 +180,85 @@ body {
 .profile-dropdown {
   position: absolute;
   right: 0;
-  top: 35px;
+  top: 50px;
   background: #fff;
-  width: 220px;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 260px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   display: none;
-  padding: 10px;
-  text-align: center;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(128, 0, 0, 0.1);
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .profile-dropdown.show {
   display: block;
+}
+
+.profile-content {
+  padding: 16px;
+}
+
+.profile-name {
+  font-weight: 700;
+  color: #800000;
+  font-size: 15px;
+  margin: 0 0 4px 0;
+}
+
+.profile-email {
+  color: #666;
+  font-size: 13px;
+  margin: 0;
+  word-break: break-word;
+}
+
+.profile-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #ddd, transparent);
+  margin: 12px 0;
+}
+
+.profile-link {
+  display: block;
+  padding: 10px 12px;
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+
+.profile-link:hover {
+  background: rgba(128, 0, 0, 0.08);
+  color: #800000;
+  padding-left: 16px;
+}
+
+.logout-link {
+  color: #800000;
+  font-weight: 600;
+  margin-top: 8px;
+  border-top: 1px solid rgba(128, 0, 0, 0.1);
+  padding-top: 12px;
+  margin-top: 8px;
+}
+
+.logout-link:hover {
+  background: rgba(128, 0, 0, 0.12);
 }
 
 /* ===============================

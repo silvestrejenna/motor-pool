@@ -7,14 +7,17 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 import psycopg2
+from psycopg2 import pool
 from docx import Document
 import psycopg2.extras
 from flask import send_from_directory
 from datetime import datetime
 from functools import wraps
+from threading import Thread
 import bcrypt, random, smtplib
 import calendar
 from datetime import datetime, timedelta
+import time
 
 
 
@@ -23,6 +26,30 @@ load_dotenv()  # Load environment variables from .env file
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
+
+db_pool = None
+
+class PooledConnection:
+    def __init__(self, conn):
+        self._conn = conn
+
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+
+    def close(self):
+        global db_pool
+        if self._conn:
+            db_pool.putconn(self._conn)
+            self._conn = None
+
+
+def init_db_pool():
+    global db_pool
+    if db_pool is None:
+        DB_URI = os.getenv("DATABASE_URL")
+        if not DB_URI:
+            raise RuntimeError("DATABASE_URL is not configured")
+        db_pool = pool.ThreadedConnectionPool(1, 10, dsn=DB_URI)
 
 # =======================================================
 # GLOBAL LOGIN PROTECTION
@@ -48,7 +75,10 @@ def require_login():
         return redirect(url_for('login'))
     
     if 'user_id' in session and session.get('user_role') in ['Admin', 'Staff']:
-        create_pending_request_notifications()
+        last_check = session.get('last_notification_check', 0)
+        if time.time() - last_check > 60:
+            create_pending_request_notifications()
+            session['last_notification_check'] = time.time()
 
 ALLOWED_DOMAINS = ["@pup.edu.ph", "@iskolarngbayan.pup.edu.ph"]
 TEST_EMAILS = ["silvestrejennamae09@gmail.com"]
@@ -80,11 +110,10 @@ def role_required(*allowed_roles):
 
 # --- CONNECT TO SUPABASE ---6ymhn
 def get_db_connection():
-    DB_URI = os.getenv("DATABASE_URL")
     try:
-        conn = psycopg2.connect(DB_URI)
-        print("Connected to the database successfully.")
-        return conn
+        init_db_pool()
+        conn = db_pool.getconn()
+        return PooledConnection(conn)
     except Exception as e:
         print(f"Connection failed: {e}")
         return None
@@ -228,7 +257,7 @@ def register():
     session['register_fullname'] = full_name
     session['register_password'] = hashed_password
 
-    send_otp_email(email, otp)
+    send_otp_email_async(email, otp)
     return redirect(url_for('verify_otp'))
 
     # Continue with account creation logic
@@ -663,14 +692,17 @@ def tools_equipment():
     """)
     tools = cur.fetchall()
 
-    cur.execute("SELECT COUNT(*) FROM tools_equipment")
-    total = cur.fetchone()[0]
-
-    cur.execute("SELECT COUNT(*) FROM tools_equipment WHERE condition = 'Excellent'")
-    excellent = cur.fetchone()[0]
-
-    cur.execute("SELECT COUNT(*) FROM tools_equipment WHERE condition = 'Good'")
-    good = cur.fetchone()[0]
+    cur.execute("""
+        SELECT
+            COUNT(*) AS total,
+            COUNT(*) FILTER (WHERE condition = 'Excellent') AS excellent,
+            COUNT(*) FILTER (WHERE condition = 'Good') AS good
+        FROM tools_equipment
+    """)
+    row = cur.fetchone()
+    total = row[0]
+    excellent = row[1]
+    good = row[2]
 
     cur.close()
     conn.close()
@@ -801,14 +833,15 @@ def maintenance_pms():
         p_records = cur.fetchall()
         
         # 4. Calculate Stats for the UI Cards
-        # Total Monthly Maintenance Cost
-        cur.execute("SELECT SUM(cost) FROM maintenance_log WHERE date >= date_trunc('month', CURRENT_DATE)")
-        cost_res = cur.fetchone()
-        total_m_cost = cost_res[0] if cost_res and cost_res[0] else 0
-        
-        # Total Records this month
-        cur.execute("SELECT COUNT(*) FROM maintenance_log WHERE date >= date_trunc('month', CURRENT_DATE)")
-        m_count = cur.fetchone()[0]
+        cur.execute("""
+            SELECT
+                COALESCE(SUM(cost), 0) AS total_m_cost,
+                COUNT(*) FILTER (WHERE date >= date_trunc('month', CURRENT_DATE)) AS m_count
+            FROM maintenance_log
+        """)
+        row = cur.fetchone()
+        total_m_cost = row[0]
+        m_count = row[1]
         
         # Total PMS Scheduled (Count of records in PMS table)
         pms_scheduled_count = len(p_records)
@@ -1035,21 +1068,19 @@ def parts_supplies():
         cur.execute("SELECT * FROM parts_supplies ORDER BY part_id ASC")
         parts = cur.fetchall()
 
-        cur.execute("SELECT COUNT(*) FROM parts_supplies")
-        total = cur.fetchone()[0]
-
-        cur.execute("SELECT COUNT(*) FROM parts_supplies WHERE stock > min_stock")
-        in_stock = cur.fetchone()[0]
-
         cur.execute("""
-            SELECT COUNT(*) 
-            FROM parts_supplies 
-            WHERE stock <= min_stock AND stock > 0
+            SELECT
+                COUNT(*) AS total,
+                COUNT(*) FILTER (WHERE stock > min_stock) AS in_stock,
+                COUNT(*) FILTER (WHERE stock <= min_stock AND stock > 0) AS low_stock,
+                COUNT(*) FILTER (WHERE stock = 0) AS out_stock
+            FROM parts_supplies
         """)
-        low_stock = cur.fetchone()[0]
-
-        cur.execute("SELECT COUNT(*) FROM parts_supplies WHERE stock = 0")
-        out_stock = cur.fetchone()[0]
+        row = cur.fetchone()
+        total = row[0]
+        in_stock = row[1]
+        low_stock = row[2]
+        out_stock = row[3]
 
         cur.close()
         conn.close()
@@ -2348,24 +2379,17 @@ def user_dashboard():
 
     stats = cur.fetchone()
 
-    cur.close()
-    conn.close()
-
-    firstname = (session.get("user_fullname") or "User").split()[0]
-
-    conn = get_db_connection()
-    cur = conn.cursor()
-
     cur.execute("""
-            SELECT vehicle_id, name, plate_number
-            FROM vehicle
-            ORDER BY name
-               """)
-    
+        SELECT vehicle_id, name, plate_number
+        FROM vehicle
+        ORDER BY name
+    """)
     vehicles = cur.fetchall()
 
     cur.close()
     conn.close()
+
+    firstname = (session.get("user_fullname") or "User").split()[0]
 
 
 
@@ -2526,8 +2550,6 @@ def user_trip_tickets():
 # USER SIDE ROUTES---end
 # =======================================================
 
-import time
-
 # =======================================================
 # FORGOT PASSWORD
 # =======================================================
@@ -2558,7 +2580,7 @@ def forgot_password():
     session['reset_otp'] = otp
     session['otp_time'] = time.time()   # OTP timestamp added here
 
-    send_otp_email(email, otp)
+    send_otp_email_async(email, otp)
 
     return redirect(url_for("verify_reset_otp"))
 
@@ -2704,6 +2726,10 @@ def send_otp_email(receiver_email, otp):
     except Exception as e:
         print("EMAIL ERROR:", e)
 
+
+def send_otp_email_async(receiver_email, otp):
+    Thread(target=send_otp_email, args=(receiver_email, otp), daemon=True).start()
+
 #============== RESEND OTP ================================
 @app.route('/resend-otp')
 def resend_otp():
@@ -2717,7 +2743,7 @@ def resend_otp():
 
     session['otp'] = otp
 
-    send_otp_email(email, otp)
+    send_otp_email_async(email, otp)
 
     flash("A new OTP has been sent to your email.")
 
@@ -2925,11 +2951,10 @@ def req_details(req_id):
     
     req_data = cur.fetchone()
 
-    cur.close()
-    conn.close()
-
-    conn = get_db_connection()
-    cur = conn.cursor()
+    if req_data is None:
+        cur.close()
+        conn.close()
+        return "Request not found", 404
 
     cur.execute("""
         SELECT vehicle_id, name, plate_number
@@ -3136,10 +3161,10 @@ def download_trip(filename):
                 tt.end_date,
                 vr.purpose,
                 vr.destination,
-                u.full_name
+                u.full_name AS prepared_by
             FROM trip_tickets tt
             JOIN vehicle_requests vr ON vr.id = tt.request_id
-            JOIN users u ON vr.user_id = u.id
+            JOIN users u ON u.id = vr.user_id
             JOIN vehicle v ON v.vehicle_id = tt.vehicle_id
             WHERE tt.id = %s
             LIMIT 1
@@ -3147,11 +3172,16 @@ def download_trip(filename):
 
         data = cur.fetchone()
         print("DOWNLOAD DATA:", data)
-        cur.close()
-        conn.close()
 
         if not data:
+            cur.close()
+            conn.close()
             return f"❌ No data found for request {ticket_id}", 404
+
+        prepared_by = data.get("prepared_by", "")
+
+        cur.close()
+        conn.close()
 
         if is_metro_mnla(data["destination"]):
             template_file = "trip-ticket_mnla.docx"
@@ -3167,26 +3197,13 @@ def download_trip(filename):
 
         doc = Document(TEMPLATE_PATH)
 
-        conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-
-        cur.execute("""
-            SELECT full_name FROM users WHERE id = %s
-        """, (user_id,))
-
-        user = cur.fetchone()
-        cur.close()
-        conn.close()
-
-        prepared_by = user["full_name"] if user else ""
-
         for p in doc.paragraphs:
             if "{{driver_name}}" in p.text:
                 p.text = p.text.replace("{{driver_name}}", data["driver_name"])
             if "{{vehicle_name}}" in p.text:
                 p.text = p.text.replace("{{vehicle_name}}", data["vehicle_name"])
             if "{{plate_number}}" in p.text:
-                p.text = p.text.replace("{{plate_number}}", data["plate_nnumber"])
+                p.text = p.text.replace("{{plate_number}}", data["plate_number"])
             if "{{purpose}}" in p.text:
                 p.text = p.text.replace("{{purpose}}", data["purpose"])
             if "{{DATE}}" in p.text:
@@ -3344,6 +3361,9 @@ def mark_notification_read(notif_id):
 #============================ CREATE PENDING REQUEST NOTIFICATIONS =======================================================================
 def create_pending_request_notifications():
     conn = get_db_connection()
+    if not conn:
+        return
+
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cur.execute("""
@@ -3352,42 +3372,53 @@ def create_pending_request_notifications():
         WHERE status = 'pending'
         AND created_at <= NOW() - INTERVAL '1 hour'
     """)
-
     requests = cur.fetchall()
 
+    if not requests:
+        cur.close()
+        conn.close()
+        return
+
+    cur.execute("""
+        SELECT id
+        FROM users
+        WHERE role IN ('Admin', 'Staff')
+    """)
+    admins = [row['id'] for row in cur.fetchall()]
+
+    if not admins:
+        cur.close()
+        conn.close()
+        return
+
+    request_ids = [str(req['id']) for req in requests]
+    cur.execute("""
+        SELECT CAST(request_id AS TEXT) AS request_id, user_id
+        FROM notifications
+        WHERE CAST(request_id AS TEXT) = ANY(%s)
+          AND user_id = ANY(%s)
+          AND created_at >= NOW() - INTERVAL '1 hour'
+    """, (request_ids, admins))
+
+    existing_notifications = {
+        (row['request_id'], row['user_id'])
+        for row in cur.fetchall()
+    }
+
+    insert_rows = []
     for req in requests:
         message = f"Request #{req['id']} from {req['office']} needs approval"
+        for admin_id in admins:
+            if (str(req['id']), admin_id) not in existing_notifications:
+                insert_rows.append((admin_id, req['id'], message, 'pending_reminder'))
 
-        # get all admins/staff
-        cur.execute("""
-            SELECT id FROM users
-            WHERE role IN ('Admin', 'Staff')
-        """)
-        admins = cur.fetchall()
+    if insert_rows:
+        cur.executemany("""
+            INSERT INTO notifications (user_id, request_id, message, type)
+            VALUES (%s, %s, %s, %s)
+        """, insert_rows)
+        conn.commit()
 
-        for admin in admins:
-            # check duplicate per admin
-            cur.execute("""
-                SELECT 1 FROM notifications
-                WHERE request_id = %s
-                AND user_id = %s
-                AND created_at >= NOW() - INTERVAL '1 hour'
-            """, (req['id'], admin['id']))
-
-            exists = cur.fetchone()
-
-            if not exists:
-                cur.execute("""
-                    INSERT INTO notifications (user_id, request_id, message, type)
-                    VALUES (%s, %s, %s, %s)
-                """, (
-                    admin['id'],
-                    req['id'],
-                    message,
-                    "pending_reminder"
-                ))
-
-    conn.commit()
     cur.close()
     conn.close()
 #=============================================================================
