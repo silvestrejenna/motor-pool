@@ -283,8 +283,9 @@ body {
   border: none;
   padding: 12px 22px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 12px;
   cursor: pointer;
+  font-weight: bold;
 }
 
 /* ================= SUMMARY CARDS ================= */
@@ -308,6 +309,7 @@ body {
 
 .summary-card h2 {
   margin-top: 10px;
+  font-size: 28px;
 }
 
 /* ================= TABLE ================= */
@@ -374,6 +376,7 @@ body {
   padding: 7px 14px;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 12px;
 }
 
 .btn-update {
@@ -383,6 +386,8 @@ body {
   padding: 7px 14px;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 12px;
+  margin-left: 10px;
 }
 
 .btn-cancel {
@@ -392,6 +397,7 @@ body {
   padding: 7px 14px;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 12px;
 }
 
 .btn-delete {
@@ -401,6 +407,8 @@ body {
   padding: 7px 14px;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 12px;
+  text-decoration: none;
 }
 
 /* ================= INLINE EDIT (FIXED & CLEAN) ================= */

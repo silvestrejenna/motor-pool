@@ -1,390 +1,382 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>PUP Motor Pool | Parts & Supplies</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/parts_supplies.css') }}"
-    />
-  </head>
 
-  <body>
-    <div class="main-container">
-      <!-- ================= SIDEBAR ================= -->
-      <aside class="sidebar">
-        <div class="logo-section">
-          <img
-            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-          />
+<head>
+  <meta charset="UTF-8" />
+  <title>PUP Motor Pool | Parts & Supplies</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/parts_supplies.css') }}" />
+</head>
+
+<body>
+  <div class="main-container">
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar">
+      <div class="logo-section">
+        <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" />
+      </div>
+
+      <ul>
+        <li><a href="{{ url_for('inventory') }}">VEHICLES</a></li>
+        <li><a href="{{ url_for('gas_rfid') }}">GASOLINE & RFID</a></li>
+        <li>
+          <a href="{{ url_for('maintenance_pms') }}">MAINTENANCE & PMS LOG</a>
+        </li>
+        <li>
+          <a href="{{ url_for('tools_equipment') }}">TOOLS & EQUIPMENT</a>
+        </li>
+        <li class="active">
+          <a href="{{ url_for('parts_supplies') }}">PARTS & SUPPLIES</a>
+        </li>
+        <li><a href="{{ url_for('reports') }}">REPORTS</a></li>
+      </ul>
+    </aside>
+
+    <!-- ================= CONTENT ================= -->
+    <div class="content">
+      <!-- ================= TOP NAV ================= -->
+      <header class="top-nav">
+        <div class="nav-links">
+          <a href="{{ url_for('home') }}">HOME</a>
+          <a href="{{ url_for('inventory') }}" class="active">INVENTORY</a>
+          <a href="{{ url_for('records') }}">RECORDS</a>
         </div>
+        <div class="user-profile">
+          <div class="notification-wrapper">
+            <span class="icon" id="notifBell">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+              </svg>
+            </span>
+            <span id="notifBadge" class="notif-badge hidden">0</span>
 
-        <ul>
-          <li><a href="{{ url_for('inventory') }}">VEHICLES</a></li>
-          <li><a href="{{ url_for('gas_rfid') }}">GASOLINE & RFID</a></li>
-          <li>
-            <a href="{{ url_for('maintenance_pms') }}">MAINTENANCE & PMS LOG</a>
-          </li>
-          <li>
-            <a href="{{ url_for('tools_equipment') }}">TOOLS & EQUIPMENT</a>
-          </li>
-          <li class="active">
-            <a href="{{ url_for('parts_supplies') }}">PARTS & SUPPLIES</a>
-          </li>
-          <li><a href="{{ url_for('reports') }}">REPORTS</a></li>
-        </ul>
-      </aside>
-
-      <!-- ================= CONTENT ================= -->
-      <div class="content">
-        <!-- ================= TOP NAV ================= -->
-        <header class="top-nav">
-          <div class="nav-links">
-            <a href="{{ url_for('home') }}">HOME</a>
-            <a href="{{ url_for('inventory') }}" class="active">INVENTORY</a>
-            <a href="{{ url_for('records') }}">RECORDS</a>
-          </div>
-          <div class="user-profile">
-              <div class="notification-wrapper">
-                <span class="icon" id="notifBell">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-                  </svg>
-                </span>
-                <span id="notifBadge" class="notif-badge hidden">0</span>
-
-                <div id="notifDropdown" class="notif-dropdown hidden">
-                  <p class="notif-title">Notifications</p>
-                  <div id="notifList"></div>
-                </div>
-              </div>
-              <div class="profile">
-                <button class="profile-icon" onclick="toggleProfile()" title="Profile">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-                  </svg>
-                </button>
-
-              <div class="profile-dropdown" id="profileDropdown">
-                <p class="name" id="profileName">Loading...</p>
-                <p class="email" id="profileEmail"></p>
-                <hr />
-                <a href="#">Activity</a><br />
-                <a href="#">Change Password</a><br />
-                <a href="{{ url_for('logout') }}" onclick="logout()" class="logout">Log Out</a>
-              </div>
-        </header>
-
-        <!-- ================= PAGE ================= -->
-        <section class="inventory-section">
-          <div class="section-header">
-            <div>
-              <h1>PARTS & SUPPLIES</h1>
-              <p class="subtitle">Track spare parts and supply inventory</p>
+            <div id="notifDropdown" class="notif-dropdown hidden">
+              <p class="notif-title">Notifications</p>
+              <div id="notifList"></div>
             </div>
-
-            <button class="primary-btn" onclick="openAddDrawer()">
-              Add Part
+          </div>
+          <div class="profile">
+            <button class="profile-icon" onclick="toggleProfile()" title="Profile">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+              </svg>
             </button>
-          </div>
 
-          <!-- ================= TABLE ================= -->
-  
-            <div class="table-card">
-              <table class="inventory-table">
-                <thead>
-                  <tr>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th>Stock</th>
-                    <th>Min</th>
-                    <th>Unit</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {% for p in parts %}
-                  <tr id="row-{{ p[0] }}">
-                    <td>{{ p[1] }}</td>
-
-                    <td>
-                      <span class="view">{{ p[2] }}</span>
-                      <input class="edit-input" value="{{ p[2] }}" />
-                    </td>
-
-                    <td>
-                      <span class="view">{{ p[3] }}</span>
-                      <input class="edit-input" value="{{ p[3] }}" />
-                    </td>
-
-                    <td>
-                      <span class="view">{{ p[4] }}</span>
-                      <input
-                        type="number"
-                        class="edit-input"
-                        value="{{ p[4] }}"
-                      />
-                    </td>
-
-                    <td>
-                      <span class="view">{{ p[5] }}</span>
-                      <input
-                        type="number"
-                        class="edit-input"
-                        value="{{ p[5] }}"
-                      />
-                    </td>
-
-                    <td>
-                      <span class="view">{{ p[6] }}</span>
-                      <input class="edit-input unit-input" value="{{ p[6] }}" />
-                    </td>
-
-                    <td>
-                      <span class="badge {{ p[7]|lower|replace(' ','-') }}"
-                        >{{ p[7] }}</span
-                      >
-                    </td>
-
-                    <td class="action-buttons">
-                      <button class="btn-edit" onclick="editRow('{{ p[0] }}')">
-                        Update
-                      </button>
-                      <button
-                        class="btn-update"
-                        onclick="updateRow('{{ p[0] }}')"
-                      >
-                        Save
-                      </button>
-                      <button
-                        class="btn-cancel"
-                        onclick="cancelEdit('{{ p[0] }}')"
-                      >
-                        Cancel
-                      </button>
-
-                      <form
-                        method="POST"
-                        action="{{ url_for('delete_part', part_id=p[0]) }}"
-                        onsubmit="return confirm('Delete this part?')"
-                      >
-                        <button type="submit" class="btn-delete">Delete</button>
-                      </form>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+            <div class="profile-dropdown" id="profileDropdown">
+              <p class="name" id="profileName">Loading...</p>
+              <p class="email" id="profileEmail"></p>
+              <hr />
+              <a href="#">Activity</a><br />
+              <a href="#">Change Password</a><br />
+              <a href="{{ url_for('logout') }}" onclick="logout()" class="logout">Log Out</a>
             </div>
+      </header>
+
+      <!-- ================= PAGE ================= -->
+      <section class="inventory-section">
+        <div class="section-header">
+          <div>
+            <h1>PARTS & SUPPLIES</h1>
+            <p class="subtitle">Track spare parts and supply inventory</p>
           </div>
-        </section>
-      </div>
-  
-    
-    <!-- ================= FOOTER ================= -->
-    <footer class="footer">
-      <div class="footer-content">
-        <div>
-          <img
-            src="{{ url_for('static', filename='images/motorpool-logo.png') }}"
-            class="footer-logo"
-          />
-          <p class="footer-desc">
-            A Web-Based Inventory and Record Management System for
-            <strong>Motor Pool</strong>
-          </p>
-        </div>
 
-        <div class="footer-center">
-          <h4>MENU</h4>
-          <a href="{{ url_for('home') }}">Home</a>
-          <a href="{{ url_for('inventory') }}">Inventory</a>
-          <a href="{{ url_for('records') }}">Record Management</a>
-        </div>
-
-        <div class="footer-right">
-          <h4>CONTACT US</h4>
-          <p>motorpool@pup.edu.ph</p>
-          <p>(02) 5335-1787</p>
-        </div>
-      </div>
-
-      <hr class="footer-divider" />
-      <div class="footer-bottom">
-        © 2025 Polytechnic University of the Philippines. Under G.A.S.S.
-      </div>
-    </footer>
-    <!-- ================= ADD PART DRAWER ================= -->
-    <div class="drawer-overlay" id="addDrawer">
-      <div class="drawer">
-        <h2>Add Part</h2>
-
-        <form method="POST" action="{{ url_for('add_part') }}">
-          <label>Part Name</label>
-          <input name="name" required />
-
-          <label>Category</label>
-          <input name="category" required />
-
-          <label>Stock</label>
-          <input type="number" name="stock" required />
-
-          <label>Min Stock</label>
-          <input type="number" name="min_stock" required />
-
-          <label>Unit</label>
-          <input name="unit" required />
-
-          <button type="submit" class="btn-save">Save</button>
-          <button
-            type="button"
-            class="drawer-cancel"
-            onclick="closeAddDrawer()"
-          >
-            Cancel
+          <button class="primary-btn" onclick="openAddDrawer()">
+            Add Part
           </button>
-        </form>
+        </div>
+
+        <!-- ================= TABLE ================= -->
+
+        <div class="table-card">
+          <table class="inventory-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Stock</th>
+                <th>Min</th>
+                <th>Unit</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for p in parts %}
+              <tr id="row-{{ p[0] }}">
+                <td>{{ p[1] }}</td>
+
+                <td>
+                  <span class="view">{{ p[2] }}</span>
+                  <input class="edit-input" value="{{ p[2] }}" />
+                </td>
+
+                <td>
+                  <span class="view">{{ p[3] }}</span>
+                  <input class="edit-input" value="{{ p[3] }}" />
+                </td>
+
+                <td>
+                  <span class="view">{{ p[4] }}</span>
+                  <input type="number" class="edit-input" value="{{ p[4] }}" />
+                </td>
+
+                <td>
+                  <span class="view">{{ p[5] }}</span>
+                  <input type="number" class="edit-input" value="{{ p[5] }}" />
+                </td>
+
+                <td>
+                  <span class="view">{{ p[6] }}</span>
+                  <input class="edit-input unit-input" value="{{ p[6] }}" />
+                </td>
+
+                <td>
+                  <span class="badge {{ p[7]|lower|replace(' ','-') }}">{{ p[7] }}</span>
+                </td>
+
+                <td class="action-buttons">
+                  <button class="btn-edit" onclick="editRow('{{ p[0] }}')">
+                    Edit
+                  </button>
+                  <button class="btn-update" onclick="updateRow('{{ p[0] }}')">
+                    Update
+                  </button>
+                  <button class="btn-cancel" onclick="cancelEdit('{{ p[0] }}')">
+                    Cancel
+                  </button>
+
+                  <form method="POST" action="{{ url_for('delete_part', part_id=p[0]) }}"
+                    onsubmit="return confirm('Delete this part?')">
+                    <button type="submit" class="btn-delete">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+    </div>
+    </section>
+  </div>
+
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div>
+        <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" class="footer-logo" />
+        <p class="footer-desc">
+          A Web-Based Inventory and Record Management System for
+          <strong>Motor Pool</strong>
+        </p>
+      </div>
+
+      <div class="footer-center">
+        <h4>MENU</h4>
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('inventory') }}">Inventory</a>
+        <a href="{{ url_for('records') }}">Record Management</a>
+      </div>
+
+      <div class="footer-right">
+        <h4>CONTACT US</h4>
+        <p>motorpool@pup.edu.ph</p>
+        <p>(02) 5335-1787</p>
       </div>
     </div>
 
-    <script>
-      function openAddDrawer() {
-        document.getElementById("addDrawer").classList.add("show");
-      }
-      function closeAddDrawer() {
-        document.getElementById("addDrawer").classList.remove("show");
-      }
+    <hr class="footer-divider" />
+    <div class="footer-bottom">
+      © 2025 Polytechnic University of the Philippines. Under G.A.S.S.
+    </div>
+  </footer>
+  <!-- ================= ADD PART DRAWER ================= -->
+  <div class="drawer-overlay" id="addDrawer">
+    <div class="drawer">
+      <span class="icon" class="close-btn" onclick="toggleAddDrawer()">&times;</span>
+      <h2>Add Part</h2>
 
-      function editRow(id) {
-        document.getElementById("row-" + id).classList.add("editing");
+      <form method="POST" action="{{ url_for('add_part') }}">
+        <label>Part Name</label>
+        <input name="name" required />
+
+        <label>Category</label>
+        <input name="category" required />
+
+        <label>Stock</label>
+        <input type="number" name="stock" required />
+
+        <label>Min Stock</label>
+        <input type="number" name="min_stock" required />
+
+        <label>Unit</label>
+        <input name="unit" required />
+
+        <button type="submit" class="btn-save">Save Record</button>
+
+      </form>
+    </div>
+  </div>
+
+  <script>
+
+    function openAddDrawer() {
+      document.getElementById("addDrawer").classList.add("show");
+    }
+    function closeAddDrawer() {
+      document.getElementById("addDrawer").classList.remove("show");
+    }
+
+    function editRow(id) {
+      document.getElementById("row-" + id).classList.add("editing");
+    }
+    function cancelEdit(id) {
+      document.getElementById("row-" + id).classList.remove("editing");
+    }
+
+    function updateRow(id) {
+      const row = document.getElementById("row-" + id);
+      const i = row.querySelectorAll(".edit-input");
+
+      const formData = new FormData();
+      formData.append("name", i[0].value);
+      formData.append("category", i[1].value);
+      formData.append("stock", i[2].value);
+      formData.append("min_stock", i[3].value);
+      formData.append("unit", i[4].value);
+
+      fetch("/update-part/" + id, {
+        method: "POST",
+        body: formData,
+      }).then(() => location.reload());
+    }
+
+    function toggleAddDrawer() {
+      const modal = document.getElementById("addDrawer");
+
+      if (getComputedStyle(modal).display === "none") {
+        modal.style.display = "flex";
+      } else {
+        modal.style.display = "none";
       }
-      function cancelEdit(id) {
-        document.getElementById("row-" + id).classList.remove("editing");
+    }
+
+    // Close modal if user clicks outside
+    window.onclick = function (event) {
+      const drawer = document.getElementById("addDrawer");
+
+      if (event.target === drawer) {
+        drawer.style.display = "none";
       }
+    };
 
-      function updateRow(id) {
-        const row = document.getElementById("row-" + id);
-        const i = row.querySelectorAll(".edit-input");
-
-        const formData = new FormData();
-        formData.append("name", i[0].value);
-        formData.append("category", i[1].value);
-        formData.append("stock", i[2].value);
-        formData.append("min_stock", i[3].value);
-        formData.append("unit", i[4].value);
-
-        fetch("/update-part/" + id, {
-          method: "POST",
-          body: formData,
-        }).then(() => location.reload());
+    async function loadUserProfile() {
+      const res = await fetch("/auth/user");
+      if (!res.ok) {
+        window.location.href = "/";
+        return;
       }
+      const user = await res.json();
+      document.getElementById("profileName").textContent = user.full_name;
+      document.getElementById("profileEmail").textContent = user.email;
+    }
 
-      async function loadUserProfile() {
-        const res = await fetch("/auth/user");
-        if (!res.ok) {
-          window.location.href = "/";
+    loadUserProfile();
+
+    function toggleProfile() {
+      document.getElementById("profileDropdown").classList.toggle("show");
+    }
+
+    async function logout() {
+      await fetch("/logout", { method: "POST" });
+      window.location.href = "/";
+    }
+
+    const bell = document.getElementById("notifBell");
+    const dropdown = document.getElementById("notifDropdown");
+    const notifList = document.getElementById("notifList");
+    const notifBadge = document.getElementById("notifBadge");
+
+    bell.addEventListener("click", async () => {
+      dropdown.classList.toggle("hidden");
+
+      if (!dropdown.classList.contains("hidden")) {
+        await loadNotifications();
+      }
+    });
+
+    async function loadUnreadCount() {
+      try {
+        const res = await fetch("/get_unread_notif_count");
+        const data = await res.json();
+
+        const badge = document.getElementById("notifBadge");
+
+        console.log("Unread count:", data.count);
+
+        if (data.count > 0) {
+          badge.textContent = data.count;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+        }
+      } catch (err) {
+        console.error("Error loading unread count:", err);
+      }
+    }
+
+    async function loadNotifications() {
+      try {
+        const res = await fetch("/get_notifications");
+        const data = await res.json();
+        notifList.innerHTML = "";
+
+        if (data.length === 0) {
+          notifList.innerHTML = "<p>No notifications</p>";
           return;
         }
-        const user = await res.json();
-        document.getElementById("profileName").textContent = user.full_name;
-        document.getElementById("profileEmail").textContent = user.email;
-      }
 
-      loadUserProfile();
+        data.forEach((notif) => {
+          const div = document.createElement("div");
+          div.className = "notif-item";
+          div.textContent = notif.message;
+          div.style.cursor = "pointer";
+          div.style.pointerEvents = "auto";
 
-      function toggleProfile() {
-        document.getElementById("profileDropdown").classList.toggle("show");
-      }
-
-      async function logout() {
-        await fetch("/logout", { method: "POST" });
-        window.location.href = "/";
-      }
-
-      const bell = document.getElementById("notifBell");
-      const dropdown = document.getElementById("notifDropdown");
-      const notifList = document.getElementById("notifList");
-      const notifBadge = document.getElementById("notifBadge");
-
-      bell.addEventListener("click", async () => {
-        dropdown.classList.toggle("hidden");
-
-        if (!dropdown.classList.contains("hidden")) {
-          await loadNotifications();
-        }
-      });
-
-      async function loadUnreadCount() {
-        try {
-          const res = await fetch("/get_unread_notif_count");
-          const data = await res.json();
-
-          const badge = document.getElementById("notifBadge");
-
-          console.log("Unread count:", data.count);
-
-          if (data.count > 0) {
-            badge.textContent = data.count;
-            badge.classList.remove("hidden");
-          } else {
-            badge.classList.add("hidden");
-          }
-        } catch (err) {
-          console.error("Error loading unread count:", err);
-        }
-      }
-
-      async function loadNotifications() {
-        try {
-          const res = await fetch("/get_notifications");
-          const data = await res.json();
-          notifList.innerHTML = "";
-
-          if (data.length === 0) {
-            notifList.innerHTML = "<p>No notifications</p>";
-            return;
+          if (!notif.is_read) {
+            div.style.fontWeight = "bold";
           }
 
-          data.forEach((notif) => {
-            const div = document.createElement("div");
-            div.className = "notif-item";
-            div.textContent = notif.message;
-            div.style.cursor = "pointer";
-            div.style.pointerEvents = "auto";
+          div.onclick = async function () {
+            console.log("CLICKED NOTIF:", notif.id);
 
-            if (!notif.is_read) {
-              div.style.fontWeight = "bold";
-            }
-
-            div.onclick = async function () {
-              console.log("CLICKED NOTIF:", notif.id);
-
-              div.onclick = function () {
-                console.log("CLICK WORKING");
-              };
-
-              try {
-                const res = await fetch(`/mark_notification_read/${notif.id}`);
-                const result = await res.json();
-
-                await loadUnreadCount();
-                window.location.href = result.redirect_url;
-              } catch (err) {
-                console.error("Error marking as read:", err);
-              }
+            div.onclick = function () {
+              console.log("CLICK WORKING");
             };
 
-            notifList.appendChild(div);
-          });
-        } catch (err) {
-          console.error("Error loading notifications:", err);
-          notifList.innerHTML = "<p>Failed to load notifications</p>";
-        }
+            try {
+              const res = await fetch(`/mark_notification_read/${notif.id}`);
+              const result = await res.json();
+
+              await loadUnreadCount();
+              window.location.href = result.redirect_url;
+            } catch (err) {
+              console.error("Error marking as read:", err);
+            }
+          };
+
+          notifList.appendChild(div);
+        });
+      } catch (err) {
+        console.error("Error loading notifications:", err);
+        notifList.innerHTML = "<p>Failed to load notifications</p>";
       }
-      window.onload = loadUnreadCount;
-    </script>
-  </body>
+    }
+    window.onload = loadUnreadCount;
+  </script>
+</body>
+
 </html>

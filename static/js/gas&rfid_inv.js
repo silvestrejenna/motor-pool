@@ -3,6 +3,13 @@ function toggleFuelModal() {
   modal.style.display = modal.style.display === "flex" ? "none" : "flex";
 }
 
+// Close modal if user clicks outside
+window.onclick = function (event) {
+  if (event.target.className === "modal-overlay") {
+    event.target.style.display = "none";
+  }
+};
+
 // Same logic as vehicle inventory, just different field names
 function editFuel(id) {
   const row = document.getElementById(`row-${id}`);

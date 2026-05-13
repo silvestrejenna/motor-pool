@@ -99,7 +99,10 @@ function toggleModal() {
   const modal = document.getElementById("addModal");
   if (!modal) return;
 
-  if (modal.style.display === "flex" || getComputedStyle(modal).display === "flex") {
+  if (
+    modal.style.display === "flex" ||
+    getComputedStyle(modal).display === "flex"
+  ) {
     modal.style.display = "none";
   } else {
     modal.style.display = "flex";
@@ -370,3 +373,10 @@ function deleteRFIDRow(id) {
     window.location.href = `/delete_rfid/${id}`;
   }
 }
+
+// Close modal if user clicks outside
+window.onclick = function (event) {
+  if (event.target.className === "modal-overlay") {
+    event.target.style.display = "none";
+  }
+};
