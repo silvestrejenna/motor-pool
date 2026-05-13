@@ -1,3 +1,23 @@
+function toggleMainModal() {
+  const modal = document.getElementById("m-modal");
+
+  if (getComputedStyle(modal).display === "none") {
+    modal.style.display = "flex";
+  } else {
+    modal.style.display = "none";
+  }
+}
+
+function togglePMSModal() {
+  const modal = document.getElementById("p-modal");
+
+  if (getComputedStyle(modal).display === "none") {
+    modal.style.display = "flex";
+  } else {
+    modal.style.display = "none";
+  }
+}
+
 function switchTab(tab) {
   const mSec = document.getElementById("maintenance-section");
   const pSec = document.getElementById("pms-section");

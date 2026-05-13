@@ -264,6 +264,16 @@ body {
   justify-content: space-between;
   margin-bottom: 30px;
 }
+.section-header h1 {
+  font-size: 32px;
+  margin: 0;
+}
+
+.section-header p {
+  margin-top: 5px;
+  color: #666;
+  font-size: 14px;
+}
 
 .primary-btn {
   background: var(--pup-red);
@@ -272,8 +282,9 @@ body {
   padding: 8px 16px; /* ⬅ smaller */
   border-radius: 6px; /* ⬅ tighter */
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12px;
   height: fit-content; /* ⬅ prevents tall stretching */
+  font-weight: bold;
 }
 
 /* ================= TABLE ================= */
@@ -291,7 +302,7 @@ body {
 
 .inventory-table th {
   text-align: left;
-  font-size: 13px;
+  font-size: 14px;
   color: #888;
   padding: 18px 14px;
   white-space: nowrap;
@@ -342,6 +353,7 @@ body {
   padding: 7px 14px;
   border-radius: 6px;
   border: none;
+  font-size: 12px;
 }
 .btn-update {
   background: #28a745;
@@ -349,6 +361,7 @@ body {
   padding: 7px 14px;
   border-radius: 6px;
   border: none;
+  font-size: 12px;
 }
 .btn-cancel {
   background: #6c757d;
@@ -356,6 +369,7 @@ body {
   padding: 7px 14px;
   border-radius: 6px;
   border: none;
+  font-size: 12px;
 }
 .btn-delete {
   background: #dc3545;
@@ -363,6 +377,7 @@ body {
   padding: 7px 14px;
   border-radius: 6px;
   border: none;
+  font-size: 12px;
 }
 
 /* ================= INLINE EDIT ================= */
@@ -425,6 +440,10 @@ tr.editing td {
   padding: 40px 32px;
 }
 
+.drawer h2 {
+  color: var(--pup-red);
+}
+
 .drawer input {
   width: 100%;
   padding: 12px;
@@ -437,9 +456,12 @@ tr.editing td {
   width: 100%;
   background: var(--pup-red);
   color: white;
+  border: none;
   padding: 14px;
   border-radius: 10px;
-  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
 }
 
 .drawer-cancel {

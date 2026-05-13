@@ -271,6 +271,7 @@ body {
   padding: 12px 24px;
   border-radius: 8px;
   cursor: pointer;
+  font-weight: bold;
 }
 
 /* Table Styling */
@@ -291,7 +292,7 @@ body {
 .inventory-table th {
   text-align: left;
   color: #888;
-  font-size: 13px;
+  font-size: 14px;
   padding-bottom: 15px;
 }
 
@@ -306,41 +307,47 @@ body {
   text-decoration: underline;
 }
 
-/* Action Buttons */
-.action-buttons button,
-.btn-delete {
-  border: none;
-  padding: 6px 12px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 12px;
-  text-decoration: none;
-  display: inline-block;
-  margin-bottom: 5px;
-}
-
+/* NORMAL BUTTONS */
 .btn-edit {
   background: #ffc107;
-  color: black;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
 }
 
 .btn-update {
   background: #28a745;
   color: white;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-left: 10px;
+}
+
+.btn-cancel {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
 }
 
 .btn-delete {
   background: #dc3545;
   color: white;
-}
-.btn-cancel {
-  background-color: #6c757d; /* Gray color */
-  color: white;
   border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
+  padding: 7px 14px;
+  border-radius: 6px;
   cursor: pointer;
-  margin-left: 5px;
+  font-size: 12px;
+  text-decoration: none;
+  font-weight: normal;
 }
 
 .btn-cancel:hover {
@@ -369,6 +376,9 @@ body {
   gap: 10px;
 }
 
+.modal-content h2 {
+  color: var(--pup-red);
+}
 .modal-content input,
 .modal-content select,
 .modal-content textarea {
@@ -659,17 +669,6 @@ body {
 .actions-header {
   width: 120px;
   min-width: 120px;
-}
-
-.rfid-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-
-.rfid-actions button {
-  width: 80px;
 }
 
 .rfid-edit-input {
