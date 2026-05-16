@@ -998,3 +998,23 @@ body {
 
   z-index: 10000;
 }
+
+.form-card select {
+  width: 100%;
+  padding: 14px 50px 14px 16px;
+
+  border-radius: 8px;
+  border: 1px solid #dcdcdc;
+  font-size: 14px;
+  box-sizing: border-box;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 18px;
+}

@@ -23,9 +23,9 @@ select {
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 380px);
-  gap: 20px;
+  gap: 40px;
   margin-bottom: 30px;
-  margin-left: 40px;
+  margin-left: 100px;
 }
 
 .stat-card {
@@ -81,4 +81,16 @@ select {
   width: 50px; /* 👈 adjust this (24–36px is ideal) */
   height: 50px;
   object-fit: contain;
+}
+
+.btn-download {
+  background: var(--pup-red);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: none;
+  font-weight: bold;
 }

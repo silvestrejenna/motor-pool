@@ -41,37 +41,43 @@
           <a href="{{ url_for('records') }}">RECORDS</a>
         </div>
 
-        <div class="user-profile">
-          <div class="notification-wrapper">
-            <span class="icon" id="notifBell">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
-              </svg>
-            </span>
-            <span id="notifBadge" class="notif-badge hidden">0</span>
+        <div class="nav-right">
+          <div class="user-profile">
+            <div class="notification-wrapper">
+              <span class="icon" id="notifBell">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+                </svg>
+              </span>
+              <span id="notifBadge" class="notif-badge hidden">0</span>
 
-            <div id="notifDropdown" class="notif-dropdown hidden">
-              <p class="notif-title">Notifications</p>
-              <div id="notifList"></div>
+              <div id="notifDropdown" class="notif-dropdown hidden">
+                <p class="notif-title">Notifications</p>
+                <div id="notifList"></div>
+              </div>
+            </div>
+            <div class="profile">
+              <button class="profile-icon" onclick="toggleProfile()" title="Profile">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                </svg>
+              </button>
+
+              <div class="profile-dropdown" id="profileDropdown">
+                <div class="profile-content">
+                  <p class="profile-name" id="profileName">Loading...</p>
+                  <p class="profile-email" id="profileEmail"></p>
+                  <div class="profile-divider"></div>
+                  <a href="#" class="profile-link">Activity</a>
+                  <a href="#" class="profile-link">Change Password</a>
+                  <a href="{{ url_for('logout') }}" onclick="logout()" class="profile-link logout-link">Log Out</a>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="profile">
-            <button class="profile-icon" onclick="toggleProfile()" title="Profile">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-              </svg>
-            </button>
-
-            <div class="profile-dropdown" id="profileDropdown">
-              <p class="name" id="profileName">Loading...</p>
-              <p class="email" id="profileEmail"></p>
-              <hr />
-              <a href="#">Activity</a><br />
-              <a href="#">Change Password</a><br />
-              <a href="{{ url_for('logout') }}" onclick="logout()" class="logout">Log Out</a>
-            </div>
+        </div>
       </header>
 
       <!-- ================= PAGE ================= -->
