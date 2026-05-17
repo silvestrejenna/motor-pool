@@ -3367,10 +3367,14 @@ def create_pending_request_notifications():
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cur.execute("""
-        SELECT id, office
-        FROM vehicle_requests
-        WHERE status = 'pending'
-        AND created_at <= NOW() - INTERVAL '1 hour'
+        SELECT
+                vr.id,
+                vr.office,
+                u.full_name
+        FROM vehicle_requests vr
+        JOIN users u ON vr.user_id = u.id
+        WHERE vr.status = 'pending'
+        AND vr.created_at <= NOW() - INTERVAL '2 hours'
     """)
     requests = cur.fetchall()
 
@@ -3397,7 +3401,7 @@ def create_pending_request_notifications():
         FROM notifications
         WHERE CAST(request_id AS TEXT) = ANY(%s)
           AND user_id = ANY(%s)
-          AND created_at >= NOW() - INTERVAL '1 hour'
+          AND notifications.created_at >= NOW() - INTERVAL '2 hours'
     """, (request_ids, admins))
 
     existing_notifications = {
@@ -3407,7 +3411,8 @@ def create_pending_request_notifications():
 
     insert_rows = []
     for req in requests:
-        message = f"Request #{req['id']} from {req['office']} needs approval"
+        requester_name = req["full_name"] or "A requester"
+        message = f"{requester_name} from {req['office']} needs approval"
         for admin_id in admins:
             if (str(req['id']), admin_id) not in existing_notifications:
                 insert_rows.append((admin_id, req['id'], message, 'pending_reminder'))

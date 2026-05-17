@@ -289,9 +289,31 @@ body {
   color: #555;
 }
 
+/* NOTIFICATIONS */
+
 .notification-wrapper {
   position: relative;
   cursor: pointer;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #333;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.icon:hover {
+  color: #800000;
+}
+
+.icon svg {
+  width: 20px;
+  height: 20px;
 }
 
 .notif-dropdown {
