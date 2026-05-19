@@ -134,13 +134,12 @@
 
 
         <div id="vehicle-content">
-          <h3>Fuel Records</h3>
+          <h3>Vehicle Records</h3>
 
           <table class="inventory-table">
             <thead>
               <tr>
-                <th>Vehicle ID</th>
-                <th>Name</th>
+                <th>Vehicle Name</th>
                 <th>Plate Number</th>
                 <th>Color</th>
                 <th>Type</th>
@@ -152,8 +151,7 @@
 
             <tbody>
               {% for vehicle in vehicles %}
-              <tr id="row-{{ vehicle[0] }}">
-                <td>V00{{ vehicle[0] }}</td>
+             
 
                 <td class="v-name">
                   <a href="{{ url_for('vehicle_details', vehicle_id=vehicle[0]) }}" class="vehicle-link" style="
