@@ -239,6 +239,11 @@
       document.getElementById("profileDropdown").classList.toggle("show");
     }
 
+    async function logout() {
+      await fetch("/logout", { method: "POST" });
+      window.location.href = "/";
+    }
+
     document.addEventListener("click", function (event) {
       const profile = document.querySelector(".profile");
       const dropdown = document.getElementById("profileDropdown");
@@ -307,12 +312,17 @@
         data.forEach((notif) => {
           const div = document.createElement("div");
           div.classList.add("notif-item");
+
+          if (!notif.is_read) {
+            div.classList.add("unread");
+          }
+
           div.textContent = notif.message;
           div.style.cursor = "pointer";
 
           div.addEventListener("click", async () => {
             try {
-              await fetch(`/mark_notif_read/${notif.id}`, { method: "POST" });
+              await fetch(`/mark_notification_read/${notif.id}`);
               if (notif.type === "approved") {
                 window.location.href = "/user_my_requests";
               }
@@ -357,6 +367,8 @@
     function closeReasonModal() {
       document.getElementById("reasonModal").classList.add("hidden");
     }
+
+    loadUnreadCount();
   </script>
 </body>
 
