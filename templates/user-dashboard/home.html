@@ -209,12 +209,17 @@
         data.forEach((notif) => {
           const div = document.createElement("div");
           div.classList.add("notif-item");
+
+          if (!notif.is_read) {
+            div.classList.add("unread");
+          }
+
           div.textContent = notif.message;
           div.style.cursor = "pointer";
 
           div.addEventListener("click", async () => {
             try {
-              await fetch(`/mark_notif_read/${notif.id}`, { method: "POST" });
+              await fetch(`/mark_notification_read/${notif.id}`);
               if (notif.type === "approved") {
                 window.location.href = "/user_my_requests";
               }
@@ -250,6 +255,8 @@
         console.error("Error loading unread count:", err);
       }
     }
+
+    loadUnreadCount();
   </script>
 </body>
 

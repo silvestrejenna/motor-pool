@@ -1018,3 +1018,11 @@ body {
   background-position: right 16px center;
   background-size: 18px;
 }
+
+.notif-item {
+  font-weight: 400;
+}
+
+.notif-item.unread {
+  font-weight: 700;
+}
