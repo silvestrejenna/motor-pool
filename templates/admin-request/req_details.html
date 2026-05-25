@@ -67,7 +67,7 @@
                   <p class="profile-email" id="profileEmail"></p>
                   <div class="profile-divider"></div>
                   <a href="#" class="profile-link">Activity</a>
-                  <a href="#" class="profile-link">Change Password</a>
+                  <a href="{{ url_for('forgot_password') }}" class="profile-link">Change Password</a>
                   <a href="{{ url_for('logout') }}" onclick="logout()" class="profile-link logout-link">Log Out</a>
                 </div>
               </div>
@@ -217,7 +217,7 @@
                 <option value="" disabled selected>Select Vehicle</option>
                 {% for vehicle in vehicles %}
                 <option value="{{ vehicle['vehicle_id'] }}">
-                    {{ vehicle['name'] }}
+                  {{ vehicle['name'] }}
                 </option>
                 {% endfor %}
               </select>
