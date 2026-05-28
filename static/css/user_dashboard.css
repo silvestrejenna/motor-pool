@@ -236,11 +236,8 @@ body {
    HOME HERO
 ================================ */
 .home-hero {
-  height: calc(100vh - 80px);
+  min-height: 850px;
   position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   background:
     linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
     url("../images/pup-img.jpg");
@@ -262,7 +259,7 @@ body {
 
 .hero-center {
   position: absolute;
-  top: 200px;
+  top: 240px;
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
@@ -271,14 +268,13 @@ body {
 }
 
 .hero-center p {
-  font-size: 1.3rem;
-  margin: 0;
-  line-height: 1.5;
+  font-size: 27px;
+  font-family: "Segoe UI", sans-serif;
 }
 
 .home-actions {
   position: absolute;
-  bottom: 110px;
+  bottom: 150px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -815,8 +811,8 @@ body {
 
 .footer-content {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+  gap: 45px;
   align-items: start;
 }
 
@@ -826,10 +822,6 @@ body {
 
 .footer-content p {
   margin: 2px 0;
-}
-
-.footer-right p {
-  margin: 4px 0; /* tighter spacing */
 }
 
 .footer-content div {
@@ -846,25 +838,22 @@ body {
   line-height: 1.5;
 }
 
-.footer-center h4,
-.footer-right h4 {
-  margin-bottom: 12px;
+.footer-content h4 {
+  margin-bottom: 14px;
   font-weight: bold;
+  font-size: 16px;
 }
 
-.footer-center a {
-  display: block;
+.footer-content a,
+.footer-content p {
   color: #333;
   text-decoration: none;
-  margin-bottom: 4px;
+  margin-bottom: 10px;
+  line-height: 1.5;
 }
 
-.footer-center a:hover {
+.footer-content a:hover {
   color: #7b0000;
-}
-
-.footer-right p {
-  margin-bottom: 8px;
 }
 
 .footer-divider {
@@ -1025,4 +1014,208 @@ body {
 
 .notif-item.unread {
   font-weight: 700;
+}
+
+/* =================================
+   RESPONSIVE FIXES ONLY
+   (keeps original design)
+================================= */
+
+body {
+  overflow-x: hidden;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* NAVBAR WRAPPING ONLY */
+.nav-links {
+  flex-wrap: wrap;
+}
+
+/* =================================
+   TABLET FIXES
+================================= */
+
+@media (max-width: 1024px) {
+  .top-navbar {
+    padding: 15px 30px;
+  }
+
+  .nav-center {
+    gap: 20px;
+  }
+
+  .nav-links {
+    gap: 18px;
+  }
+
+  .hero-center {
+    width: 80%;
+  }
+}
+/* =================================
+   MOBILE FIXES
+================================= */
+
+@media (max-width: 768px) {
+  /* NAVBAR */
+  .top-navbar {
+    padding: 15px 20px;
+    flex-wrap: wrap;
+  }
+
+  .nav-center {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .nav-links {
+    gap: 12px;
+  }
+
+  /* HERO */
+  .hero-center {
+    width: 90%;
+  }
+
+  /* FORMS */
+  .form-row.two {
+    grid-template-columns: 1fr;
+  }
+
+  /* REQUEST CARDS */
+  .request-card,
+  .ticket-card {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+}
+/* =================================
+   KEEP ORIGINAL HERO LAYOUT
+================================= */
+
+@media (max-width: 1024px) {
+  .hero-left {
+    top: 70px;
+    left: 50px;
+  }
+
+  .hero-center {
+    top: 230px;
+    width: 80%;
+  }
+
+  .home-actions {
+    bottom: 200px;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-left {
+    top: 55px;
+    left: 30px;
+  }
+
+  .hero-left h1 {
+    font-size: 2.8rem;
+  }
+
+  .hero-center {
+    top: 135px;
+    width: 90%;
+  }
+
+  .hero-center p {
+    font-size: 1.1rem;
+  }
+
+  .home-actions {
+    bottom: 200px;
+    gap: 12px;
+  }
+
+  .home-card {
+    width: 160px;
+    padding: 22px 10px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .home-hero {
+    height: 720px;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-hero {
+    height: 620px;
+  }
+}
+
+/* =================================
+   RESPONSIVE FOOTER
+================================= */
+
+@media (max-width: 1024px) {
+  .footer {
+    padding: 25px 35px 15px;
+  }
+
+  .footer-content {
+    grid-template-columns: 1fr 1fr;
+    gap: 35px;
+  }
+  .footer-support,
+  .footer-legal,
+  .footer-right,
+  .footer-center,
+  .footer-left {
+    width: 100%;
+  }
+
+  .footer-left {
+    grid-column: span 2;
+  }
+
+  .footer-desc {
+    max-width: 100%;
+  }
+
+  .footer-bottom {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 25px 20px 15px;
+  }
+
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  .footer-left {
+    grid-column: span 1;
+  }
+
+  .footer-logo {
+    width: 45px;
+  }
+
+  .footer-content h4 {
+    margin-bottom: 10px;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
 }

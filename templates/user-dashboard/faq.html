@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>FAQs | Motor Pool</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/support-pages.css') }}" />
+</head>
+
+<body>
+
+    <div class="page-container">
+        <a href="{{ url_for('user_home') }}" class="back-btn">
+            Back to Home
+        </a>
+        <div class="top-header">
+            <h1>Frequently Asked Questions</h1>
+            <p>PUP Motor Pool Management System</p>
+        </div>
+
+        <div class="faq-container">
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    How do I submit a vehicle request?
+                </button>
+
+                <div class="faq-answer">
+                    <p>
+                        Go to the <strong>New Request</strong> page,
+                        complete the transportation request form,
+                        then submit your request for approval.
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    How can I check my request status?
+                </button>
+
+                <div class="faq-answer">
+                    <p>
+                        Navigate to <strong>My Request</strong>
+                        to view all submitted requests and
+                        their current approval status.
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    Who approves transportation requests?
+                </button>
+
+                <div class="faq-answer">
+                    <p>
+                        Requests are reviewed and approved
+                        by the designated Motor Pool and
+                        administrative personnel.
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    Can I cancel a request?
+                </button>
+
+                <div class="faq-answer">
+                    <p>
+                        Yes. Pending requests may be cancelled
+                        before approval. Contact the Motor Pool
+                        office for assistance.
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    How do I receive trip tickets?
+                </button>
+
+                <div class="faq-answer">
+                    <p>
+                        Approved trip tickets become available
+                        in the <strong>Trip Tickets</strong> section.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+
+
+    </div>
+
+    <script>
+        const questions = document.querySelectorAll('.faq-question');
+
+        questions.forEach((question) => {
+            question.addEventListener('click', () => {
+
+                const answer = question.nextElementSibling;
+
+                answer.classList.toggle('show');
+
+            });
+        });
+    </script>
+
+</body>
+
+</html>

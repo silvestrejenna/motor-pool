@@ -3535,6 +3535,41 @@ def admin_request_list():
     conn.close()
 
     return render_template("admin_request_list.html", requests=requests)
+
+# =======================================================
+# SUPPORT PAGES
+# =======================================================
+@app.route('/faq')
+def faq():
+    return render_template('user-dashboard/faq.html')
+
+
+@app.route('/user-guide')
+def user_guide():
+    return render_template('user-dashboard/user-guide.html')
+
+# =======================================================
+# legal pages
+# =======================================================
+
+@app.route('/privacy-policy')
+def privacy_policy():
+    return render_template(
+        'user-dashboard/privacy-policy.html'
+    )
+
+@app.route('/terms-conditions')
+def terms_conditions():
+    return render_template(
+        'user-dashboard/terms-conditions.html'
+    )
+
+
+@app.route('/data-privacy')
+def data_privacy():
+    return render_template(
+        'user-dashboard/data-privacy.html'
+    )
 # =======================================================
 # LOGOUT
 # =======================================================

@@ -58,7 +58,6 @@
 
                 <div class="profile-divider"></div>
 
-                <a href="#" class="profile-link">Activity</a>
                 <a href="{{ url_for('forgot_password') }}" class="profile-link">Change Password</a>
 
                 <a href="#" onclick="logout()" class="profile-link logout-link">
@@ -148,36 +147,65 @@
   <!-- ================= FOOTER ================= -->
   <footer class="footer">
     <div class="footer-content">
-      <div>
-        <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" class="footer-logo" />
-        <p>
+
+      <!-- LEFT -->
+      <div class="footer-left">
+        <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" alt="Motor Pool Logo"
+          class="footer-logo" />
+
+        <p class="footer-desc">
           A Web-Based Inventory and Record Management System for
           <strong>Motor Pool</strong>
         </p>
       </div>
 
-      <div>
+      <!-- MENU -->
+      <div class="footer-center">
         <h4>MENU</h4>
+
         <a href="{{ url_for('user_home') }}">Home</a>
         <a href="{{ url_for('user_dashboard') }}">Dashboard</a>
         <a href="{{ url_for('user_new_request') }}">Request</a>
         <a href="{{ url_for('user_trip_tickets') }}">Trip Ticket</a>
       </div>
 
-      <div>
+      <!-- SUPPORT -->
+      <div class="footer-support">
+        <h4>USER SUPPORT</h4>
+
+        <a href="#">FAQs</a>
+        <a href="#">User Guide / Manual</a>
+        <a href="#">Report an Issue</a>
+      </div>
+
+      <!-- LEGAL -->
+      <div class="footer-legal">
+        <h4>LEGAL / POLICIES</h4>
+
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms and Conditions</a>
+        <a href="#">Data Privacy Notice</a>
+      </div>
+
+      <!-- CONTACT -->
+      <div class="footer-right">
         <h4>CONTACT US</h4>
+
         <p>motorpool@pup.edu.ph</p>
         <p>(02) 5335-1787</p>
       </div>
+
     </div>
 
     <hr class="footer-divider" />
 
     <div class="footer-bottom">
-      <span>© 2025 Polytechnic University of the Philippines</span>
+      <span>© 2025 Polytechnic University of the Philippines. Under
+        G.A.S.S.</span>
       <span>Terms of Services and Privacy Policy</span>
     </div>
   </footer>
+
 
   <script>
     async function loadUserProfile() {
