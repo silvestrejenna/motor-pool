@@ -3109,7 +3109,7 @@ def admin_trip_tickets():
     FROM trip_tickets tt
     JOIN vehicle_requests vr ON vr.id = tt.request_id
     JOIN vehicle v ON v.vehicle_id = tt.vehicle_id
-    ORDER BY tt.start_date DESC
+    ORDER BY tt.id DESC
 """)
 
     tickets = cur.fetchall()
