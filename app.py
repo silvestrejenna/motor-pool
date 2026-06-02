@@ -2701,8 +2701,8 @@ def generate_otp():
 def send_otp_email(receiver_email, otp):
 
     try:
-        sender_email = "tmps.pup@gmail.com"
-        sender_password = "ayxj yrer wmud irxl"
+        sender_email = os.getenv("SMTP_EMAIL")
+        sender_password = os.getenv("SMTP_PASSWORD")
 
         subject = "PUP Motor Pool Account Verification"
         body = f"Your OTP code is: {otp}"
