@@ -2714,14 +2714,24 @@ def send_otp_email(receiver_email, otp):
 
         msg.attach(MIMEText(body, 'plain'))
 
+        print("STEP 1: Creating SMTP connection")
         server = smtplib.SMTP('smtp.gmail.com', 587)
+
+        print("STEP 2: Starting TLS")
         server.starttls()
+
+        print("STEP 3: Logging in")
         server.login(sender_email, sender_password)
 
+        print("STEP 4: Login successful")
         server.sendmail(sender_email, receiver_email, msg.as_string())
         server.quit()
 
+        print("STEP 6: SMTP connection closed")
+
         print("OTP EMAIL SENT SUCCESSFULLY")
+        print("SMTP_EMAIL exists:", bool(os.getenv("SMTP_EMAIL")))
+        print("SMTP_PASSWORD exists:", bool(os.getenv("SMTP_PASSWORD")))
 
     except Exception as e:
         print("EMAIL ERROR:", e)
