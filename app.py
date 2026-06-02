@@ -80,7 +80,7 @@ def require_login():
             create_pending_request_notifications()
             session['last_notification_check'] = time.time()
 
-ALLOWED_DOMAINS = ["@pup.edu.ph", "@iskolarngbayan.pup.edu.ph"]
+ALLOWED_DOMAINS = ["@pup.edu.ph", "@iskolarngbayan.pup.edu.ph", "@gmail.com"]
 TEST_EMAILS = ["silvestrejennamae09@gmail.com"]
 
 @app.template_filter('month_name')
