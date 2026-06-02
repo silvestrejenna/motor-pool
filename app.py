@@ -2737,12 +2737,16 @@ def send_otp_email(receiver_email, otp):
     except Exception as e:
         import traceback
 
-    print("EMAIL ERROR")
-    traceback.print_exc()
+        print("EMAIL ERROR")
+        traceback.print_exc()
 
 
-def send_otp_email(receiver_email, otp):
-    Thread(target=send_otp_email, args=(receiver_email, otp), daemon=True).start()
+def send_otp_email_async(receiver_email, otp):
+    Thread(
+        target=send_otp_email,
+        args=(receiver_email, otp),
+        daemon=True
+        ).start()
 
 #============== RESEND OTP ================================
 @app.route('/resend-otp')
