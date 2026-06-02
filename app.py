@@ -257,7 +257,7 @@ def register():
     session['register_fullname'] = full_name
     session['register_password'] = hashed_password
 
-    send_otp_email_async(email, otp)
+    send_otp_email(email, otp)
     return redirect(url_for('verify_otp'))
 
     # Continue with account creation logic
@@ -2580,7 +2580,7 @@ def forgot_password():
     session['reset_otp'] = otp
     session['otp_time'] = time.time()   # OTP timestamp added here
 
-    send_otp_email_async(email, otp)
+    send_otp_email(email, otp)
 
     return redirect(url_for("verify_reset_otp"))
 
@@ -2717,6 +2717,7 @@ def send_otp_email(receiver_email, otp):
         print("STEP 1: Creating SMTP connection")
         server = smtplib.SMTP('smtp.gmail.com', 587)
 
+        print("STEP 1.5: SMTP connection established")
         print("STEP 2: Starting TLS")
         server.starttls()
 
@@ -2734,10 +2735,13 @@ def send_otp_email(receiver_email, otp):
         print("SMTP_PASSWORD exists:", bool(os.getenv("SMTP_PASSWORD")))
 
     except Exception as e:
-        print("EMAIL ERROR:", e)
+        import traceback
+
+    print("EMAIL ERROR")
+    traceback.print_exc()
 
 
-def send_otp_email_async(receiver_email, otp):
+def send_otp_email(receiver_email, otp):
     Thread(target=send_otp_email, args=(receiver_email, otp), daemon=True).start()
 
 #============== RESEND OTP ================================
@@ -2753,7 +2757,7 @@ def resend_otp():
 
     session['otp'] = otp
 
-    send_otp_email_async(email, otp)
+    send_otp_email(email, otp)
 
     flash("A new OTP has been sent to your email.")
 
