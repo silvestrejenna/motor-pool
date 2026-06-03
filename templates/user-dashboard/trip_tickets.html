@@ -180,18 +180,29 @@
       <div class="footer-support">
         <h4>USER SUPPORT</h4>
 
-        <a href="#">FAQs</a>
-        <a href="#">User Guide / Manual</a>
-        <a href="#">Report an Issue</a>
+        <a href="{{ url_for('faq') }}">FAQs</a>
+
+        <a href="{{ url_for('user_guide') }}">
+          User Guide / Manual
+        </a>
+
       </div>
 
       <!-- LEGAL -->
       <div class="footer-legal">
         <h4>LEGAL / POLICIES</h4>
 
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms and Conditions</a>
-        <a href="#">Data Privacy Notice</a>
+        <a href="{{ url_for('privacy_policy') }}">
+          Privacy Policy
+        </a>
+
+        <a href="{{ url_for('terms_conditions') }}">
+          Terms and Conditions
+        </a>
+
+        <a href="{{ url_for('data_privacy') }}">
+          Data Privacy Notice
+        </a>
       </div>
 
       <!-- CONTACT -->
