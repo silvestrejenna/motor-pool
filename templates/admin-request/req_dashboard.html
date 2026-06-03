@@ -110,19 +110,11 @@
               <button id="nextMonth">&gt;</button>
             </div>
 
-            <select id="vehicleSelect" name="vehicles">
-              <option value="" disabled selected>
-                Select Vehicle
-              </option>
-
-              {% for vehicle in vehicles %}
-              <option value="{{ vehicle[0] }}">
-                {{ vehicle[1] }}
-              </option>
-              {% endfor %}
-            </select>
-            <button class="btn-edit-cal">Edit Calendar</button>
+            <p class="calendar-note">
+              This calendar shows vehicles that are occupied, booked, or otherwise unavailable.
+            </p>
           </div>
+
           <div id="calendar"></div>
         </div>
 
