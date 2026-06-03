@@ -103,7 +103,7 @@
     </nav>
 
     <!-- ================= CONTENT ================= -->
-    <div class="dashboard-content">
+    <diV class="dashboard-content">
       <h2>Trip Tickets</h2>
 
       <p class="subtitle">View and download your approved trip tickets</p>
@@ -128,27 +128,27 @@
 
       {% for ticket in tickets %}
       <div class="ticket-card">
-        <div>
-          <h4>Trip Ticket #{{ ticket.id }}</h4>
 
-          <p style="color: red">FILE: {{ ticket.trip_ticket_file }}</p>
+        <div class="ticket-info">
+          <h4>Trip Ticket #{{ ticket.ticket_id }}</h4>
 
-          <p>Vehicle: {{ ticket.vehicle_name }}</p>
-          <p>Destination: {{ ticket.destination }}</p>
+          <p><strong>Requested BY:</strong> {{ firstname }}</p>
 
-          <p>Date: {{ ticket.start_date }}</p>
+          <p><strong>Vehicle:</strong> {{ ticket.vehicle_name }}</p>
+
+          <p><strong>Destination:</strong> {{ ticket.destination }}</p>
+
+          <p><strong>Date:</strong> {{ ticket.start_date }}</p>
         </div>
 
-        {% if ticket.trip_ticket_file %}
-        <a href="{{ url_for('download_trip', filename=ticket.file) }}" class="download-btn">
+        <a href="{{ url_for('download_trip',
+             filename='trip_ticket_' ~ ticket.ticket_id ~ '.docx') }}" class="download-btn">
           Download
         </a>
-        {% else %}
-        <span>No file</span>
-        {% endif %}
+
       </div>
       {% endfor %}
-    </div>
+    </diV>
   </div>
 
   <!-- ================= FOOTER ================= -->
@@ -180,18 +180,29 @@
       <div class="footer-support">
         <h4>USER SUPPORT</h4>
 
-        <a href="#">FAQs</a>
-        <a href="#">User Guide / Manual</a>
-        <a href="#">Report an Issue</a>
+        <a href="{{ url_for('faq') }}">FAQs</a>
+
+        <a href="{{ url_for('user_guide') }}">
+          User Guide / Manual
+        </a>
+
       </div>
 
       <!-- LEGAL -->
       <div class="footer-legal">
         <h4>LEGAL / POLICIES</h4>
 
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms and Conditions</a>
-        <a href="#">Data Privacy Notice</a>
+        <a href="{{ url_for('privacy_policy') }}">
+          Privacy Policy
+        </a>
+
+        <a href="{{ url_for('terms_conditions') }}">
+          Terms and Conditions
+        </a>
+
+        <a href="{{ url_for('data_privacy') }}">
+          Data Privacy Notice
+        </a>
       </div>
 
       <!-- CONTACT -->
@@ -215,7 +226,6 @@
 
 
 
-
   <script>
     async function loadUserProfile() {
       const res = await fetch("/auth/user");
@@ -232,6 +242,11 @@
 
     function toggleProfile() {
       document.getElementById("profileDropdown").classList.toggle("show");
+    }
+
+    async function logout() {
+      await fetch("/logout", { method: "POST" });
+      window.location.href = "/";
     }
 
     const bell = document.getElementById("notifBell");
