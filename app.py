@@ -210,21 +210,25 @@ def register():
     if request.method == 'GET':
         return render_template("register.html")
 
-    firstname = request.form.get('firstname')
-    lastname = request.form.get('lastname')
-    email = request.form.get('email')
-    password = request.form.get('password')
-    confirm_password = request.form.get('confirm_password')
-    full_name = f"{firstname} {lastname}"
+    firstname = request.form.get('firstname', '').strip()
+    lastname = request.form.get('lastname', '').strip()
+    email = request.form.get('email', '').strip()
+    password = request.form.get('password', '')
+    confirm_password = request.form.get('confirm_password', '')
+    full_name = f"{firstname} {lastname}".strip()
 
-    #EMAIL VALIDATION
+    if not firstname or not lastname or not email or not password or not confirm_password:
+        flash("Please fill in all required fields.")
+        return redirect(url_for('register'))
+
+    # EMAIL VALIDATION
     if not allowed_email(email):
         flash("Please use a valid PUP email address")
         return redirect(url_for('register'))
 
     if password != confirm_password:
-            flash("Passwords do not match")
-            return redirect(url_for('register'))
+        flash("Passwords do not match")
+        return redirect(url_for('register'))
     
     #CHECK DUPLICATE EMAIL
     conn = get_db_connection()
