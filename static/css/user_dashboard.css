@@ -478,6 +478,13 @@ body {
   border-radius: 12px;
 }
 
+.calendar-note {
+  margin-top: 0;
+  color: #800000;
+  font-size: 0.95rem;
+  font-weight: bold;
+}
+
 .calendar-header {
   display: flex;
   justify-content: space-between;
