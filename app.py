@@ -2514,11 +2514,8 @@ def user_my_requests():
 
 # ================= TRIP TICKETS =================
 @app.route("/user/trip-tickets")
-@role_required ('Client')
+@role_required('Client')
 def user_trip_tickets():
-
-    if "user_id" not in session:
-        return redirect(url_for("login"))
 
     user_id = session.get("user_id")
 
@@ -2526,12 +2523,17 @@ def user_trip_tickets():
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cur.execute("""
-        SELECT *
-        FROM vehicle_requests
-        WHERE user_id = %s
-        AND status = 'approved'
-        AND trip_ticket_file IS NOT NULL
-        ORDER BY created_at DESC
+        SELECT
+            vr.id,
+            vr.destination,
+            vr.start_date,
+            tt.id AS ticket_id
+        FROM vehicle_requests vr
+        JOIN trip_tickets tt
+            ON tt.request_id::text = vr.id::text
+        WHERE vr.user_id = %s
+        AND vr.status = 'approved'
+        ORDER BY vr.created_at DESC
     """, (user_id,))
 
     tickets = cur.fetchall()
