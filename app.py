@@ -71,7 +71,8 @@ def require_login():
         'verify_reset_otp',
         'reset_password',
         'resend_otp',
-        'static'
+        'static',
+        'health_check'
     ]
 
     if not request.endpoint:
@@ -80,10 +81,12 @@ def require_login():
     if 'user_id' not in session and request.endpoint not in allowed_routes:
         return redirect(url_for('login'))
     
+    # Only run notification check asynchronously for Admin/Staff (non-blocking)
     if 'user_id' in session and session.get('user_role') in ['Admin', 'Staff']:
         last_check = session.get('last_notification_check', 0)
         if time.time() - last_check > 60:
-            create_pending_request_notifications()
+            # Run in background thread to avoid blocking requests
+            Thread(target=create_pending_request_notifications, daemon=True).start()
             session['last_notification_check'] = time.time()
 
 ALLOWED_DOMAINS = ["@pup.edu.ph", "@iskolarngbayan.pup.edu.ph", "@gmail.com"]
@@ -3411,73 +3414,84 @@ def mark_notification_read(notif_id):
 
 #============================ CREATE PENDING REQUEST NOTIFICATIONS =======================================================================
 def create_pending_request_notifications():
-    conn = get_db_connection()
-    if not conn:
-        return
+    """Create pending request notifications. Safe to run in background thread."""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            print("[NOTIF] No DB connection available")
+            return
 
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        
+        # Set timeout on queries (5 second max per query)
+        cur.execute("SET statement_timeout = 5000")
 
-    cur.execute("""
-        SELECT
-                vr.id,
-                vr.office,
-                u.full_name
-        FROM vehicle_requests vr
-        JOIN users u ON vr.user_id = u.id
-        WHERE vr.status = 'pending'
-        AND vr.created_at <= NOW() - INTERVAL '2 hours'
-    """)
-    requests = cur.fetchall()
+        cur.execute("""
+            SELECT
+                    vr.id,
+                    vr.office,
+                    u.full_name
+            FROM vehicle_requests vr
+            JOIN users u ON vr.user_id = u.id
+            WHERE vr.status = 'pending'
+            AND vr.created_at <= NOW() - INTERVAL '2 hours'
+        """)
+        requests = cur.fetchall()
 
-    if not requests:
+        if not requests:
+            cur.close()
+            conn.close()
+            return
+
+        cur.execute("""
+            SELECT id
+            FROM users
+            WHERE role IN ('Admin', 'Staff')
+        """)
+        admins = [row['id'] for row in cur.fetchall()]
+
+        if not admins:
+            cur.close()
+            conn.close()
+            return
+
+        request_ids = [str(req['id']) for req in requests]
+        cur.execute("""
+            SELECT CAST(request_id AS TEXT) AS request_id, user_id
+            FROM notifications
+            WHERE CAST(request_id AS TEXT) = ANY(%s)
+              AND user_id = ANY(%s)
+              AND notifications.created_at >= NOW() - INTERVAL '2 hours'
+        """, (request_ids, admins))
+
+        existing_notifications = {
+            (row['request_id'], row['user_id'])
+            for row in cur.fetchall()
+        }
+
+        insert_rows = []
+        for req in requests:
+            requester_name = req["full_name"] or "A requester"
+            message = f"{requester_name} from {req['office']} needs approval"
+            for admin_id in admins:
+                if (str(req['id']), admin_id) not in existing_notifications:
+                    insert_rows.append((admin_id, req['id'], message, 'pending_reminder'))
+
+        if insert_rows:
+            cur.executemany("""
+                INSERT INTO notifications (user_id, request_id, message, type)
+                VALUES (%s, %s, %s, %s)
+            """, insert_rows)
+            conn.commit()
+
         cur.close()
         conn.close()
-        return
-
-    cur.execute("""
-        SELECT id
-        FROM users
-        WHERE role IN ('Admin', 'Staff')
-    """)
-    admins = [row['id'] for row in cur.fetchall()]
-
-    if not admins:
-        cur.close()
-        conn.close()
-        return
-
-    request_ids = [str(req['id']) for req in requests]
-    cur.execute("""
-        SELECT CAST(request_id AS TEXT) AS request_id, user_id
-        FROM notifications
-        WHERE CAST(request_id AS TEXT) = ANY(%s)
-          AND user_id = ANY(%s)
-          AND notifications.created_at >= NOW() - INTERVAL '2 hours'
-    """, (request_ids, admins))
-
-    existing_notifications = {
-        (row['request_id'], row['user_id'])
-        for row in cur.fetchall()
-    }
-
-    insert_rows = []
-    for req in requests:
-        requester_name = req["full_name"] or "A requester"
-        message = f"{requester_name} from {req['office']} needs approval"
-        for admin_id in admins:
-            if (str(req['id']), admin_id) not in existing_notifications:
-                insert_rows.append((admin_id, req['id'], message, 'pending_reminder'))
-
-    if insert_rows:
-        cur.executemany("""
-            INSERT INTO notifications (user_id, request_id, message, type)
-            VALUES (%s, %s, %s, %s)
-        """, insert_rows)
-        conn.commit()
-
-    cur.close()
-    conn.close()
-#=============================================================================
+        print("[NOTIF] Notifications updated successfully")
+    except Exception as e:
+        print(f"[NOTIF] Error creating notifications: {e}")
+        import traceback
+        traceback.print_exc()
+#============================================================================="
 
 @app.route('/auth/user')
 def auth_user():
