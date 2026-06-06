@@ -2531,10 +2531,13 @@ def user_trip_tickets():
             vr.id,
             vr.destination,
             vr.start_date,
-            tt.id AS ticket_id
+            tt.id AS ticket_id,
+            v.name AS vehicle_name
         FROM vehicle_requests vr
         JOIN trip_tickets tt
             ON tt.request_id::text = vr.id::text
+        LEFT JOIN vehicle v
+            ON v.vehicle_id = tt.vehicle_id
         WHERE vr.user_id = %s
         AND vr.status = 'approved'
         ORDER BY vr.created_at DESC
