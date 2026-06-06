@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
+import requests
 import psycopg2
 from psycopg2 import pool
 from docx import Document
@@ -48,8 +49,13 @@ def init_db_pool():
     if db_pool is None:
         DB_URI = os.getenv("DATABASE_URL")
         if not DB_URI:
-            raise RuntimeError("DATABASE_URL is not configured")
-        db_pool = pool.ThreadedConnectionPool(1, 10, dsn=DB_URI)
+            print("Warning: DATABASE_URL not configured; DB pool disabled")
+            return
+        try:
+            db_pool = pool.ThreadedConnectionPool(1, 10, dsn=DB_URI)
+        except Exception as e:
+            print(f"Error creating DB pool: {e}")
+            db_pool = None
 
 # =======================================================
 # GLOBAL LOGIN PROTECTION
@@ -261,7 +267,7 @@ def register():
     session['register_fullname'] = full_name
     session['register_password'] = hashed_password
 
-    send_otp_email(email, otp)
+    send_otp_email_async(email, otp)
     return redirect(url_for('verify_otp'))
 
     # Continue with account creation logic
@@ -2586,7 +2592,7 @@ def forgot_password():
     session['reset_otp'] = otp
     session['otp_time'] = time.time()   # OTP timestamp added here
 
-    send_otp_email(email, otp)
+    send_otp_email_async(email, otp)
 
     return redirect(url_for("verify_reset_otp"))
 
@@ -2705,46 +2711,67 @@ def generate_otp():
     return str(random.randint(100000, 999999))
 
 def send_otp_email(receiver_email, otp):
+    sender_email = os.getenv("SMTP_EMAIL") or os.getenv("EMAIL_FROM")
+    subject = "PUP Motor Pool Account Verification"
+    body = f"Your OTP code is: {otp}"
 
-    try:
-        sender_email = os.getenv("SMTP_EMAIL")
-        sender_password = os.getenv("SMTP_PASSWORD")
+    print("Brevo: Sending OTP email to", receiver_email)
 
-        subject = "PUP Motor Pool Account Verification"
-        body = f"Your OTP code is: {otp}"
+    provider = os.getenv("EMAIL_PROVIDER", "brevo").lower()
 
-        msg = MIMEMultipart()
-        msg['From'] = sender_email
-        msg['To'] = receiver_email
-        msg['Subject'] = subject
+    if provider == 'brevo':
+        api_key = os.getenv('BREVO_API_KEY')
+        if not api_key:
+            print("BREVO_API_KEY not configured")
+            return
+        payload = {
+            "sender": {"email": sender_email},
+            "to": [{"email": receiver_email}],
+            "subject": subject,
+            "textContent": body
+        }
+        try:
+            print("requests =", requests)
+            print("type =", type(requests))
+            resp = requests.post(
+                'https://api.brevo.com/v3/smtp/email',
+                headers={
+                    'api-key': api_key,
+                    'Content-Type': 'application/json'
+                },
+                json=payload,
+                timeout=10
+            )
+            print('Brevo response status:', resp.status_code)
+            print('Brevo response body:', resp.text)
+            if resp.status_code in (200, 201):
+                print("OTP EMAIL SENT via Brevo")
+            else:
+                print(f"Brevo error: {resp.status_code} {resp.text}")
+        except Exception as e:
+            print("Brevo send error:")
+            import traceback
+            traceback.print_exc()
+    # SendGrid support removed. Use Brevo (preferred) or SMTP fallback.
+    else:
+        try:
+            sender_password = os.getenv("SMTP_PASSWORD")
 
-        msg.attach(MIMEText(body, 'plain'))
+            msg = MIMEMultipart()
+            msg['From'] = sender_email
+            msg['To'] = receiver_email
+            msg['Subject'] = subject
+            msg.attach(MIMEText(body, 'plain'))
 
-        print("STEP 1: Creating SMTP connection")
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-
-        print("STEP 1.5: SMTP connection established")
-        print("STEP 2: Starting TLS")
-        server.starttls()
-
-        print("STEP 3: Logging in")
-        server.login(sender_email, sender_password)
-
-        print("STEP 4: Login successful")
-        server.sendmail(sender_email, receiver_email, msg.as_string())
-        server.quit()
-
-        print("STEP 6: SMTP connection closed")
-
-        print("OTP EMAIL SENT SUCCESSFULLY")
-        print("SMTP_EMAIL exists:", bool(os.getenv("SMTP_EMAIL")))
-        print("SMTP_PASSWORD exists:", bool(os.getenv("SMTP_PASSWORD")))
-
-    except Exception as e:
-        import traceback
-
-        print("EMAIL ERROR")
-        traceback.print_exc()
+            print("Creating SMTP connection")
+            server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, receiver_email, msg.as_string())
+            server.quit()
+            print("OTP EMAIL SENT SUCCESSFULLY via SMTP")
+        except Exception as e:
+            print("SMTP EMAIL ERROR", e)
 
 
 def send_otp_email_async(receiver_email, otp):
@@ -2767,7 +2794,7 @@ def resend_otp():
 
     session['otp'] = otp
 
-    send_otp_email(email, otp)
+    send_otp_email_async(email, otp)
 
     flash("A new OTP has been sent to your email.")
 
@@ -2804,7 +2831,7 @@ def req_dashboard():
 #============================ LIST OF REQUESTS ==============================
 @app.route('/admin-request/requests')
 @role_required('Admin', 'Staff')
-def requests():
+def admin_requests():
 
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -3609,4 +3636,9 @@ def logout():
 
 if __name__ == '__main__':
     #sync_assigned_user()
-    app.run(debug=True, port=5055)
+    app.run(debug=True, port=int(os.getenv('PORT', 5055)))
+
+
+@app.route('/health')
+def health_check():
+    return 'OK', 200
