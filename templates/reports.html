@@ -101,14 +101,21 @@
             <select id="reportMonth" name="month">
               <option value="" disabled selected>Month</option>
               <option value="1">January</option>
-              ...
+              <option value="2">February</option>
+              <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
             </select>
 
             <select id="reportYear" name="year">
               <option value="" disabled selected>Year</option>
-              <option value="2024">2024</option>
-              <option value="2025">2025</option>
-              <option value="2026">2026</option>
             </select>
 
             <input type="date" name="monitoring_date" />
@@ -128,17 +135,19 @@
       <section class="stats-grid">
         <div class="stat-card">
           <span class="label">Total Reports</span>
-          <span class="value">127</span>
-          <span class="subtext">Generated this year</span>
+          <span class="value">{{ total_reports }}</span>
+          <span class="subtext">Generated all time</span>
         </div>
         <div class="stat-card">
           <span class="label">This Month</span>
-          <span class="value">18</span>
-          <span class="subtext">Reports generated in October</span>
+          <span class="value">{{ reports_this_month }}</span>
+          <span class="subtext">
+            Reports generated in {{ month_name }}
+          </span>
         </div>
         <div class="stat-card">
-          <span class="label">Most Viewed</span>
-          <span class="value">Fuel</span>
+          <span class="label">Most Generated</span>
+          <span class="value">{{ most_generated_title }}</span>
           <span class="subtext">Report category</span>
         </div>
       </section>

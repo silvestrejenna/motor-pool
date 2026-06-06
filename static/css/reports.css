@@ -23,9 +23,9 @@ select {
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 380px);
-  gap: 40px;
+  gap: 35px;
   margin-bottom: 30px;
-  margin-left: 100px;
+  margin-left: 26px;
 }
 
 .stat-card {
@@ -37,7 +37,7 @@ select {
 
 .stat-card .value {
   display: block;
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   font-weight: bold;
   margin: 10px 0;
 }
@@ -49,6 +49,7 @@ select {
   border-bottom: 1px solid var(--border-color);
   padding: 8px 12px; /* reduce internal spacing */
   margin-bottom: 6px;
+  font-size: 15px;
 }
 
 .report-info {
@@ -78,8 +79,8 @@ select {
 }
 
 .file-icon {
-  width: 50px; /* 👈 adjust this (24–36px is ideal) */
-  height: 50px;
+  width: 40px; /* 👈 adjust this (24–36px is ideal) */
+  height: 40px;
   object-fit: contain;
 }
 
