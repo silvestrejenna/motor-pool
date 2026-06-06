@@ -3129,12 +3129,14 @@ def admin_trip_tickets():
     SELECT 
         tt.id,
         tt.request_id,
+        u.full_name,
         v.name AS vehicle_name,
         tt.start_date,
         vr.destination,
         vr.trip_ticket_file AS file
     FROM trip_tickets tt
     JOIN vehicle_requests vr ON vr.id = tt.request_id
+    JOIN users u ON u.id = vr.user_id
     JOIN vehicle v ON v.vehicle_id = tt.vehicle_id
     ORDER BY tt.id DESC
 """)
