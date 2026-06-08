@@ -413,6 +413,16 @@
     }
 
     loadUnreadCount();
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const today = new Date();
+      today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+
+      const formattedDate = today.toISOString().split("T")[0];
+
+      document.querySelector('input[name="start_date"]').min = formattedDate;
+      document.querySelector('input[name="end_date"]').min = formattedDate;
+    });
   </script>
 </body>
 

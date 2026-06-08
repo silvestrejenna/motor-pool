@@ -12,13 +12,14 @@ from psycopg2 import pool
 from docx import Document
 import psycopg2.extras
 from flask import send_from_directory
-from datetime import datetime
+from datetime import date, datetime
 from functools import wraps
 from threading import Thread
 import bcrypt, random, smtplib
 import calendar
 from datetime import datetime, timedelta
 import time
+from datetime import datetime, timedelta, date
 
 
 
@@ -2436,6 +2437,24 @@ def user_new_request():
         days = request.form.get("days")
         passengers = request.form.get("passengers")
         office = request.form.get("office")
+
+         # ===== DATE VALIDATION =====
+        start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+        if start_date_obj < date.today():
+            flash("Travel date cannot be earlier than today.")
+            return redirect(url_for("user_new_request"))
+
+        if end_date_obj < start_date_obj:
+            flash("End date cannot be earlier than the start date.")
+            return redirect(url_for("user_new_request"))
+
+        if not destination or not purpose:
+            flash("Please fill in all required fields.")
+            return redirect(url_for("user_new_request"))
+
+        conn = get_db_connection()
 
         if not destination or not purpose:
             flash("Please fill in all required fields.")
