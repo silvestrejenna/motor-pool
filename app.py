@@ -2719,7 +2719,22 @@ def generate_otp():
 def send_otp_email(receiver_email, otp):
     sender_email = os.getenv("SMTP_EMAIL") or os.getenv("EMAIL_FROM")
     subject = "PUP Motor Pool Account Verification"
-    body = f"Your OTP code is: {otp}"
+    body = f"""
+    
+    Good day.
+    
+    To complete your account registration or password reset request in the Electronic Inventory and Records Management System (e-IRMS), please enter the verification code below:
+    
+    Verification Code: {otp}
+    
+    This code is required to verify your identity and secure your account.
+    
+    If you did not request this verification, kindly ignore this email.
+    
+    Thank you.
+    
+    Transportation and Motor Pool Section
+    Polytechnic University of the Philippines"""
 
     print("Brevo: Sending OTP email to", receiver_email)
 
