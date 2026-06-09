@@ -2455,12 +2455,6 @@ def user_new_request():
             return redirect(url_for("user_new_request"))
 
         conn = get_db_connection()
-
-        if not destination or not purpose:
-            flash("Please fill in all required fields.")
-            return redirect(url_for("user_new_request"))
-
-        conn = get_db_connection()
         cur = conn.cursor()
 
         cur.execute("""
