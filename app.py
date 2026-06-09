@@ -1839,7 +1839,7 @@ def calculate_parts_supplies_summary():
 #=========MONTHLY MONITORING REPORT START==========================================
 #=========ANNEX B1 START==========================================
 
-def insert_annex_b1_rows(doc, rows, monitoring_date, schedule):
+def insert_annex_b1_rows(doc, rows, monitoring_date, m_month, m_week):
     table = doc.tables[0]  # first table in the template
 
     for row in rows:
@@ -1859,6 +1859,8 @@ def insert_annex_b1_rows(doc, rows, monitoring_date, schedule):
         else:
             remark = " N/A"
 
+            schedule = f"{m_month} {m_week}"
+
         cells = table.add_row().cells
 
         cells[0].text = monitoring_date
@@ -1870,7 +1872,7 @@ def insert_annex_b1_rows(doc, rows, monitoring_date, schedule):
         
 #=========ANNEX B1 END==========================================
 #=========ANNEX B2 START==========================================
-def insert_annex_b2_rows(doc, rows, schedule):
+def insert_annex_b2_rows(doc, rows, m_month, m_week):
     table = doc.tables[1]  # 2nd table in the template
 
     for row in rows:
@@ -1889,6 +1891,8 @@ def insert_annex_b2_rows(doc, rows, schedule):
 
         else:
             detail = " N/A"
+
+            schedule = f"{m_month} {m_week}"
 
         cells = table.add_row().cells
 
@@ -2105,19 +2109,6 @@ def generate_report():
         m_month = request.form.get("m_month")
         m_week = request.form.get("m_week")
 
-        week_map = {
-            "1": "1st Week to 2nd Week",
-            "2": "2nd Week to 3rd Week",
-            "3": "3rd Week to 4th Week",
-            "4": "4th Week to 5th Week",
-        }
-
-        week_label = week_map.get(m_week, "")
-
-        month_name = calendar.month_name[int(m_month)]
-
-        schedule = f"{month_name} {week_label}"
-
         if not monitoring_date:
             print("No monitoring date selected")
             return redirect(url_for("reports"))
@@ -2140,8 +2131,8 @@ def generate_report():
 
         doc = Document("report_template/monitoring_temp.docx")
 
-        insert_annex_b1_rows(doc, rows, monitoring_date, schedule)
-        insert_annex_b2_rows(doc, rows, schedule)
+        insert_annex_b1_rows(doc, rows, monitoring_date, m_month, m_week)
+        insert_annex_b2_rows(doc, rows, m_month, m_week)
         insert_annex_b3_rows(doc, rows)
 
         doc.save(output_path)
