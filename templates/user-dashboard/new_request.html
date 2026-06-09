@@ -182,7 +182,7 @@
             <div>
               <label>Number of Days *</label>
 
-              <input type="number" name="days" min="1" required />
+              <input type="number" name="days" readonly>
             </div>
 
             <div>
@@ -420,8 +420,36 @@
 
       const formattedDate = today.toISOString().split("T")[0];
 
-      document.querySelector('input[name="start_date"]').min = formattedDate;
-      document.querySelector('input[name="end_date"]').min = formattedDate;
+      const startDate = document.querySelector('input[name="start_date"]');
+      const endDate = document.querySelector('input[name="end_date"]');
+      const daysInput = document.querySelector('input[name="days"]');
+
+      startDate.min = formattedDate;
+      endDate.min = formattedDate;
+
+      function updateDays() {
+        if (startDate.value && endDate.value) {
+          const start = new Date(startDate.value);
+          const end = new Date(endDate.value);
+
+          const diff =
+            Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+          daysInput.value = diff;
+        }
+      }
+
+      startDate.addEventListener("change", () => {
+        endDate.min = startDate.value;
+
+        if (endDate.value && endDate.value < startDate.value) {
+          endDate.value = startDate.value;
+        }
+
+        updateDays();
+      });
+
+      endDate.addEventListener("change", updateDays);
     });
   </script>
 </body>
