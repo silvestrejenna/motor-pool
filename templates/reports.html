@@ -89,7 +89,6 @@
           <form id="reportForm" class="control-grid" method="POST" action="{{ url_for('generate_report') }}">
             <select id="reportType" name="report_type" required>
               <option value="" disabled selected>Report Type</option>
-              <option value="monthly_monitoring">Monthly Monitoring</option>
               <option value="vehicle">Vehicle Inventory</option>
               <option value="gas_rfid">Gasoline & RFID</option>
               <option value="maintenance_log">Maintenance Log</option>
@@ -114,18 +113,14 @@
               <option value="12">December</option>
             </select>
 
-            <select id="reportYear" name="year">
+            <select id="reportYear" name="year" required>
               <option value="" disabled selected>Year</option>
+              <option value="2023">2024</option>
+              <option value="2024">2025</option>
+              <option value="2024">2026</option>
             </select>
 
-            <input type="date" name="monitoring_date" />
 
-            <select name="m_week">
-              <option value="1">1st Week</option>
-              <option value="2">2nd Week</option>
-              <option value="3">3rd Week</option>
-              <option value="4">4th Week</option>
-            </select>
 
             <button class="btn-add" type="submit">Generate Report</button>
           </form>
