@@ -1,5 +1,6 @@
 import email
 from fileinput import filename
+import profile
 from pydoc import doc
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 from dotenv import load_dotenv
@@ -2418,6 +2419,43 @@ def user_new_request():
 
     user_id = session.get("user_id")
 
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            address,
+            contact_number,
+            emergency_contact_person,
+            relationship,
+            emergency_contact_number
+        FROM users
+        WHERE id = %s
+    """, (user_id,))
+
+    profile = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not profile:
+        flash(
+            "Please complete your profile information before submitting a vehicle request."
+        )
+        return redirect(url_for("user_profile"))
+
+    if (
+        not profile[0] or
+        not profile[1] or
+        not profile[2] or
+        not profile[3] or
+        not profile[4]
+    ):
+        flash(
+            "Please complete your profile information before submitting a vehicle request."
+        )
+        return redirect(url_for("user_profile"))
+    
     if request.method == "POST":
         vehicle_type = request.form.get("vehicle_type")
         destination = request.form.get("destination")
@@ -2449,15 +2487,64 @@ def user_new_request():
         cur = conn.cursor()
 
         cur.execute("""
+            SELECT
+                contact_number,
+                emergency_contact_person,
+                relationship,
+                emergency_contact_number
+            FROM users
+            WHERE id = %s
+        """, (user_id,))
+
+        profile = cur.fetchone()
+
+        contact_number = profile[0]
+        emergency_contact_person = profile[1]
+        relationship = profile[2]
+        emergency_contact_number = profile[3]
+
+        cur.execute("""
             INSERT INTO vehicle_requests
-            (user_id, vehicle_type, destination, purpose, start_date, end_date, time, days,
-                    passengers, office, status)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'pending')
+            (
+                user_id,
+                vehicle_type,
+                destination,
+                purpose,
+                start_date,
+                end_date,
+                time,
+                days,
+                passengers,
+                office,
+                contact_number,
+                emergency_contact_person,
+                relationship,
+                emergency_contact_number,
+                status
+            )
+            VALUES (
+                %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                %s,%s,%s,%s,
+                'pending'
+            )
             RETURNING id
         """,
-        (user_id, vehicle_type, destination, purpose, start_date, end_date, time, days,
-         passengers, office)
-        )
+        (
+            user_id,
+            vehicle_type,
+            destination,
+            purpose,
+            start_date,
+            end_date,
+            time,
+            days,
+            passengers,
+            office,
+            contact_number,
+            emergency_contact_person,
+            relationship,
+            emergency_contact_number
+        ))
 
         new_request_id = cur.fetchone()[0]
         requester_name = session.get("user_fullname") or "A user"
@@ -2491,7 +2578,11 @@ def user_new_request():
 
     return render_template(
         "user-dashboard/new_request.html",
-        firstname=firstname
+        firstname=firstname,
+        contact_number=profile[1],
+        emergency_contact_person=profile[2],
+        relationship=profile[3],
+        emergency_contact_number=profile[4]
     )
 
 
@@ -2832,7 +2923,11 @@ def requests():
             vr.office,
             vr.destination,
             vr.created_at,
-            vr.status
+            vr.status,  
+            vr.contact_number,
+            vr.emergency_contact_person,
+            vr.relationship,
+            vr.emergency_contact_number
         FROM vehicle_requests vr
         JOIN users u ON vr.user_id = u.id
         ORDER BY vr.created_at DESC
@@ -3612,6 +3707,139 @@ def data_privacy():
     return render_template(
         'user-dashboard/data-privacy.html'
     )
+# =======================================================
+# USER PROFILE
+# =======================================================
+@app.route("/user/profile", methods=["GET", "POST"])
+@role_required('Client')
+def user_profile():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    user_id = session["user_id"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    if request.method == "POST":
+
+        address = request.form.get("address")
+        contact_number = request.form.get("contact_number")
+        emergency_contact_person = request.form.get("emergency_contact_person")
+        relationship = request.form.get("relationship")
+        emergency_contact_number = request.form.get("emergency_contact_number")
+
+        if not contact_number.isdigit() or len(contact_number) != 11:
+            flash("Contact number must contain exactly 11 digits.")
+            return redirect(url_for("user_profile"))
+
+        if not emergency_contact_number.isdigit() or len(emergency_contact_number) != 11:
+            flash("Emergency contact number must contain exactly 11 digits.")
+            return redirect(url_for("user_profile"))
+
+        if not contact_number.startswith("09"):
+            flash("Contact number must start with 09.")
+            return redirect(url_for("user_profile"))
+
+        if not emergency_contact_number.startswith("09"):
+            flash("Emergency contact number must start with 09.")
+            return redirect(url_for("user_profile"))   
+
+
+        cursor.execute("""
+            UPDATE users
+            SET
+                address = %s,
+                contact_number = %s,
+                emergency_contact_person = %s,
+                relationship = %s,
+                emergency_contact_number = %s
+            WHERE id = %s
+        """, (
+            address,
+            contact_number,
+            emergency_contact_person,
+            relationship,
+            emergency_contact_number,
+            user_id
+        ))
+
+        conn.commit()
+
+        flash("Profile updated successfully.")
+        cursor.close()
+        conn.close()
+
+        return redirect(url_for("user_profile"))
+
+    cursor.execute("""
+        SELECT
+            id,
+            full_name,
+            email,
+            address,
+            contact_number,
+            emergency_contact_person,
+            relationship,
+            emergency_contact_number
+        FROM users
+        WHERE id = %s
+    """, (user_id,))
+
+    user = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        "user_profile.html",
+        user=user
+    )
+
+# =======================================================
+# CONTEXT PROCESSOR TO CHECK IF PROFILE IS COMPLETE
+# =======================================================
+@app.context_processor
+def inject_profile_status():
+
+    if "user_id" not in session:
+        return dict(profile_incomplete=False)
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT
+                address,
+                contact_number,
+                emergency_contact_person,
+                emergency_contact_number
+            FROM users
+            WHERE id = %s
+        """, (session["user_id"],))
+
+        profile = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        if not profile:
+            return dict(profile_incomplete=True)
+
+        incomplete = (
+            not profile[0] or
+            not profile[1] or
+            not profile[2] or
+            not profile[3] or
+            not profile[4]
+        )
+
+        return dict(profile_incomplete=incomplete)
+
+    except Exception:
+        return dict(profile_incomplete=False)
 # =======================================================
 # LOGOUT
 # =======================================================

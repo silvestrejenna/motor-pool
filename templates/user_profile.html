@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_dashboard.css') }}">
+
+
+</head>
+
+<body>
+
+    <div class="profile-container">
+
+        <div class="profile-card">
+
+            <div class="profile-header">
+                <a href="{{ url_for('user_home') }}" class="back-btn">
+                    ← Back
+                </a>
+            </div>
+
+            <h2>My Profile</h2>
+
+            <p class="profile-subtitle">
+                Complete your personal and emergency contact information before submitting a vehicle request.
+            </p>
+
+            {% if profile_incomplete %}
+            <div class="profile-warning">
+                ⚠ Please complete your profile information before submitting a vehicle request.
+            </div>
+            {% endif %}
+
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            {% for message in messages %}
+            <div class="profile-warning">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" class="profile-form">
+
+                <div class="profile-group">
+                    <label for="address">Full Address</label>
+                    <input type="text" id="address" name="address" value="{{ user.address or '' }}"
+                        placeholder="House No., Street, Barangay, City" required>
+                </div>
+
+                <div class="profile-group">
+                    <label for="contact_number">Contact Number</label>
+                    <input type="tel" id="contact_number" name="contact_number" value="{{ user.contact_number or '' }}"
+                        placeholder="09XXXXXXXXX" pattern="09[0-9]{9}" maxlength="11"
+                        oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
+                </div>
+
+                <div class="profile-group">
+                    <label for="emergency_contact_person">
+                        Emergency Contact Person
+                    </label>
+                    <input type="text" id="emergency_contact_person" name="emergency_contact_person"
+                        value="{{ user.emergency_contact_person or '' }}" placeholder="Full Name" required>
+                </div>
+
+                <div class="profile-group">
+                    <label for="relationship">
+                        Relationship to Emergency Contact
+                    </label>
+                    <select id="relationship" name="relationship" required>
+
+                        <option value="">Select Relationship</option>
+
+                        <option value="Parent" {% if user.relationship=='Parent' %}selected{% endif %}>
+                            Parent
+                        </option>
+
+                        <option value="Spouse" {% if user.relationship=='Spouse' %}selected{% endif %}>
+                            Spouse
+                        </option>
+
+                        <option value="Sibling" {% if user.relationship=='Sibling' %}selected{% endif %}>
+                            Sibling
+                        </option>
+
+                        <option value="Guardian" {% if user.relationship=='Guardian' %}selected{% endif %}>
+                            Guardian
+                        </option>
+
+                        <option value="Relative" {% if user.relationship=='Relative' %}selected{% endif %}>
+                            Relative
+                        </option>
+
+                        <option value="Friend" {% if user.relationship=='Friend' %}selected{% endif %}>
+                            Friend
+                        </option>
+
+                    </select>
+                </div>
+
+                <div class="profile-group">
+                    <label for="emergency_contact_number">
+                        Emergency Contact Number
+                    </label>
+                    <input type="tel" id="emergency_contact_number" name="emergency_contact_number"
+                        value="{{ user.emergency_contact_number or '' }}" placeholder="09XXXXXXXXX" pattern="09[0-9]{9}"
+                        maxlength="11" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
+                </div>
+
+                <button type="submit" class="profile-save-btn">
+                    Save Profile
+                </button>
+
+            </form>
+
+        </div>
+
+
+    </div>
+
+</body>
+
+</html>
