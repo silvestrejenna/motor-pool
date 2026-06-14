@@ -168,3 +168,17 @@ document.addEventListener("DOMContentLoaded",() => {
         }
     });
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+  const yearSelect = document.getElementById("reportYear");
+  const currentYear = new Date().getFullYear();
+
+  for (let year = currentYear + 1; year >= 2020; year--) {
+    const option = document.createElement("option");
+    option.value = year;
+    option.textContent = year;
+    yearSelect.appendChild(option);
+  }
+
+  yearSelect.value = currentYear;
+});

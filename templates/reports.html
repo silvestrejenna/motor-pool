@@ -90,7 +90,6 @@
 
             <select id="reportType" name="report_type" required>
               <option value="" disabled selected>Report Type</option>
-              <option value="monthly_monitoring">Monthly Monitoring</option>
               <option value="vehicle">Vehicle Inventory</option>
               <option value="gas_rfid">Gasoline & RFID</option>
               <option value="maintenance_log">Maintenance Log</option>
@@ -115,6 +114,21 @@
                 <option value="11">November</option>
                 <option value="12">December</option>
               </select>
+            <select id="reportMonth" name="month">
+              <option value="" disabled selected>Month</option>
+              <option value="1">January</option>
+              <option value="2">February</option>
+              <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
 
               <select id="reportYear" name="year" required>
                 <option value="" disabled selected>Year</option>
@@ -123,6 +137,12 @@
                 <option value="2026">2026</option>
               </select>
             </div>
+            <select id="reportYear" name="year" required>
+              <option value="" disabled selected>Year</option>
+              <option value="2023">2024</option>
+              <option value="2024">2025</option>
+              <option value="2024">2026</option>
+            </select>
 
             <div id="monthlyFields" class="field-row" style="display: none;">
               <label for="monitoringDate" class="field-label">Date of Monitoring</label>
@@ -153,6 +173,7 @@
               </select>
             </div>
 
+
             <button class="btn-add" type="submit">Generate Report</button>
           </form>
         </div>
@@ -163,16 +184,25 @@
           <span class="label">Total Reports</span>
           <span class="value">{{ total_reports }}</span>
           <span class="subtext">Generated this year</span>
+          <span class="value">{{ total_reports }}</span>
+          <span class="subtext">Generated all time</span>
         </div>
         <div class="stat-card">
           <span class="label">This Month</span>
           <span class="value">{{ reports_this_month }}</span>
           <span class="subtext">Reports generated in {{ month_name }}</span>
+          <span class="value">{{ reports_this_month }}</span>
+          <span class="subtext">
+            Reports generated in {{ month_name }}
+          </span>
         </div>
         <div class="stat-card">
           <span class="label">Most Generated</span>
           <span class="value">{{ most_generated_title }}</span>
           <span class="subtext">Report type with the highest count</span>
+          <span class="label">Most Generated</span>
+          <span class="value">{{ most_generated_title }}</span>
+          <span class="subtext">Report category</span>
         </div>
       </section>
 

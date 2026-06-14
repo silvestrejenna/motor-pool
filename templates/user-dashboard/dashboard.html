@@ -58,6 +58,10 @@
 
                 <div class="profile-divider"></div>
 
+                <a href="{{ url_for('user_profile') }}" class="profile-link">
+                  My Profile
+                </a>
+
                 <a href="{{ url_for('forgot_password') }}" class="profile-link">Change Password</a>
 
                 <a href="#" onclick="logout()" class="profile-link logout-link">
@@ -94,6 +98,16 @@
 
     <!-- CONTENT -->
     <div class="dashboard-content">
+      {% if profile_incomplete %}
+      <div class="profile-warning">
+        ⚠ Please complete your profile information.
+
+        <a href="{{ url_for('user_profile') }}">
+          Complete Profile
+        </a>
+      </div>
+      {% endif %}
+
       <div class="content-wrapper">
         <h2>Welcome, {{ firstname }}!</h2>
         <p class="subtitle">Manage your vehicle requests and trip tickets</p>

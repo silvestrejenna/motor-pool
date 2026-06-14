@@ -48,9 +48,16 @@
 
 .stats-grid {
   display: grid;
+<<<<<<< HEAD
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
   margin: 0 0 30px;
+=======
+  grid-template-columns: repeat(3, 380px);
+  gap: 35px;
+  margin-bottom: 30px;
+  margin-left: 26px;
+>>>>>>> dev
 }
 
 .stat-card {
@@ -63,7 +70,11 @@
 
 .stat-card .value {
   display: block;
+<<<<<<< HEAD
   font-size: 2rem;
+=======
+  font-size: 2.2rem;
+>>>>>>> dev
   font-weight: bold;
   margin: 10px 0;
 }
@@ -75,6 +86,7 @@
   border-bottom: 1px solid var(--border-color);
   padding: 8px 12px; /* reduce internal spacing */
   margin-bottom: 6px;
+  font-size: 15px;
 }
 
 .report-info {
@@ -104,8 +116,8 @@
 }
 
 .file-icon {
-  width: 50px; /* 👈 adjust this (24–36px is ideal) */
-  height: 50px;
+  width: 40px; /* 👈 adjust this (24–36px is ideal) */
+  height: 40px;
   object-fit: contain;
 }
 

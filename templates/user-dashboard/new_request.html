@@ -58,6 +58,10 @@
 
                 <div class="profile-divider"></div>
 
+                <a href="{{ url_for('user_profile') }}" class="profile-link">
+                  My Profile
+                </a>
+
                 <a href="{{ url_for('forgot_password') }}" class="profile-link">Change Password</a>
 
                 <a href="#" onclick="logout()" class="profile-link logout-link">
@@ -182,7 +186,7 @@
             <div>
               <label>Number of Days *</label>
 
-              <input type="number" name="days" min="1" required />
+              <input type="number" name="days" readonly>
             </div>
 
             <div>
@@ -209,10 +213,25 @@
               <input type="text" name="office" placeholder="Enter Office/Department Name" required />
             </div>
           </div>
+          <div>
+            <label>Contact Number</label>
+            <p>{{ contact_number }}</p>
+          </div>
 
-          <label>Contact Number *</label>
+          <div>
+            <label>Emergency Contact</label>
+            <p>{{ emergency_contact_person }}</p>
+          </div>
 
-          <input type="text" name="contact_number" placeholder="Enter reachable number" required />
+          <div>
+            <label>Relationship</label>
+            <p>{{ relationship }}</p>
+          </div>
+
+          <div>
+            <label>Emergency Contact Number</label>
+            <p>{{ emergency_contact_number }}</p>
+          </div>
         </div>
 
         <!-- CONFIRM -->
@@ -413,6 +432,44 @@
     }
 
     loadUnreadCount();
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const today = new Date();
+      today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+
+      const formattedDate = today.toISOString().split("T")[0];
+
+      const startDate = document.querySelector('input[name="start_date"]');
+      const endDate = document.querySelector('input[name="end_date"]');
+      const daysInput = document.querySelector('input[name="days"]');
+
+      startDate.min = formattedDate;
+      endDate.min = formattedDate;
+
+      function updateDays() {
+        if (startDate.value && endDate.value) {
+          const start = new Date(startDate.value);
+          const end = new Date(endDate.value);
+
+          const diff =
+            Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+          daysInput.value = diff;
+        }
+      }
+
+      startDate.addEventListener("change", () => {
+        endDate.min = startDate.value;
+
+        if (endDate.value && endDate.value < startDate.value) {
+          endDate.value = startDate.value;
+        }
+
+        updateDays();
+      });
+
+      endDate.addEventListener("change", updateDays);
+    });
   </script>
 </body>
 
