@@ -161,7 +161,42 @@
 
           <label>Trip Destination *</label>
 
-          <input type="text" name="destination" placeholder="e.g. Provincial Capitol, Batangas City" required />
+          <div class="form-row two">
+            <div>
+              <label>Region *</label>
+              <select id="region" name="region" required>
+                <option value="">Select Region</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Province *</label>
+              <select id="province" name="province" required disabled>
+                <option value="">Select Province</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row two">
+            <div>
+              <label>City / Municipality *</label>
+              <select id="city" name="city" required disabled>
+                <option value="">Select City/Municipality</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Postal Code *</label>
+              <input type="text" name="postal_code" maxlength="4" inputmode="numeric" pattern="[0-9]{4}"
+                oninput="this.value=this.value.replace(/[^0-9]/g,'')" placeholder="e.g. 1000" required>
+            </div>
+          </div>
+
+          <label>Venue / Office Name *</label>
+          <input type="text" name="venue_name" placeholder="e.g. Provincial Capitol" required>
+
+          <label>Street Address / Barangay *</label>
+          <input type="text" name="street_address" placeholder="Building No., Street, Barangay" required>
 
           <label>Purpose of Trip *</label>
 
@@ -503,6 +538,70 @@
         }
 
         wordCount.textContent = words.length;
+      });
+    });
+
+    const regionSelect = document.getElementById("region");
+    const provinceSelect = document.getElementById("province");
+    const citySelect = document.getElementById("city");
+
+    // Load Regions
+    fetch("https://psgc.gitlab.io/api/regions/")
+      .then(res => res.json())
+      .then(data => {
+        data.forEach(region => {
+          regionSelect.innerHTML += `
+        <option value="${region.code}">
+          ${region.name}
+        </option>`;
+        });
+      });
+
+    // Region -> Province
+    regionSelect.addEventListener("change", async () => {
+
+      provinceSelect.innerHTML =
+        '<option value="">Select Province</option>';
+
+      citySelect.innerHTML =
+        '<option value="">Select City/Municipality</option>';
+
+      provinceSelect.disabled = false;
+      citySelect.disabled = true;
+
+      const response = await fetch(
+        `https://psgc.gitlab.io/api/regions/${regionSelect.value}/provinces/`
+      );
+
+      const provinces = await response.json();
+
+      provinces.forEach(province => {
+        provinceSelect.innerHTML += `
+      <option value="${province.code}">
+        ${province.name}
+      </option>`;
+      });
+    });
+
+    // Province -> City
+    provinceSelect.addEventListener("change", async () => {
+
+      citySelect.innerHTML =
+        '<option value="">Select City/Municipality</option>';
+
+      citySelect.disabled = false;
+
+      const response = await fetch(
+        `https://psgc.gitlab.io/api/provinces/${provinceSelect.value}/cities-municipalities/`
+      );
+
+      const cities = await response.json();
+
+      cities.forEach(city => {
+        citySelect.innerHTML += `
+      <option value="${city.code}">
+        ${city.name}
+      </option>`;
       });
     });
   </script>
