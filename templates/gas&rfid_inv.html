@@ -6,6 +6,7 @@
   <title>Gasoline & RFID | Motor Pool</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/vehicle_inv.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/gas&rfid_inv.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/search_filter.css') }}" />
 </head>
 
 <body>
@@ -101,6 +102,30 @@
             <p>{{ summary.autosweep }}</p>
           </div>
         </div>
+
+        <section class="search-card">
+          <h3>Search & Filter Gas Records</h3>
+          <form method="GET" action="{{ url_for('gas_rfid') }}" class="search-form">
+            <div class="search-grid">
+              <input type="text" name="search" placeholder="Search by vehicle, driver, plate, or remarks"
+                value="{{ search }}" />
+
+              <select name="vehicle">
+                <option value="">All Vehicles</option>
+                {% for vehicle in vehicles %}
+                <option value="{{ vehicle[0] }}" {% if vehicle_filter==vehicle[0] %}selected{% endif %}>
+                  {{ vehicle[0] }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="search-actions">
+              <button type="submit" class="search-btn">Apply Filters</button>
+              <a href="{{ url_for('gas_rfid') }}" class="search-clear">Clear</a>
+            </div>
+          </form>
+        </section>
 
         <div class="table-card">
           <div class="table-wrapper">
