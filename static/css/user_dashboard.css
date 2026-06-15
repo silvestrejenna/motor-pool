@@ -1396,3 +1396,28 @@ img {
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 5.5 8 12l6.5-6.5' stroke='%23666' stroke-width='2' fill='none'/%3E%3C/svg%3E")
     no-repeat right 16px center;
 }
+
+.textarea-container textarea {
+  width: 100%;
+  min-height: 140px;
+  padding: 15px;
+  box-sizing: border-box;
+}
+
+.counter-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.validation-message {
+  color: #dc3545;
+  font-size: 12px;
+  display: none;
+}
+
+.word-counter {
+  font-size: 12px;
+  color: #666;
+}

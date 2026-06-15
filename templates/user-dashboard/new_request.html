@@ -165,7 +165,19 @@
 
           <label>Purpose of Trip *</label>
 
-          <textarea name="purpose" placeholder="Describe the purpose of your trip" required></textarea>
+          <div class="textarea-container">
+            <textarea name="purpose" id="purpose" placeholder="Describe the purpose of your trip" required></textarea>
+          </div>
+
+          <div class="counter-row">
+            <div class="validation-message" id="purposeError">
+              Maximum of 100 words only.
+            </div>
+
+            <span class="word-counter">
+              <span id="wordCount">0</span>/100 words
+            </span>
+          </div>
 
           <div class="form-row">
             <div>
@@ -469,6 +481,29 @@
       });
 
       endDate.addEventListener("change", updateDays);
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const purposeField = document.getElementById("purpose");
+      const wordCount = document.getElementById("wordCount");
+      const purposeError = document.getElementById("purposeError");
+
+      purposeField.addEventListener("input", () => {
+        let words = purposeField.value.trim().match(/\S+/g) || [];
+
+        if (words.length === 100) {
+          purposeError.style.display = "block";
+        } else {
+          purposeError.style.display = "none";
+        }
+
+        if (words.length > 100) {
+          purposeField.value = words.slice(0, 100).join(" ");
+          words = purposeField.value.trim().match(/\S+/g) || [];
+        }
+
+        wordCount.textContent = words.length;
+      });
     });
   </script>
 </body>
