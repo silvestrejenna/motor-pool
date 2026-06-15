@@ -134,12 +134,12 @@
 
               <input type="text" name="vehicle_type" placeholder="Please provide us the type of vehicle" required />
 -->
-          <select name="vehicle_type" required>
+          <select name="vehicle_type" id="vehicle_type" required>
             <option value="" disabled selected>
               Select Type of Vehicle
             </option>
 
-            <option value="Sedan">Sedan</option>
+
             <option value="SUV">SUV</option>
             <option value="Van">Van</option>
             <option value="Passenger Bus">Passenger Bus</option>
@@ -147,7 +147,7 @@
             <option value="Pickup Truck">Pickup Truck</option>
             <option value="Utility Vehicle">Utility Vehicle</option>
             <option value="Service Vehicle">Service Vehicle</option>
-            <option value="Motorcycle">Motorcycle</option>
+
 
             <option value="No Specific Vehicle Preference">
               No Specific Vehicle Preference
@@ -240,7 +240,7 @@
             <div>
               <label>Number of Passengers *</label>
 
-              <input type="number" name="passengers" min="1" required />
+              <input type="number" id="passengers" name="passengers" min="1" required>
             </div>
           </div>
         </div>
@@ -653,6 +653,56 @@
 
     limitWords(document.getElementById("venue_name"), 20);
     limitWords(document.getElementById("street_address"), 50);
+
+    const vehicleCapacity = {
+      "SUV": 7,              // Toyota Innova (excluding driver)
+      "Van": 14,             // Based on Grandia (smallest van capacity)
+      "Mini Bus": 29,        // Hino MB
+      "Passenger Bus": 49,   // Volvo Bus
+      "Pickup Truck": 4,     // Ranger
+      "Utility Vehicle": 2,  // Traviz cargo vehicle
+      "Service Vehicle": 2   // Travis service vehicle
+    };
+
+    const vehicleSelect = document.getElementById("vehicle_type");
+    const passengerInput = document.getElementById("passengers");
+
+    vehicleSelect.addEventListener("change", () => {
+
+      const capacity = vehicleCapacity[vehicleSelect.value];
+
+      passengerInput.value = "";
+      passengerInput.setCustomValidity("");
+
+      if (!capacity) {
+        passengerInput.placeholder = "Enter number of passengers";
+        return;
+      }
+
+      passengerInput.placeholder =
+        `Maximum ${capacity} passengers`;
+    });
+
+    passengerInput.addEventListener("input", () => {
+
+      const capacity =
+        vehicleCapacity[vehicleSelect.value];
+
+      if (!capacity) return;
+
+      if (parseInt(passengerInput.value) > capacity) {
+
+        passengerInput.setCustomValidity(
+          `Selected vehicle can only accommodate ${capacity} passengers.`
+        );
+
+      } else {
+
+        passengerInput.setCustomValidity("");
+      }
+    });
+
+
   </script>
 </body>
 
