@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <title>Vehicle Inventory | Motor Pool</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/vehicle_inv.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/search_filter.css') }}" />
 </head>
 
 <body>
@@ -135,6 +136,30 @@
         <div id="vehicle-content">
           <h3>Vehicle Records</h3>
 
+          <section class="search-card">
+            <h3>Search & Filter Vehicles</h3>
+            <form method="GET" action="{{ url_for('inventory') }}" class="search-form">
+              <input type="hidden" name="tab" value="vehicle" />
+
+              <div class="search-grid">
+                <input type="text" name="vehicle_search" placeholder="Search by name, plate, color, or type"
+                  value="{{ vehicle_search }}" />
+
+                <select name="vehicle_status">
+                  <option value="">All Statuses</option>
+                  {% for status in vehicle_statuses %}
+                  <option value="{{ status }}" {% if vehicle_status==status %}selected{% endif %}>{{ status }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="search-actions">
+                <button type="submit" class="search-btn">Apply Filters</button>
+                <a href="{{ url_for('inventory', tab='vehicle') }}" class="search-clear">Clear</a>
+              </div>
+            </form>
+          </section>
+
           <table class="inventory-table">
             <thead>
               <tr>
@@ -206,6 +231,30 @@
         <div id="rfid-table" style="display: none;">
 
           <h3>RFID Records</h3>
+
+          <section class="search-card">
+            <h3>Search & Filter RFID Records</h3>
+            <form method="GET" action="{{ url_for('inventory') }}" class="search-form">
+              <input type="hidden" name="tab" value="rfid" />
+
+              <div class="search-grid">
+                <input type="text" name="rfid_search" placeholder="Search by vehicle, plate, or RFID number"
+                  value="{{ rfid_search }}" />
+
+                <select name="rfid_vehicle">
+                  <option value="">All Vehicles</option>
+                  {% for vehicle in vehicles %}
+                  <option value="{{ vehicle[1] }}" {% if rfid_vehicle==vehicle[1] %}selected{% endif %}>{{ vehicle[1] }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="search-actions">
+                <button type="submit" class="search-btn">Apply Filters</button>
+                <a href="{{ url_for('inventory', tab='rfid') }}" class="search-clear">Clear</a>
+              </div>
+            </form>
+          </section>
 
 
           <table class="rfid-custom-table">
@@ -414,6 +463,11 @@
   </footer>
 
   <script src="{{ url_for('static', filename='js/vehicle_inv.js') }}"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      switchTab("{{ active_tab }}");
+    });
+  </script>
 </body>
 
 </html>

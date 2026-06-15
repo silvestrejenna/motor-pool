@@ -129,6 +129,23 @@ def get_db_connection():
         print(f"Connection failed: {e}")
         return None
 
+
+def build_search_clause(columns, search_value):
+    search_value = (search_value or "").strip()
+    if not search_value:
+        return "", []
+
+    clause = " OR ".join([f"CAST({column} AS TEXT) ILIKE %s" for column in columns])
+    return f" AND ({clause})", [f"%{search_value}%"] * len(columns)
+
+
+def build_equals_clause(column, filter_value):
+    filter_value = (filter_value or "").strip()
+    if not filter_value:
+        return "", []
+
+    return f" AND {column} = %s", [filter_value]
+
 # --- SYNC ADMIN USER ---
 #def sync_assigned_user():
     assigned_email = "motorpooladmin@pup.edu.ph"
@@ -306,18 +323,51 @@ def inventory():
     conn = get_db_connection()
     vehicles = []
     rfids = []
+    vehicle_statuses = []
+    vehicle_search = request.args.get("vehicle_search", "")
+    vehicle_status = request.args.get("vehicle_status", "")
+    rfid_search = request.args.get("rfid_search", "")
+    rfid_vehicle = request.args.get("rfid_vehicle", "")
+    active_tab = request.args.get("tab", "vehicle")
+
+    if vehicle_search.strip() or vehicle_status.strip():
+        active_tab = "vehicle"
+    elif rfid_search.strip() or rfid_vehicle.strip():
+        active_tab = "rfid"
     
     if conn:
         cur = conn.cursor()
         cur.execute("""
-            SELECT vehicle_id, name, plate_number, color, type, status, mileage 
-            FROM vehicle 
-            ORDER BY vehicle_id ASC
+            SELECT DISTINCT status
+            FROM vehicle
+            WHERE status IS NOT NULL AND status <> ''
+            ORDER BY status ASC
         """)
+        vehicle_statuses = [row[0] for row in cur.fetchall()]
+
+        vehicle_query = """
+            SELECT vehicle_id, name, plate_number, color, type, status, mileage
+            FROM vehicle
+            WHERE 1=1
+        """
+        vehicle_params = []
+        search_clause, search_params = build_search_clause(
+            ["name", "plate_number", "color", "type", "status", "mileage"],
+            vehicle_search,
+        )
+        vehicle_query += search_clause
+        vehicle_params.extend(search_params)
+
+        status_clause, status_params = build_equals_clause("status", vehicle_status)
+        vehicle_query += status_clause
+        vehicle_params.extend(status_params)
+        vehicle_query += " ORDER BY vehicle_id ASC"
+
+        cur.execute(vehicle_query, vehicle_params)
         vehicles = cur.fetchall()
 
         # ================= RFID =================
-        cur.execute("""
+        rfid_query = """
             SELECT
                 id,
                 vehicle_name,
@@ -327,9 +377,29 @@ def inventory():
                 easytrip_account,
                 easytrip_card
             FROM rfid_records
-            ORDER BY id ASC
-        """)
+            WHERE 1=1
+        """
+        rfid_params = []
+        search_clause, search_params = build_search_clause(
+            [
+                "vehicle_name",
+                "plate_number",
+                "autosweep_account",
+                "autosweep_card",
+                "easytrip_account",
+                "easytrip_card",
+            ],
+            rfid_search,
+        )
+        rfid_query += search_clause
+        rfid_params.extend(search_params)
 
+        vehicle_clause, vehicle_params = build_equals_clause("vehicle_name", rfid_vehicle)
+        rfid_query += vehicle_clause
+        rfid_params.extend(vehicle_params)
+        rfid_query += " ORDER BY id ASC"
+
+        cur.execute(rfid_query, rfid_params)
         rfids = cur.fetchall()
 
         cur.close()
@@ -338,7 +408,13 @@ def inventory():
     return render_template(
         "vehicle_inv.html",
         vehicles=vehicles,
-        rfids=rfids
+        rfids=rfids,
+        vehicle_statuses=vehicle_statuses,
+        vehicle_search=vehicle_search,
+        vehicle_status=vehicle_status,
+        rfid_search=rfid_search,
+        rfid_vehicle=rfid_vehicle,
+        active_tab=active_tab,
     )
 
 
@@ -572,6 +648,8 @@ def gas_rfid():
     records = []
     vehicles = [] 
     summary = {"total_fuel": "0L", "avg_fuel": "0L", "easytrip": "₱0", "autosweep": "₱0"}
+    search = request.args.get("search", "")
+    vehicle_filter = request.args.get("vehicle", "")
     
     if conn:
         try:
@@ -581,12 +659,26 @@ def gas_rfid():
             vehicles = cur.fetchall()
 
             # FIX: Added double quotes to "gasRfid_id" and fixed plate_number
-            cur.execute("""
-                SELECT f.*, v.plate_number 
-                FROM gas_rfid f 
-                LEFT JOIN vehicle v ON f.v_name = v.name 
-                ORDER BY f."gasRfid_id" ASC
-            """)
+            record_query = """
+                SELECT f.*, v.plate_number
+                FROM gas_rfid f
+                LEFT JOIN vehicle v ON f.v_name = v.name
+                WHERE 1=1
+            """
+            record_params = []
+            search_clause, search_params = build_search_clause(
+                ["f.v_name", "f.driver", "f.date", "f.remarks", "v.plate_number"],
+                search,
+            )
+            record_query += search_clause
+            record_params.extend(search_params)
+
+            vehicle_clause, vehicle_params = build_equals_clause("f.v_name", vehicle_filter)
+            record_query += vehicle_clause
+            record_params.extend(vehicle_params)
+            record_query += ' ORDER BY f."gasRfid_id" ASC'
+
+            cur.execute(record_query, record_params)
             records = cur.fetchall()
 
             # FIX: Changed purchased_trip to purchased_tri to match your DB schema
@@ -609,7 +701,14 @@ def gas_rfid():
         finally:
             conn.close()
 
-    return render_template("gas&rfid_inv.html", records=records, vehicles=vehicles, summary=summary)
+    return render_template(
+        "gas&rfid_inv.html",
+        records=records,
+        vehicles=vehicles,
+        summary=summary,
+        search=search,
+        vehicle_filter=vehicle_filter,
+    )
 
 @app.route('/add_fuel', methods=['POST'])
 @role_required('Admin')
@@ -699,12 +798,36 @@ def tools_equipment():
     
     conn = get_db_connection()
     cur = conn.cursor()
+    search = request.args.get("search", "")
+    condition_filter = request.args.get("condition", "")
 
     cur.execute("""
+        SELECT DISTINCT condition
+        FROM tools_equipment
+        WHERE condition IS NOT NULL AND condition <> ''
+        ORDER BY condition ASC
+    """)
+    conditions = [row[0] for row in cur.fetchall()]
+
+    tools_query = """
         SELECT id, item_code, name, category, quantity, condition
         FROM tools_equipment
-        ORDER BY id ASC
-    """)
+        WHERE 1=1
+    """
+    tools_params = []
+    search_clause, search_params = build_search_clause(
+        ["item_code", "name", "category", "quantity", "condition"],
+        search,
+    )
+    tools_query += search_clause
+    tools_params.extend(search_params)
+
+    condition_clause, condition_params = build_equals_clause("condition", condition_filter)
+    tools_query += condition_clause
+    tools_params.extend(condition_params)
+    tools_query += " ORDER BY id ASC"
+
+    cur.execute(tools_query, tools_params)
     tools = cur.fetchall()
 
     cur.execute("""
@@ -727,7 +850,10 @@ def tools_equipment():
         tools=tools,
         total=total,
         excellent=excellent,
-        good=good
+        good=good,
+        conditions=conditions,
+        search=search,
+        condition_filter=condition_filter,
     )
 
 
@@ -832,6 +958,16 @@ def delete_tool(id):
 def maintenance_pms():
     conn = get_db_connection()
     cur = conn.cursor()
+    m_search = request.args.get("m_search", "")
+    m_vehicle = request.args.get("m_vehicle", "")
+    p_search = request.args.get("p_search", "")
+    p_vehicle = request.args.get("p_vehicle", "")
+    active_tab = request.args.get("tab", "maintenance")
+
+    if m_search.strip() or m_vehicle.strip():
+        active_tab = "maintenance"
+    elif p_search.strip() or p_vehicle.strip():
+        active_tab = "pms"
     
     try:
         # 1. Fetch Vehicles for the dropdown selectors in your modals
@@ -840,11 +976,37 @@ def maintenance_pms():
         vehicles = cur.fetchall()
         
         # 2. Fetch Maintenance Logs (Matches your 'maintenance_log' Supabase table)
-        cur.execute('SELECT * FROM maintenance_log ORDER BY date DESC')
+        maintenance_query = "SELECT * FROM maintenance_log WHERE 1=1"
+        maintenance_params = []
+        search_clause, search_params = build_search_clause(
+            ["date", "vehicle_name", "problem", "action_taken", "cost", "mechanic"],
+            m_search,
+        )
+        maintenance_query += search_clause
+        maintenance_params.extend(search_params)
+        vehicle_clause, vehicle_params = build_equals_clause("vehicle_name", m_vehicle)
+        maintenance_query += vehicle_clause
+        maintenance_params.extend(vehicle_params)
+        maintenance_query += " ORDER BY date DESC"
+
+        cur.execute(maintenance_query, maintenance_params)
         m_records = cur.fetchall()
         
         # 3. Fetch PMS Logs (Matches your 'pms_log' Supabase table)
-        cur.execute('SELECT * FROM pms_log ORDER BY last_pms_date DESC')
+        pms_query = "SELECT * FROM pms_log WHERE 1=1"
+        pms_params = []
+        search_clause, search_params = build_search_clause(
+            ["vehicle_name", "last_pms_date", "km", "oil_liters", "next_pms_date"],
+            p_search,
+        )
+        pms_query += search_clause
+        pms_params.extend(search_params)
+        vehicle_clause, vehicle_params = build_equals_clause("vehicle_name", p_vehicle)
+        pms_query += vehicle_clause
+        pms_params.extend(vehicle_params)
+        pms_query += " ORDER BY last_pms_date DESC"
+
+        cur.execute(pms_query, pms_params)
         p_records = cur.fetchall()
         
         # 4. Calculate Stats for the UI Cards
@@ -862,12 +1024,17 @@ def maintenance_pms():
         pms_scheduled_count = len(p_records)
 
         return render_template('maintenance_pms.html', 
-                               vehicles=vehicles, 
-                               m_records=m_records, 
-                               p_records=p_records,
-                               total_m_cost=total_m_cost,
-                               m_count=m_count,
-                               pms_count=pms_scheduled_count)
+                       vehicles=vehicles, 
+                       m_records=m_records, 
+                       p_records=p_records,
+                       total_m_cost=total_m_cost,
+                       m_count=m_count,
+                       pms_count=pms_scheduled_count,
+                       active_tab=active_tab,
+                       m_search=m_search,
+                       m_vehicle=m_vehicle,
+                       p_search=p_search,
+                       p_vehicle=p_vehicle)
                                
     except Exception as e:
         print(f"Error connecting to Maintenance/PMS: {e}")
@@ -1075,12 +1242,37 @@ def parts_supplies():
     conn = get_db_connection()
     parts = []
     total = in_stock = low_stock = out_stock = 0
+    search = request.args.get("search", "")
+    status_filter = request.args.get("status", "")
+    statuses = []
 
     if conn:
         cur = conn.cursor()
 
+        cur.execute("""
+            SELECT DISTINCT status
+            FROM parts_supplies
+            WHERE status IS NOT NULL AND status <> ''
+            ORDER BY status ASC
+        """)
+        statuses = [row[0] for row in cur.fetchall()]
+
         # IMPORTANT: use part_id (not id)
-        cur.execute("SELECT * FROM parts_supplies ORDER BY part_id ASC")
+        parts_query = "SELECT * FROM parts_supplies WHERE 1=1"
+        parts_params = []
+        search_clause, search_params = build_search_clause(
+            ["part_code", "name", "category", "stock", "min_stock", "unit", "status"],
+            search,
+        )
+        parts_query += search_clause
+        parts_params.extend(search_params)
+
+        status_clause, status_params = build_equals_clause("status", status_filter)
+        parts_query += status_clause
+        parts_params.extend(status_params)
+        parts_query += " ORDER BY part_id ASC"
+
+        cur.execute(parts_query, parts_params)
         parts = cur.fetchall()
 
         cur.execute("""
@@ -1106,7 +1298,10 @@ def parts_supplies():
         total=total,
         in_stock=in_stock,
         low_stock=low_stock,
-        out_stock=out_stock
+        out_stock=out_stock,
+        statuses=statuses,
+        search=search,
+        status_filter=status_filter,
     )
 
 
