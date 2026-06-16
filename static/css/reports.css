@@ -95,3 +95,22 @@ select {
   text-decoration: none;
   font-weight: bold;
 }
+
+.flash-message {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin: 0 0 16px 0;
+  font-weight: 500;
+}
+
+.flash-message.error {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.flash-message.success {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
