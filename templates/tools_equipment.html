@@ -40,6 +40,7 @@
           <a href="{{ url_for('home') }}">HOME</a>
           <a href="{{ url_for('inventory') }}">INVENTORY</a>
           <a href="{{ url_for('records') }}">RECORDS</a>
+          <a href="{{ url_for('recycle_bin') }}">RECYCLE BIN</a>
         </div>
 
         <div class="nav-right">
@@ -121,7 +122,8 @@
               <select name="condition">
                 <option value="">All Conditions</option>
                 {% for condition in conditions %}
-                <option value="{{ condition }}" {% if condition_filter==condition %}selected{% endif %}>{{ condition }}</option>
+                <option value="{{ condition }}" {% if condition_filter==condition %}selected{% endif %}>{{ condition }}
+                </option>
                 {% endfor %}
               </select>
             </div>

@@ -41,6 +41,7 @@
           <a href="{{ url_for('home') }}">HOME</a>
           <a href="{{ url_for('inventory') }}" class="active">INVENTORY</a>
           <a href="{{ url_for('records') }}">RECORDS</a>
+          <a href="{{ url_for('recycle_bin') }}">RECYCLE BIN</a>
         </div>
         <div class="nav-right">
           <div class="user-profile">
@@ -243,7 +244,8 @@
                 <select name="rfid_vehicle">
                   <option value="">All Vehicles</option>
                   {% for vehicle in vehicles %}
-                  <option value="{{ vehicle[1] }}" {% if rfid_vehicle==vehicle[1] %}selected{% endif %}>{{ vehicle[1] }}</option>
+                  <option value="{{ vehicle[1] }}" {% if rfid_vehicle==vehicle[1] %}selected{% endif %}>{{ vehicle[1] }}
+                  </option>
                   {% endfor %}
                 </select>
               </div>
