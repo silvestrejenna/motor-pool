@@ -112,6 +112,8 @@
 
       <p class="subtitle">View and download your approved trip tickets</p>
 
+      <input type="text" id="searchInput" placeholder="Search by destination, request number..." maxlength="50" class="search-box" />
+
       <!-- EMPTY STATE -->
       <!-- <div class="empty-ticket">
           <div class="empty-icon">📄</div>
@@ -329,6 +331,19 @@
         console.error("Error loading unread count:", err);
       }
     }
+
+    document
+      .getElementById("searchInput")
+      .addEventListener("input", function () {
+        const value = this.value.toLowerCase();
+        const cards = document.querySelectorAll(".ticket-card");
+
+        cards.forEach((card) => {
+          card.style.display = card.innerText.toLowerCase().includes(value)
+            ? "flex"
+            : "none";
+        });
+      });
 
     loadUnreadCount();
   </script>

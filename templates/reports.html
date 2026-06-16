@@ -81,6 +81,16 @@
         </div>
       </header>
 
+        <!-- ================= FLASH MESSAGES ================= -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash-message {{ category }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
       <!-- ================= INVENTORY ================= -->
       <section class="generate-section">
         <div class="card">
@@ -115,6 +125,9 @@
 
             <select id="reportYear" name="year" required>
               <option value="" disabled selected>Year</option>
+              <option value="2023">2024</option>
+              <option value="2024">2025</option>
+              <option value="2024">2026</option>
             </select>
 
 

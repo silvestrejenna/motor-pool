@@ -2728,6 +2728,10 @@ def generate_report():
     if report_type == "gas_rfid":
         rows = fetch_gas_rfid_rows(month, year)
 
+        if not rows: 
+            flash("No data found for the selected month and year.")
+            return redirect(url_for("reports"))
+
         doc = Document("report_template/gas&rfid_temp.docx")
 
         # Header placeholder

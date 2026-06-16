@@ -50,7 +50,7 @@
 
                 <div class="profile-group">
                     <label for="address">Full Address</label>
-                    <input type="text" id="address" name="address" value="{{ user.address or '' }}"
+                    <input type="text" id="address" maxlength="200" name="address" value="{{ user.address or '' }}"
                         placeholder="House No., Street, Barangay, City" required>
                 </div>
 
@@ -65,7 +65,7 @@
                     <label for="emergency_contact_person">
                         Emergency Contact Person
                     </label>
-                    <input type="text" id="emergency_contact_person" name="emergency_contact_person"
+                    <input type="text" id="emergency_contact_person" maxlength="100" name="emergency_contact_person"
                         value="{{ user.emergency_contact_person or '' }}" placeholder="Full Name" required>
                 </div>
 
