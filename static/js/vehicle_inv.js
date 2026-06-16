@@ -82,16 +82,19 @@ function cancelUpdate(id) {
   const row = document.getElementById(`row-${id}`);
 
   // 1. Hide the Update and Cancel buttons
-  document.getElementById(`upd-${id}`).style.display = "none";
-  document.getElementById(`cancel-${id}`).style.display = "none";
+  const updateBtn = document.getElementById(`upd-${id}`);
+  const cancelBtn = document.getElementById(`cancel-${id}`);
+  if (updateBtn) updateBtn.style.display = "none";
+  if (cancelBtn) cancelBtn.style.display = "none";
 
-  // 2. Show the Edit and Delete buttons (or whatever was there)
-  row.querySelector(".btn-edit").style.display = "inline-block";
-  row.querySelector(".btn-delete").style.display = "inline-block";
+  if (row) {
+    const editBtn = row.querySelector(".btn-edit");
+    const deleteBtn = row.querySelector(".btn-delete");
+    if (editBtn) editBtn.style.display = "inline-block";
+    if (deleteBtn) deleteBtn.style.display = "inline-block";
+  }
 
-  // 3. Turn inputs back into text
-  // We assume your editRow turned text into inputs; this refreshes the page
-  // to discard any changes the user typed, which is the safest "Cancel".
+  // Reload to discard changes safely if the row structure was altered.
   location.reload();
 }
 
