@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
+import json
 import requests
 import psycopg2
 from psycopg2 import pool
@@ -21,6 +22,7 @@ import calendar
 from datetime import datetime, timedelta
 import time
 from datetime import datetime, timedelta, date
+from datetime import datetime
 
 
 
@@ -42,7 +44,13 @@ class PooledConnection:
     def close(self):
         global db_pool
         if self._conn:
-            db_pool.putconn(self._conn)
+            if db_pool:
+                db_pool.putconn(self._conn)
+            else:
+                try:
+                    self._conn.close()
+                except Exception:
+                    pass
             self._conn = None
 
 
@@ -54,10 +62,104 @@ def init_db_pool():
             print("Warning: DATABASE_URL not configured; DB pool disabled")
             return
         try:
+            conn = psycopg2.connect(DB_URI)
+            try:
+                ensure_inventory_schema(conn)
+            finally:
+                conn.close()
+
             db_pool = pool.ThreadedConnectionPool(1, 10, dsn=DB_URI)
         except Exception as e:
             print(f"Error creating DB pool: {e}")
+            if db_pool:
+                try:
+                    db_pool.closeall()
+                except Exception:
+                    pass
             db_pool = None
+
+# Soft-delete and audit configuration for inventory-related tables
+schema_initialized = False
+INVENTORY_SOFT_DELETE_TABLES = {
+    "vehicle": "vehicle_id",
+    "rfid_records": "id",
+    "gas_rfid": "gasRfid_id",
+    "tools_equipment": "id",
+    "parts_supplies": "part_id",
+    "maintenance_log": "id",
+    "pms_log": "id",
+}
+
+def fetch_one_as_dict(cur):
+    row = cur.fetchone()
+    if row is None:
+        return None
+    return dict(zip([desc[0] for desc in cur.description], row))
+
+
+def ensure_inventory_schema(conn):
+    global schema_initialized
+    if schema_initialized or conn is None:
+        return
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS activity_log (
+                id SERIAL PRIMARY KEY,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                user_id INTEGER,
+                user_name TEXT,
+                action TEXT NOT NULL,
+                entity_type TEXT NOT NULL,
+                entity_id TEXT,
+                old_data JSONB,
+                new_data JSONB
+            )
+        """)
+
+        for table, pk in INVENTORY_SOFT_DELETE_TABLES.items():
+            try:
+                cur.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE")
+                cur.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ")
+                cur.execute(f"UPDATE {table} SET is_deleted = FALSE WHERE is_deleted IS NULL")
+            except Exception as e:
+                print(f"Schema init warning for {table}: {e}")
+
+        conn.commit()
+        schema_initialized = True
+    except Exception as e:
+        print(f"Error ensuring inventory schema: {e}")
+        conn.rollback()
+    finally:
+        cur.close()
+
+
+def log_action(user_id, user_name, action, entity_type, entity_id=None, old_data=None, new_data=None):
+    conn = get_db_connection()
+    if not conn:
+        return
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            INSERT INTO activity_log (
+                user_id, user_name, action, entity_type, entity_id, old_data, new_data
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (
+            user_id,
+            user_name,
+            action,
+            entity_type,
+            str(entity_id) if entity_id is not None else None,
+            json.dumps(old_data) if old_data is not None else None,
+            json.dumps(new_data) if new_data is not None else None,
+        ))
+        conn.commit()
+    except Exception as e:
+        print(f"Audit log error: {e}")
+        conn.rollback()
+    finally:
+        cur.close()
+        conn.close()
 
 # =======================================================
 # GLOBAL LOGIN PROTECTION
@@ -123,6 +225,8 @@ def role_required(*allowed_roles):
 def get_db_connection():
     try:
         init_db_pool()
+        if db_pool is None:
+            return None
         conn = db_pool.getconn()
         return PooledConnection(conn)
     except Exception as e:
@@ -139,7 +243,7 @@ def build_search_clause(columns, search_value):
     return f" AND ({clause})", [f"%{search_value}%"] * len(columns)
 
 
-def build_equals_clause(column, filter_value):
+def build_equals_clause(column, filter_value):  
     filter_value = (filter_value or "").strip()
     if not filter_value:
         return "", []
@@ -348,7 +452,7 @@ def inventory():
         vehicle_query = """
             SELECT vehicle_id, name, plate_number, color, type, status, mileage
             FROM vehicle
-            WHERE 1=1
+            WHERE is_deleted = FALSE
         """
         vehicle_params = []
         search_clause, search_params = build_search_clause(
@@ -377,7 +481,7 @@ def inventory():
                 easytrip_account,
                 easytrip_card
             FROM rfid_records
-            WHERE 1=1
+            WHERE is_deleted = FALSE
         """
         rfid_params = []
         search_clause, search_params = build_search_clause(
@@ -439,6 +543,23 @@ def add_vehicle():
         cur.close()
         conn.close()
 
+        log_action(
+            session.get('user_id'),
+            session.get('user_fullname'),
+            'create',
+            'vehicle',
+            None,
+            old_data=None,
+            new_data={
+                'name': name,
+                'plate_number': plate_number,
+                'color': color,
+                'type': type,
+                'status': status,
+                'mileage': mileage,
+            }
+        )
+
     flash("Vehicle record added successfully!")
     return redirect(url_for('inventory'))
 
@@ -450,10 +571,23 @@ def delete_vehicle(id):
     if conn:
         try:
             cur = conn.cursor()
-            # This matches the vehicle_id in your Supabase table
-            cur.execute("DELETE FROM vehicle WHERE vehicle_id = %s", (id,))
+            cur.execute("SELECT * FROM vehicle WHERE vehicle_id = %s", (id,))
+            old_data = fetch_one_as_dict(cur)
+            cur.execute(
+                "UPDATE vehicle SET is_deleted = TRUE, deleted_at = NOW() WHERE vehicle_id = %s",
+                (id,)
+            )
             conn.commit()
-            flash("Vehicle deleted successfully!")
+            flash("Vehicle record moved to recycle bin.")
+            log_action(
+                session.get('user_id'),
+                session.get('user_fullname'),
+                'delete',
+                'vehicle',
+                id,
+                old_data=old_data,
+                new_data=None,
+            )
             cur.close()
         except Exception as e:
             print(f"Delete error: {e}")
@@ -485,12 +619,30 @@ def update_vehicle(id):
     if conn:
         try:
             cur = conn.cursor()
+            cur.execute("SELECT * FROM vehicle WHERE vehicle_id = %s", (id,))
+            old_data = fetch_one_as_dict(cur)
             cur.execute("""
                 UPDATE vehicle 
                 SET name=%s, plate_number=%s, color=%s, type=%s, status=%s, mileage=%s 
                 WHERE vehicle_id=%s
             """, (name, plate, color, v_type, status, mileage, id))
             conn.commit()
+            log_action(
+                session.get('user_id'),
+                session.get('user_fullname'),
+                'update',
+                'vehicle',
+                id,
+                old_data=old_data,
+                new_data={
+                    'name': name,
+                    'plate_number': plate,
+                    'color': color,
+                    'type': v_type,
+                    'status': status,
+                    'mileage': mileage,
+                }
+            )
             cur.close()
             flash("Vehicle updated successfully!")
         except Exception as e:
@@ -544,6 +696,22 @@ def add_rfid():
     ))
 
     conn.commit()
+    log_action(
+        session.get('user_id'),
+        session.get('user_fullname'),
+        'create',
+        'rfid_records',
+        None,
+        old_data=None,
+        new_data={
+            'vehicle_name': vehicle,
+            'plate_number': plate,
+            'autosweep_account': autosweep_account,
+            'autosweep_card': autosweep_card,
+            'easytrip_account': easytrip_account,
+            'easytrip_card': easytrip_card,
+        }
+    )
 
     cur.close()
     conn.close()
@@ -578,6 +746,9 @@ def update_rfid(id):
         conn = get_db_connection()
         cur = conn.cursor()
 
+        cur.execute("SELECT * FROM rfid_records WHERE id = %s", (id,))
+        old_data = fetch_one_as_dict(cur)
+
         cur.execute("""
             UPDATE rfid_records
             SET
@@ -599,6 +770,22 @@ def update_rfid(id):
         ))
 
         conn.commit()
+        log_action(
+            session.get('user_id'),
+            session.get('user_fullname'),
+            'update',
+            'rfid_records',
+            id,
+            old_data=old_data,
+            new_data={
+                'vehicle_name': vehicle,
+                'plate_number': plate,
+                'autosweep_account': auto_acc,
+                'autosweep_card': auto_card,
+                'easytrip_account': easy_acc,
+                'easytrip_card': easy_card,
+            }
+        )
 
         print("ROWS UPDATED:", cur.rowcount)
 
@@ -620,17 +807,26 @@ def update_rfid(id):
 def delete_rfid(id):
 
     conn = get_db_connection()
-    cur = conn.cursor()
-
-    cur.execute("""
-        DELETE FROM rfid_records
-        WHERE id=%s
-    """, (id,))
-
-    conn.commit()
-
-    cur.close()
-    conn.close()
+    if conn:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM rfid_records WHERE id = %s", (id,))
+        old_data = fetch_one_as_dict(cur)
+        cur.execute(
+            "UPDATE rfid_records SET is_deleted = TRUE, deleted_at = NOW() WHERE id = %s",
+            (id,)
+        )
+        conn.commit()
+        log_action(
+            session.get('user_id'),
+            session.get('user_fullname'),
+            'delete',
+            'rfid_records',
+            id,
+            old_data=old_data,
+            new_data=None,
+        )
+        cur.close()
+        conn.close()
 
     return redirect(url_for("inventory"))
 
@@ -663,7 +859,7 @@ def gas_rfid():
                 SELECT f.*, v.plate_number
                 FROM gas_rfid f
                 LEFT JOIN vehicle v ON f.v_name = v.name
-                WHERE 1=1
+                WHERE f.is_deleted = FALSE
             """
             record_params = []
             search_clause, search_params = build_search_clause(
@@ -686,6 +882,7 @@ def gas_rfid():
                 SELECT SUM(purchased_trip), AVG(purchased_trip), 
                        SUM(easy_rfid_bal), SUM(auto_rfid_bal) 
                 FROM gas_rfid
+                WHERE is_deleted = FALSE
             """)
             row = cur.fetchone()
             if row and row[0] is not None:
@@ -728,6 +925,28 @@ def add_fuel():
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, data)
         conn.commit()
+        log_action(
+            session.get('user_id'),
+            session.get('user_fullname'),
+            'create',
+            'gas_rfid',
+            None,
+            old_data=None,
+            new_data={
+                'v_name': data[0],
+                'date': data[1],
+                'driver': data[2],
+                'gas_bal_tank': data[3],
+                'purchased_trip': data[4],
+                'bal_after_trip': data[5],
+                'km_beginning': data[6],
+                'km_end': data[7],
+                'km_used': data[8],
+                'easy_rfid_bal': data[9],
+                'auto_rfid_bal': data[10],
+                'remarks': data[11],
+            }
+        )
         cur.close()
         conn.close()
     return redirect(url_for('gas_rfid'))
@@ -744,6 +963,8 @@ def update_fuel():
     if conn:
         try:
             cur = conn.cursor()
+            cur.execute('SELECT * FROM gas_rfid WHERE "gasRfid_id" = %s', (record_id,))
+            old_data = fetch_one_as_dict(cur)
             # We use the double quotes because gasRfid_id is case-sensitive in Supabase
             query = """
                 UPDATE gas_rfid 
@@ -760,6 +981,15 @@ def update_fuel():
                 data['easy_rfid_bal'], data['auto_rfid_bal'], record_id
             ))
             conn.commit()
+            log_action(
+                session.get('user_id'),
+                session.get('user_fullname'),
+                'update',
+                'gas_rfid',
+                record_id,
+                old_data=old_data,
+                new_data=data,
+            )
             cur.close()
             return jsonify({"status": "success"}), 200
         except Exception as e:
@@ -777,8 +1007,19 @@ def delete_fuel(id):
     if conn:
         try:
             cur = conn.cursor()
-            cur.execute('DELETE FROM gas_rfid WHERE "gasRfid_id" = %s', (id,))
+            cur.execute('SELECT * FROM gas_rfid WHERE "gasRfid_id" = %s', (id,))
+            old_data = fetch_one_as_dict(cur)
+            cur.execute('UPDATE gas_rfid SET is_deleted = TRUE, deleted_at = NOW() WHERE "gasRfid_id" = %s', (id,))
             conn.commit()
+            log_action(
+                session.get('user_id'),
+                session.get('user_fullname'),
+                'delete',
+                'gas_rfid',
+                id,
+                old_data=old_data,
+                new_data=None,
+            )
             cur.close()
         except Exception as e:
             print(f"Delete Error: {e}")
@@ -812,7 +1053,7 @@ def tools_equipment():
     tools_query = """
         SELECT id, item_code, name, category, quantity, condition
         FROM tools_equipment
-        WHERE 1=1
+        WHERE is_deleted = FALSE
     """
     tools_params = []
     search_clause, search_params = build_search_clause(
@@ -836,6 +1077,7 @@ def tools_equipment():
             COUNT(*) FILTER (WHERE condition = 'Excellent') AS excellent,
             COUNT(*) FILTER (WHERE condition = 'Good') AS good
         FROM tools_equipment
+        WHERE is_deleted = FALSE
     """)
     row = cur.fetchone()
     total = row[0]
@@ -892,6 +1134,21 @@ def save_tool():
     """, (item_code, name, category, quantity, condition))
 
     conn.commit()
+    log_action(
+        session.get('user_id'),
+        session.get('user_fullname'),
+        'create',
+        'tools_equipment',
+        None,
+        old_data=None,
+        new_data={
+            'item_code': item_code,
+            'name': name,
+            'category': category,
+            'quantity': quantity,
+            'condition': condition,
+        }
+    )
     cur.close()
     conn.close()
 
@@ -907,6 +1164,9 @@ def update_tool():
 
     conn = get_db_connection()
     cur = conn.cursor()
+
+    cur.execute("SELECT * FROM tools_equipment WHERE id = %s", (data["id"],))
+    old_data = fetch_one_as_dict(cur)
 
     cur.execute("""
         UPDATE tools_equipment
@@ -925,6 +1185,15 @@ def update_tool():
     ))
 
     conn.commit()
+    log_action(
+        session.get('user_id'),
+        session.get('user_fullname'),
+        'update',
+        'tools_equipment',
+        data['id'],
+        old_data=old_data,
+        new_data=data,
+    )
     cur.close()
     conn.close()
 
@@ -938,13 +1207,23 @@ def update_tool():
 @role_required('Admin')
 def delete_tool(id):
     conn = get_db_connection()
-    cur = conn.cursor()
-
-    cur.execute("DELETE FROM tools_equipment WHERE id = %s", (id,))
-    conn.commit()
-
-    cur.close()
-    conn.close()
+    if conn:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM tools_equipment WHERE id = %s", (id,))
+        old_data = fetch_one_as_dict(cur)
+        cur.execute("UPDATE tools_equipment SET is_deleted = TRUE, deleted_at = NOW() WHERE id = %s", (id,))
+        conn.commit()
+        log_action(
+            session.get('user_id'),
+            session.get('user_fullname'),
+            'delete',
+            'tools_equipment',
+            id,
+            old_data=old_data,
+            new_data=None,
+        )
+        cur.close()
+        conn.close()
 
     return redirect(url_for('tools_equipment'))
 
@@ -976,7 +1255,7 @@ def maintenance_pms():
         vehicles = cur.fetchall()
         
         # 2. Fetch Maintenance Logs (Matches your 'maintenance_log' Supabase table)
-        maintenance_query = "SELECT * FROM maintenance_log WHERE 1=1"
+        maintenance_query = "SELECT * FROM maintenance_log WHERE is_deleted = FALSE"
         maintenance_params = []
         search_clause, search_params = build_search_clause(
             ["date", "vehicle_name", "problem", "action_taken", "cost", "mechanic"],
@@ -993,7 +1272,7 @@ def maintenance_pms():
         m_records = cur.fetchall()
         
         # 3. Fetch PMS Logs (Matches your 'pms_log' Supabase table)
-        pms_query = "SELECT * FROM pms_log WHERE 1=1"
+        pms_query = "SELECT * FROM pms_log WHERE is_deleted = FALSE"
         pms_params = []
         search_clause, search_params = build_search_clause(
             ["vehicle_name", "last_pms_date", "km", "oil_liters", "next_pms_date"],
@@ -1061,6 +1340,22 @@ def add_maintenance():
                     VALUES (%s, %s, %s, %s, %s, %s)''', 
                 (date, v_name, prob, action, cost, mech))
     conn.commit()
+    log_action(
+        session.get('user_id'),
+        session.get('user_fullname'),
+        'create',
+        'maintenance_log',
+        None,
+        old_data=None,
+        new_data={
+            'date': date,
+            'vehicle_name': v_name,
+            'problem': prob,
+            'action_taken': action,
+            'cost': cost,
+            'mechanic': mech,
+        }
+    )
     cur.close()
     conn.close()
     return redirect(url_for('maintenance_pms'))
@@ -1079,6 +1374,8 @@ def update_maintenance(id):
     cur = conn.cursor()
 
     try:
+        cur.execute("SELECT * FROM maintenance_log WHERE id = %s", (id,))
+        old_data = fetch_one_as_dict(cur)
         cur.execute("""
             UPDATE maintenance_log
             SET
@@ -1099,6 +1396,22 @@ def update_maintenance(id):
             id
         ))
         conn.commit()
+        log_action(
+            session.get('user_id'),
+            session.get('user_fullname'),
+            'update',
+            'maintenance_log',
+            id,
+            old_data=old_data,
+            new_data={
+                'date': date,
+                'vehicle_name': vehicle,
+                'problem': problem,
+                'action_taken': action_taken,
+                'cost': cost,
+                'mechanic': mechanic,
+            }
+        )
     except Exception as e:
         print(f"Error updating maintenance record: {e}")
         conn.rollback()
@@ -1117,9 +1430,20 @@ def delete_maintenance(id):
     if conn:
         try:
             cur = conn.cursor()
-            cur.execute('DELETE FROM maintenance_log WHERE id = %s', (id,))
+            cur.execute('SELECT * FROM maintenance_log WHERE id = %s', (id,))
+            old_data = fetch_one_as_dict(cur)
+            cur.execute('UPDATE maintenance_log SET is_deleted = TRUE, deleted_at = NOW() WHERE id = %s', (id,))
             conn.commit()
-            flash("Maintenance record deleted successfully!")
+            flash("Maintenance record moved to recycle bin.")
+            log_action(
+                session.get('user_id'),
+                session.get('user_fullname'),
+                'delete',
+                'maintenance_log',
+                id,
+                old_data=old_data,
+                new_data=None,
+            )
             cur.close()
         except Exception as e:
             print(f"Delete error: {e}")
@@ -1129,7 +1453,90 @@ def delete_maintenance(id):
             conn.close()
         
     return redirect(url_for('maintenance_pms'))
-    
+
+
+@app.route('/recycle_bin')
+@role_required('Admin')
+def recycle_bin():
+    conn = get_db_connection()
+    deleted_items = []
+    recycle_map = {
+        'vehicle': ('vehicle', 'vehicle_id', ['name', 'plate_number']),
+        'rfid_records': ('rfid_records', 'id', ['vehicle_name', 'plate_number']),
+        'gas_rfid': ('gas_rfid', '"gasRfid_id"', ['v_name', 'date']),
+        'tools_equipment': ('tools_equipment', 'id', ['item_code', 'name']),
+        'parts_supplies': ('parts_supplies', 'part_id', ['part_code', 'name']),
+        'maintenance_log': ('maintenance_log', 'id', ['vehicle_name', 'problem']),
+        'pms_log': ('pms_log', 'id', ['vehicle_name', 'last_pms_date']),
+    }
+
+    if conn:
+        cur = conn.cursor()
+        for entity_type, (table, pk, cols) in recycle_map.items():
+            select_fields = ", ".join([pk] + cols + ['deleted_at'])
+            cur.execute(f"SELECT {select_fields} FROM {table} WHERE is_deleted = TRUE ORDER BY deleted_at DESC")
+            for row in cur.fetchall():
+                entity_id = row[0]
+                summary_values = [str(value) for value in row[1:-1] if value is not None]
+                cur.execute(
+                    "SELECT user_name FROM activity_log "
+                    "WHERE entity_type = %s AND entity_id = %s AND action = 'delete' "
+                    "ORDER BY created_at DESC LIMIT 1",
+                    (entity_type, str(entity_id)),
+                )
+                deleted_by_row = cur.fetchone()
+                deleted_by = deleted_by_row[0] if deleted_by_row else 'Unknown'
+                deleted_items.append({
+                    'entity_type': entity_type,
+                    'entity_id': entity_id,
+                    'summary': ' | '.join(summary_values),
+                    'deleted_at': row[-1],
+                    'deleted_by': deleted_by,
+                })
+        cur.close()
+        conn.close()
+
+    return render_template('recycle_bin.html', deleted_items=deleted_items)
+
+
+@app.route('/restore/<entity_type>/<int:entity_id>', methods=['POST'])
+@role_required('Admin')
+def restore_entity(entity_type, entity_id):
+    restore_map = {
+        'vehicle': ('vehicle', 'vehicle_id'),
+        'rfid_records': ('rfid_records', 'id'),
+        'gas_rfid': ('gas_rfid', '"gasRfid_id"'),
+        'tools_equipment': ('tools_equipment', 'id'),
+        'parts_supplies': ('parts_supplies', 'part_id'),
+        'maintenance_log': ('maintenance_log', 'id'),
+        'pms_log': ('pms_log', 'id'),
+    }
+
+    if entity_type not in restore_map:
+        flash('Unknown restore type.')
+        return redirect(url_for('recycle_bin'))
+
+    table, pk = restore_map[entity_type]
+    conn = get_db_connection()
+    if conn:
+        cur = conn.cursor()
+        cur.execute(f"UPDATE {table} SET is_deleted = FALSE, deleted_at = NULL WHERE {pk} = %s", (entity_id,))
+        conn.commit()
+        log_action(
+            session.get('user_id'),
+            session.get('user_fullname'),
+            'restore',
+            entity_type,
+            entity_id,
+            old_data=None,
+            new_data={'restored': True},
+        )
+        cur.close()
+        conn.close()
+        flash('Record restored successfully.')
+
+    return redirect(url_for('recycle_bin'))
+
 
 #--pms--#
 # --- ROUTE TO ADD PMS RECORD ---
@@ -1152,6 +1559,21 @@ def add_pms():
             VALUES (%s, %s, %s, %s, %s)
         ''', (v_name, last_pms, km, oil, next_pms))
         conn.commit()
+        log_action(
+            session.get('user_id'),
+            session.get('user_fullname'),
+            'create',
+            'pms_log',
+            None,
+            old_data=None,
+            new_data={
+                'vehicle_name': v_name,
+                'last_pms_date': last_pms,
+                'km': km,
+                'oil_liters': oil,
+                'next_pms_date': next_pms,
+            }
+        )
     except Exception as e:
         print(f"Error adding PMS record: {e}")
     finally:
@@ -1173,6 +1595,8 @@ def update_pms(id):
     conn = get_db_connection()
     cur = conn.cursor()
     try:
+        cur.execute("SELECT * FROM pms_log WHERE id = %s", (id,))
+        old_data = fetch_one_as_dict(cur)
         cur.execute("""
             UPDATE pms_log
             SET
@@ -1191,6 +1615,21 @@ def update_pms(id):
             id
         ))
         conn.commit()
+        log_action(
+            session.get('user_id'),
+            session.get('user_fullname'),
+            'update',
+            'pms_log',
+            id,
+            old_data=old_data,
+            new_data={
+                'vehicle_name': vehicle,
+                'last_pms_date': last_pms,
+                'km': km,
+                'oil_liters': oil,
+                'next_pms_date': next_pms,
+            }
+        )
     except Exception as e:
         print(f"Error updating PMS record: {e}")
         conn.rollback()
@@ -1215,9 +1654,20 @@ def delete_pms(id):
     if conn:
         try:
             cur = conn.cursor()
-            cur.execute('DELETE FROM pms_log WHERE id = %s', (id,))
+            cur.execute('SELECT * FROM pms_log WHERE id = %s', (id,))
+            old_data = fetch_one_as_dict(cur)
+            cur.execute('UPDATE pms_log SET is_deleted = TRUE, deleted_at = NOW() WHERE id = %s', (id,))
             conn.commit()
-            flash("PMS record deleted successfully!")   
+            flash("PMS record moved to recycle bin.")   
+            log_action(
+                session.get('user_id'),
+                session.get('user_fullname'),
+                'delete',
+                'pms_log',
+                id,
+                old_data=old_data,
+                new_data=None,
+            )
             cur.close()
             conn.close()
         except Exception as e:
@@ -1258,7 +1708,7 @@ def parts_supplies():
         statuses = [row[0] for row in cur.fetchall()]
 
         # IMPORTANT: use part_id (not id)
-        parts_query = "SELECT * FROM parts_supplies WHERE 1=1"
+        parts_query = "SELECT * FROM parts_supplies WHERE is_deleted = FALSE"
         parts_params = []
         search_clause, search_params = build_search_clause(
             ["part_code", "name", "category", "stock", "min_stock", "unit", "status"],
@@ -1282,6 +1732,7 @@ def parts_supplies():
                 COUNT(*) FILTER (WHERE stock <= min_stock AND stock > 0) AS low_stock,
                 COUNT(*) FILTER (WHERE stock = 0) AS out_stock
             FROM parts_supplies
+            WHERE is_deleted = FALSE
         """)
         row = cur.fetchone()
         total = row[0]
@@ -1356,6 +1807,23 @@ def add_part():
     """, (new_code, name, category, stock, min_stock, unit, status))
 
     conn.commit()
+    log_action(
+        session.get('user_id'),
+        session.get('user_fullname'),
+        'create',
+        'parts_supplies',
+        None,
+        old_data=None,
+        new_data={
+            'part_code': new_code,
+            'name': name,
+            'category': category,
+            'stock': stock,
+            'min_stock': min_stock,
+            'unit': unit,
+            'status': status,
+        }
+    )
     cur.close()
     conn.close()
 
@@ -1381,12 +1849,27 @@ def update_part(part_id):
     conn = get_db_connection()
     if conn:
         cur = conn.cursor()
+        cur.execute("SELECT * FROM parts_supplies WHERE part_id = %s", (part_id,))
+        old_data = fetch_one_as_dict(cur)
         cur.execute("""
             UPDATE parts_supplies
             SET stock=%s, min_stock=%s, status=%s
             WHERE part_id=%s
         """, (stock, min_stock, status, part_id))
         conn.commit()
+        log_action(
+            session.get('user_id'),
+            session.get('user_fullname'),
+            'update',
+            'parts_supplies',
+            part_id,
+            old_data=old_data,
+            new_data={
+                'stock': stock,
+                'min_stock': min_stock,
+                'status': status,
+            }
+        )
         cur.close()
         conn.close()
 
@@ -1403,11 +1886,22 @@ def delete_part(part_id):
     if conn:
         try:
             cur = conn.cursor()
+            cur.execute("SELECT * FROM parts_supplies WHERE part_id = %s", (part_id,))
+            old_data = fetch_one_as_dict(cur)
             cur.execute(
-                "DELETE FROM parts_supplies WHERE part_id = %s",
+                "UPDATE parts_supplies SET is_deleted = TRUE, deleted_at = NOW() WHERE part_id = %s",
                 (part_id,)
             )
             conn.commit()
+            log_action(
+                session.get('user_id'),
+                session.get('user_fullname'),
+                'delete',
+                'parts_supplies',
+                part_id,
+                old_data=old_data,
+                new_data=None,
+            )
             cur.close()
         except Exception as e:
             print(f"Delete error: {e}")
@@ -2133,6 +2627,8 @@ def insert_annex_b3_rows(doc, rows):
 @app.route("/generate_report", methods=["POST"])
 @role_required("Admin", "Staff")
 def generate_report():
+
+    
 
     report_type = request.form.get("report_type")
     month = request.form.get("month")

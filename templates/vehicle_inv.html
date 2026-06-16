@@ -41,6 +41,7 @@
           <a href="{{ url_for('home') }}">HOME</a>
           <a href="{{ url_for('inventory') }}" class="active">INVENTORY</a>
           <a href="{{ url_for('records') }}">RECORDS</a>
+          <a href="{{ url_for('recycle_bin') }}">RECYCLE BIN</a>
         </div>
         <div class="nav-right">
           <div class="user-profile">
@@ -175,52 +176,51 @@
 
             <tbody>
               {% for vehicle in vehicles %}
-
-
-              <td class="v-name">
-                <a href="{{ url_for('vehicle_details', vehicle_id=vehicle[0]) }}" class="vehicle-link" style="
-                        color: #800000;
-                        font-weight: bold;
-                        text-decoration: none;
-                      ">
-                  {{ vehicle[1] }}
-                </a>
-              </td>
-
-              <td class="v-plate">{{ vehicle[2] }}</td>
-              <td class="v-color">{{ vehicle[3] }}</td>
-              <td class="v-type">{{ vehicle[4] }}</td>
-
-              <td>
-                <span class="status-pill {{ vehicle[5]|lower }} v-status">
-                  {{ vehicle[5] }}
-                </span>
-              </td>
-
-              <td class="v-mileage">{{ vehicle[6] }} km</td>
-
-              <td class="actions">
-                <div class="action-buttons">
-                  <button class="btn-edit" onclick="editRow('{{ vehicle[0] }}')">
-                    Edit
-                  </button>
-
-                  <button class="btn-update" id="upd-{{ vehicle[0] }}" style="display: none"
-                    onclick="updateRow('{{ vehicle[0] }}')">
-                    Update
-                  </button>
-
-                  <button class="btn-cancel" id="cancel-{{ vehicle[0] }}" style="display: none"
-                    onclick="cancelUpdate('{{ vehicle[0] }}')">
-                    Cancel
-                  </button>
-
-                  <a href="{{ url_for('delete_vehicle', id=vehicle[0]) }}" class="btn-delete"
-                    onclick="return confirm('Delete this record?');">
-                    Delete
+              <tr id="row-{{ vehicle[0] }}">
+                <td class="v-name">
+                  <a href="{{ url_for('vehicle_details', vehicle_id=vehicle[0]) }}" class="vehicle-link" style="
+                          color: #800000;
+                          font-weight: bold;
+                          text-decoration: none;
+                        ">
+                    {{ vehicle[1] }}
                   </a>
-                </div>
-              </td>
+                </td>
+
+                <td class="v-plate">{{ vehicle[2] }}</td>
+                <td class="v-color">{{ vehicle[3] }}</td>
+                <td class="v-type">{{ vehicle[4] }}</td>
+
+                <td>
+                  <span class="status-pill {{ vehicle[5]|lower }} v-status">
+                    {{ vehicle[5] }}
+                  </span>
+                </td>
+
+                <td class="v-mileage">{{ vehicle[6] }} km</td>
+
+                <td class="actions">
+                  <div class="action-buttons">
+                    <button class="btn-edit" onclick="editRow('{{ vehicle[0] }}')">
+                      Edit
+                    </button>
+
+                    <button class="btn-update" id="upd-{{ vehicle[0] }}" style="display: none"
+                      onclick="updateRow('{{ vehicle[0] }}')">
+                      Update
+                    </button>
+
+                    <button class="btn-cancel" id="cancel-{{ vehicle[0] }}" style="display: none"
+                      onclick="cancelUpdate('{{ vehicle[0] }}')">
+                      Cancel
+                    </button>
+
+                    <a href="{{ url_for('delete_vehicle', id=vehicle[0]) }}" class="btn-delete"
+                      onclick="return confirm('Delete this record?');">
+                      Delete
+                    </a>
+                  </div>
+                </td>
               </tr>
               {% endfor %}
             </tbody>
@@ -244,7 +244,8 @@
                 <select name="rfid_vehicle">
                   <option value="">All Vehicles</option>
                   {% for vehicle in vehicles %}
-                  <option value="{{ vehicle[1] }}" {% if rfid_vehicle==vehicle[1] %}selected{% endif %}>{{ vehicle[1] }}</option>
+                  <option value="{{ vehicle[1] }}" {% if rfid_vehicle==vehicle[1] %}selected{% endif %}>{{ vehicle[1] }}
+                  </option>
                   {% endfor %}
                 </select>
               </div>

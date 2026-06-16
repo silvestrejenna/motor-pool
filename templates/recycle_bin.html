@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Recycle Bin | Motor Pool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/vehicle_inv.css') }}" />
+</head>
+
+<body>
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='images/motorpool-logo.png') }}" />
+            </div>
+            <ul>
+                <li><a href="{{ url_for('inventory') }}">VEHICLES</a></li>
+                <li><a href="{{ url_for('gas_rfid') }}">GASOLINE & RFID</a></li>
+                <li><a href="{{ url_for('maintenance_pms') }}">MAINTENANCE & PMS LOG</a></li>
+                <li><a href="{{ url_for('tools_equipment') }}">TOOLS & EQUIPMENT</a></li>
+                <li><a href="{{ url_for('parts_supplies') }}">PARTS & SUPPLIES</a></li>
+                <li class="active"><a href="{{ url_for('recycle_bin') }}">RECYCLE BIN</a></li>
+                <li><a href="{{ url_for('reports') }}">REPORTS</a></li>
+            </ul>
+        </aside>
+
+        <div class="content">
+            <header class="top-nav">
+                <div class="nav-links">
+                    <a href="{{ url_for('home') }}">HOME</a>
+                    <a href="{{ url_for('inventory') }}">INVENTORY</a>
+                    <a href="{{ url_for('records') }}">RECORDS</a>
+                    <a href="{{ url_for('recycle_bin') }}" class="active">RECYCLE BIN</a>
+                </div>
+            </header>
+
+            <section class="inventory-section">
+                <div class="section-header">
+                    <div>
+                        <h1>RECYCLE BIN</h1>
+                        <p class="subtitle">Recover soft-deleted inventory records and audit user actions.</p>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    {% if deleted_items %}
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>ID</th>
+                                <th>Summary</th>
+                                <th>Deleted By</th>
+                                <th>Deleted At</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in deleted_items %}
+                            <tr>
+                                <td>{{ item.entity_type }}</td>
+                                <td>{{ item.entity_id }}</td>
+                                <td>{{ item.summary }}</td>
+                                <td>{{ item.deleted_by }}</td>
+                                <td>{{ item.deleted_at }}</td>
+                                <td>
+                                    <form method="POST"
+                                        action="{{ url_for('restore_entity', entity_type=item.entity_type, entity_id=item.entity_id) }}">
+                                        <button type="submit" class="btn-update">Restore</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="table-card">
+                        <p>No deleted records found.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+
+</html>

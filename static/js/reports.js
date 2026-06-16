@@ -184,3 +184,47 @@ document.addEventListener("DOMContentLoaded", () => {
 
   yearSelect.value = currentYear;
 });
+
+const monthSelect = document.getElementById("reportMonth");
+const yearSelect = document.getElementById("reportYear");
+
+function validateMonths() {
+  if (!monthSelect || !yearSelect) return;
+
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1;
+
+  [...monthSelect.options].forEach((option) => {
+    if (!option.value) return;
+
+    if (
+      parseInt(yearSelect.value) === currentYear &&
+      parseInt(option.value) > currentMonth
+    ) {
+      option.disabled = true;
+    } else {
+      option.disabled = false;
+    }
+  });
+}
+
+yearSelect.addEventListener("change", validateMonths);
+
+document.addEventListener("DOMContentLoaded", validateMonths);
+
+document.getElementById("reportForm").addEventListener("submit", function (e) {
+  const month = parseInt(document.getElementById("reportMonth").value);
+  const year = parseInt(document.getElementById("reportYear").value);
+
+  const today = new Date();
+
+  const currentMonth = today.getMonth() + 1;
+  const currentYear = today.getFullYear();
+
+  if (year > currentYear || (year === currentYear && month > currentMonth)) {
+    e.preventDefault();
+
+    alert("Cannot generate reports for future dates.");
+  }
+});
