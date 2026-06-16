@@ -92,6 +92,51 @@
               <p>
                 Monitor and manage the status and availability of all vehicles
               </p>
+              <section class="stats-grid">
+
+                <div class="stat-card">
+                  <span class="label">Total Vehicles</span>
+                  <span class="value">
+                    {{ total_vehicles }}
+                  </span>
+                  <span class="subtext">
+                    Registered vehicles
+                  </span>
+                </div>
+
+                <div class="stat-card">
+                  <span class="label">Least Used Vehicle</span>
+
+                  <span class="value">
+                    {{ least_used_vehicle }}
+                  </span>
+
+                  <span class="subtext">
+                    {{ least_used_count }} trips
+                  </span>
+                </div>
+
+                <div class="stat-card">
+                  <span class="label">Most Used Vehicle</span>
+                  <span class="value">
+                    {{ most_used_vehicle }}
+                  </span>
+                  <span class="subtext">
+                    {{ most_used_count }} trips
+                  </span>
+                </div>
+
+                <div class="stat-card">
+                  <span class="label">Utilization Rate</span>
+                  <span class="value">
+                    {{ utilization_rate }}%
+                  </span>
+                  <span class="subtext">
+                    Based on trip tickets
+                  </span>
+                </div>
+
+              </section>
             </div>
 
           </div>
