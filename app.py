@@ -470,6 +470,57 @@ def inventory():
         cur.execute(vehicle_query, vehicle_params)
         vehicles = cur.fetchall()
 
+        # TOTAL VEHICLES
+        cur.execute("""
+            SELECT COUNT(*)
+            FROM vehicle
+            WHERE is_deleted = FALSE
+        """)
+
+        total_vehicles = cur.fetchone()[0]
+
+    
+# ==========================
+# VEHICLE ANALYTICS
+# ==========================
+
+        cur.execute("""
+            SELECT
+                v.name,
+                COUNT(t.id) as trip_count
+            FROM vehicle v
+            LEFT JOIN trip_tickets t
+                ON v.vehicle_id = t.vehicle_id
+            WHERE v.is_deleted = FALSE
+            GROUP BY v.vehicle_id, v.name
+            ORDER BY trip_count DESC
+        """)
+
+        usage_data = cur.fetchall()
+
+        most_used_vehicle = "N/A"
+        most_used_count = 0
+
+        if usage_data:
+            most_used_vehicle = usage_data[0][0]
+            most_used_count = usage_data[0][1]
+        
+        least_used_vehicle = "N/A"
+        least_used_count = 0
+
+        if usage_data:
+            least_used_vehicle = usage_data[-1][0]
+            least_used_count = usage_data[-1][1]
+
+        total_trips = sum(row[1] for row in usage_data)
+
+        utilization_rate = 0
+
+        if total_trips > 0:
+            utilization_rate = round(
+                (most_used_count / total_trips) * 100,
+                1
+            )
         # ================= RFID =================
         rfid_query = """
             SELECT
@@ -513,6 +564,12 @@ def inventory():
         "vehicle_inv.html",
         vehicles=vehicles,
         rfids=rfids,
+        total_vehicles=total_vehicles,
+        most_used_vehicle=most_used_vehicle,
+        most_used_count=most_used_count,
+        least_used_vehicle=least_used_vehicle,
+        least_used_count=least_used_count,
+        utilization_rate=utilization_rate,
         vehicle_statuses=vehicle_statuses,
         vehicle_search=vehicle_search,
         vehicle_status=vehicle_status,
@@ -2628,7 +2685,18 @@ def insert_annex_b3_rows(doc, rows):
 @role_required("Admin", "Staff")
 def generate_report():
 
-    
+    month = int(request.form.get("month"))
+    year = int(request.form.get("year"))
+
+    today = datetime.today()
+
+    if (
+        year > today.year or
+        (year == today.year and month > today.month)
+    ):
+        
+        flash("Cannot generate reports for future dates.")
+        return redirect(url_for("reports"))
 
     report_type = request.form.get("report_type")
     month = request.form.get("month")
