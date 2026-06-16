@@ -6,6 +6,7 @@
   <title>Maintenance & PMS Log</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/vehicle_inv.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/maintenance.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/search_filter.css') }}" />
 </head>
 
 <body>
@@ -106,6 +107,31 @@
               <p class="val">₱{{ "{:,.2f}".format(total_m_cost) }}</p>
             </div>
           </div>
+
+            <section class="search-card">
+              <h3>Search & Filter Maintenance Log</h3>
+              <form method="GET" action="{{ url_for('maintenance_pms') }}" class="search-form">
+                <input type="hidden" name="tab" value="maintenance" />
+
+                <div class="search-grid">
+                  <input type="text" name="m_search" placeholder="Search by vehicle, problem, action, or mechanic"
+                    value="{{ m_search }}" />
+
+                  <select name="m_vehicle">
+                    <option value="">All Vehicles</option>
+                    {% for vehicle in vehicles %}
+                    <option value="{{ vehicle[1] }}" {% if m_vehicle==vehicle[1] %}selected{% endif %}>{{ vehicle[1] }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="search-actions">
+                  <button type="submit" class="search-btn">Apply Filters</button>
+                  <a href="{{ url_for('maintenance_pms', tab='maintenance') }}" class="search-clear">Clear</a>
+                </div>
+              </form>
+            </section>
+
           <div class="table-card">
             <table>
               <thead>
@@ -141,6 +167,31 @@
               Add PMS Record
             </button>
           </div>
+
+          <section class="search-card">
+            <h3>Search & Filter PMS Log</h3>
+            <form method="GET" action="{{ url_for('maintenance_pms') }}" class="search-form">
+              <input type="hidden" name="tab" value="pms" />
+
+              <div class="search-grid">
+                <input type="text" name="p_search" placeholder="Search by vehicle, dates, KM, or oil volume"
+                  value="{{ p_search }}" />
+
+                <select name="p_vehicle">
+                  <option value="">All Vehicles</option>
+                  {% for vehicle in vehicles %}
+                  <option value="{{ vehicle[1] }}" {% if p_vehicle==vehicle[1] %}selected{% endif %}>{{ vehicle[1] }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="search-actions">
+                <button type="submit" class="search-btn">Apply Filters</button>
+                <a href="{{ url_for('maintenance_pms', tab='pms') }}" class="search-clear">Clear</a>
+              </div>
+            </form>
+          </section>
+
           <div class="table-card">
             <table>
               <thead>
@@ -249,6 +300,11 @@
 
   <script src="{{ url_for('static', filename='js/vehicle_inv.js') }}"></script>
   <script src="{{ url_for('static', filename='js/maintenance.js') }}"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      switchTab("{{ active_tab }}");
+    });
+  </script>
 </body>
 
 </html>

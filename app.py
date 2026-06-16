@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
+import requests
 import psycopg2
 from psycopg2 import pool
 from docx import Document
@@ -50,8 +51,13 @@ def init_db_pool():
     if db_pool is None:
         DB_URI = os.getenv("DATABASE_URL")
         if not DB_URI:
-            raise RuntimeError("DATABASE_URL is not configured")
-        db_pool = pool.ThreadedConnectionPool(1, 10, dsn=DB_URI)
+            print("Warning: DATABASE_URL not configured; DB pool disabled")
+            return
+        try:
+            db_pool = pool.ThreadedConnectionPool(1, 10, dsn=DB_URI)
+        except Exception as e:
+            print(f"Error creating DB pool: {e}")
+            db_pool = None
 
 # =======================================================
 # GLOBAL LOGIN PROTECTION
@@ -67,7 +73,8 @@ def require_login():
         'verify_reset_otp',
         'reset_password',
         'resend_otp',
-        'static'
+        'static',
+        'health_check'
     ]
 
     if not request.endpoint:
@@ -76,10 +83,12 @@ def require_login():
     if 'user_id' not in session and request.endpoint not in allowed_routes:
         return redirect(url_for('login'))
     
+    # Only run notification check asynchronously for Admin/Staff (non-blocking)
     if 'user_id' in session and session.get('user_role') in ['Admin', 'Staff']:
         last_check = session.get('last_notification_check', 0)
         if time.time() - last_check > 60:
-            create_pending_request_notifications()
+            # Run in background thread to avoid blocking requests
+            Thread(target=create_pending_request_notifications, daemon=True).start()
             session['last_notification_check'] = time.time()
 
 ALLOWED_DOMAINS = ["@pup.edu.ph", "@iskolarngbayan.pup.edu.ph", "@gmail.com"]
@@ -119,6 +128,23 @@ def get_db_connection():
     except Exception as e:
         print(f"Connection failed: {e}")
         return None
+
+
+def build_search_clause(columns, search_value):
+    search_value = (search_value or "").strip()
+    if not search_value:
+        return "", []
+
+    clause = " OR ".join([f"CAST({column} AS TEXT) ILIKE %s" for column in columns])
+    return f" AND ({clause})", [f"%{search_value}%"] * len(columns)
+
+
+def build_equals_clause(column, filter_value):
+    filter_value = (filter_value or "").strip()
+    if not filter_value:
+        return "", []
+
+    return f" AND {column} = %s", [filter_value]
 
 # --- SYNC ADMIN USER ---
 #def sync_assigned_user():
@@ -263,7 +289,7 @@ def register():
     session['register_fullname'] = full_name
     session['register_password'] = hashed_password
 
-    send_otp_email(email, otp)
+    send_otp_email_async(email, otp)
     return redirect(url_for('verify_otp'))
 
     # Continue with account creation logic
@@ -297,18 +323,51 @@ def inventory():
     conn = get_db_connection()
     vehicles = []
     rfids = []
+    vehicle_statuses = []
+    vehicle_search = request.args.get("vehicle_search", "")
+    vehicle_status = request.args.get("vehicle_status", "")
+    rfid_search = request.args.get("rfid_search", "")
+    rfid_vehicle = request.args.get("rfid_vehicle", "")
+    active_tab = request.args.get("tab", "vehicle")
+
+    if vehicle_search.strip() or vehicle_status.strip():
+        active_tab = "vehicle"
+    elif rfid_search.strip() or rfid_vehicle.strip():
+        active_tab = "rfid"
     
     if conn:
         cur = conn.cursor()
         cur.execute("""
-            SELECT vehicle_id, name, plate_number, color, type, status, mileage 
-            FROM vehicle 
-            ORDER BY vehicle_id ASC
+            SELECT DISTINCT status
+            FROM vehicle
+            WHERE status IS NOT NULL AND status <> ''
+            ORDER BY status ASC
         """)
+        vehicle_statuses = [row[0] for row in cur.fetchall()]
+
+        vehicle_query = """
+            SELECT vehicle_id, name, plate_number, color, type, status, mileage
+            FROM vehicle
+            WHERE 1=1
+        """
+        vehicle_params = []
+        search_clause, search_params = build_search_clause(
+            ["name", "plate_number", "color", "type", "status", "mileage"],
+            vehicle_search,
+        )
+        vehicle_query += search_clause
+        vehicle_params.extend(search_params)
+
+        status_clause, status_params = build_equals_clause("status", vehicle_status)
+        vehicle_query += status_clause
+        vehicle_params.extend(status_params)
+        vehicle_query += " ORDER BY vehicle_id ASC"
+
+        cur.execute(vehicle_query, vehicle_params)
         vehicles = cur.fetchall()
 
         # ================= RFID =================
-        cur.execute("""
+        rfid_query = """
             SELECT
                 id,
                 vehicle_name,
@@ -318,9 +377,29 @@ def inventory():
                 easytrip_account,
                 easytrip_card
             FROM rfid_records
-            ORDER BY id ASC
-        """)
+            WHERE 1=1
+        """
+        rfid_params = []
+        search_clause, search_params = build_search_clause(
+            [
+                "vehicle_name",
+                "plate_number",
+                "autosweep_account",
+                "autosweep_card",
+                "easytrip_account",
+                "easytrip_card",
+            ],
+            rfid_search,
+        )
+        rfid_query += search_clause
+        rfid_params.extend(search_params)
 
+        vehicle_clause, vehicle_params = build_equals_clause("vehicle_name", rfid_vehicle)
+        rfid_query += vehicle_clause
+        rfid_params.extend(vehicle_params)
+        rfid_query += " ORDER BY id ASC"
+
+        cur.execute(rfid_query, rfid_params)
         rfids = cur.fetchall()
 
         cur.close()
@@ -329,7 +408,13 @@ def inventory():
     return render_template(
         "vehicle_inv.html",
         vehicles=vehicles,
-        rfids=rfids
+        rfids=rfids,
+        vehicle_statuses=vehicle_statuses,
+        vehicle_search=vehicle_search,
+        vehicle_status=vehicle_status,
+        rfid_search=rfid_search,
+        rfid_vehicle=rfid_vehicle,
+        active_tab=active_tab,
     )
 
 
@@ -563,6 +648,8 @@ def gas_rfid():
     records = []
     vehicles = [] 
     summary = {"total_fuel": "0L", "avg_fuel": "0L", "easytrip": "₱0", "autosweep": "₱0"}
+    search = request.args.get("search", "")
+    vehicle_filter = request.args.get("vehicle", "")
     
     if conn:
         try:
@@ -572,12 +659,26 @@ def gas_rfid():
             vehicles = cur.fetchall()
 
             # FIX: Added double quotes to "gasRfid_id" and fixed plate_number
-            cur.execute("""
-                SELECT f.*, v.plate_number 
-                FROM gas_rfid f 
-                LEFT JOIN vehicle v ON f.v_name = v.name 
-                ORDER BY f."gasRfid_id" ASC
-            """)
+            record_query = """
+                SELECT f.*, v.plate_number
+                FROM gas_rfid f
+                LEFT JOIN vehicle v ON f.v_name = v.name
+                WHERE 1=1
+            """
+            record_params = []
+            search_clause, search_params = build_search_clause(
+                ["f.v_name", "f.driver", "f.date", "f.remarks", "v.plate_number"],
+                search,
+            )
+            record_query += search_clause
+            record_params.extend(search_params)
+
+            vehicle_clause, vehicle_params = build_equals_clause("f.v_name", vehicle_filter)
+            record_query += vehicle_clause
+            record_params.extend(vehicle_params)
+            record_query += ' ORDER BY f."gasRfid_id" ASC'
+
+            cur.execute(record_query, record_params)
             records = cur.fetchall()
 
             # FIX: Changed purchased_trip to purchased_tri to match your DB schema
@@ -600,7 +701,14 @@ def gas_rfid():
         finally:
             conn.close()
 
-    return render_template("gas&rfid_inv.html", records=records, vehicles=vehicles, summary=summary)
+    return render_template(
+        "gas&rfid_inv.html",
+        records=records,
+        vehicles=vehicles,
+        summary=summary,
+        search=search,
+        vehicle_filter=vehicle_filter,
+    )
 
 @app.route('/add_fuel', methods=['POST'])
 @role_required('Admin')
@@ -690,12 +798,36 @@ def tools_equipment():
     
     conn = get_db_connection()
     cur = conn.cursor()
+    search = request.args.get("search", "")
+    condition_filter = request.args.get("condition", "")
 
     cur.execute("""
+        SELECT DISTINCT condition
+        FROM tools_equipment
+        WHERE condition IS NOT NULL AND condition <> ''
+        ORDER BY condition ASC
+    """)
+    conditions = [row[0] for row in cur.fetchall()]
+
+    tools_query = """
         SELECT id, item_code, name, category, quantity, condition
         FROM tools_equipment
-        ORDER BY id ASC
-    """)
+        WHERE 1=1
+    """
+    tools_params = []
+    search_clause, search_params = build_search_clause(
+        ["item_code", "name", "category", "quantity", "condition"],
+        search,
+    )
+    tools_query += search_clause
+    tools_params.extend(search_params)
+
+    condition_clause, condition_params = build_equals_clause("condition", condition_filter)
+    tools_query += condition_clause
+    tools_params.extend(condition_params)
+    tools_query += " ORDER BY id ASC"
+
+    cur.execute(tools_query, tools_params)
     tools = cur.fetchall()
 
     cur.execute("""
@@ -718,7 +850,10 @@ def tools_equipment():
         tools=tools,
         total=total,
         excellent=excellent,
-        good=good
+        good=good,
+        conditions=conditions,
+        search=search,
+        condition_filter=condition_filter,
     )
 
 
@@ -823,6 +958,16 @@ def delete_tool(id):
 def maintenance_pms():
     conn = get_db_connection()
     cur = conn.cursor()
+    m_search = request.args.get("m_search", "")
+    m_vehicle = request.args.get("m_vehicle", "")
+    p_search = request.args.get("p_search", "")
+    p_vehicle = request.args.get("p_vehicle", "")
+    active_tab = request.args.get("tab", "maintenance")
+
+    if m_search.strip() or m_vehicle.strip():
+        active_tab = "maintenance"
+    elif p_search.strip() or p_vehicle.strip():
+        active_tab = "pms"
     
     try:
         # 1. Fetch Vehicles for the dropdown selectors in your modals
@@ -831,11 +976,37 @@ def maintenance_pms():
         vehicles = cur.fetchall()
         
         # 2. Fetch Maintenance Logs (Matches your 'maintenance_log' Supabase table)
-        cur.execute('SELECT * FROM maintenance_log ORDER BY date DESC')
+        maintenance_query = "SELECT * FROM maintenance_log WHERE 1=1"
+        maintenance_params = []
+        search_clause, search_params = build_search_clause(
+            ["date", "vehicle_name", "problem", "action_taken", "cost", "mechanic"],
+            m_search,
+        )
+        maintenance_query += search_clause
+        maintenance_params.extend(search_params)
+        vehicle_clause, vehicle_params = build_equals_clause("vehicle_name", m_vehicle)
+        maintenance_query += vehicle_clause
+        maintenance_params.extend(vehicle_params)
+        maintenance_query += " ORDER BY date DESC"
+
+        cur.execute(maintenance_query, maintenance_params)
         m_records = cur.fetchall()
         
         # 3. Fetch PMS Logs (Matches your 'pms_log' Supabase table)
-        cur.execute('SELECT * FROM pms_log ORDER BY last_pms_date DESC')
+        pms_query = "SELECT * FROM pms_log WHERE 1=1"
+        pms_params = []
+        search_clause, search_params = build_search_clause(
+            ["vehicle_name", "last_pms_date", "km", "oil_liters", "next_pms_date"],
+            p_search,
+        )
+        pms_query += search_clause
+        pms_params.extend(search_params)
+        vehicle_clause, vehicle_params = build_equals_clause("vehicle_name", p_vehicle)
+        pms_query += vehicle_clause
+        pms_params.extend(vehicle_params)
+        pms_query += " ORDER BY last_pms_date DESC"
+
+        cur.execute(pms_query, pms_params)
         p_records = cur.fetchall()
         
         # 4. Calculate Stats for the UI Cards
@@ -853,12 +1024,17 @@ def maintenance_pms():
         pms_scheduled_count = len(p_records)
 
         return render_template('maintenance_pms.html', 
-                               vehicles=vehicles, 
-                               m_records=m_records, 
-                               p_records=p_records,
-                               total_m_cost=total_m_cost,
-                               m_count=m_count,
-                               pms_count=pms_scheduled_count)
+                       vehicles=vehicles, 
+                       m_records=m_records, 
+                       p_records=p_records,
+                       total_m_cost=total_m_cost,
+                       m_count=m_count,
+                       pms_count=pms_scheduled_count,
+                       active_tab=active_tab,
+                       m_search=m_search,
+                       m_vehicle=m_vehicle,
+                       p_search=p_search,
+                       p_vehicle=p_vehicle)
                                
     except Exception as e:
         print(f"Error connecting to Maintenance/PMS: {e}")
@@ -1066,12 +1242,37 @@ def parts_supplies():
     conn = get_db_connection()
     parts = []
     total = in_stock = low_stock = out_stock = 0
+    search = request.args.get("search", "")
+    status_filter = request.args.get("status", "")
+    statuses = []
 
     if conn:
         cur = conn.cursor()
 
+        cur.execute("""
+            SELECT DISTINCT status
+            FROM parts_supplies
+            WHERE status IS NOT NULL AND status <> ''
+            ORDER BY status ASC
+        """)
+        statuses = [row[0] for row in cur.fetchall()]
+
         # IMPORTANT: use part_id (not id)
-        cur.execute("SELECT * FROM parts_supplies ORDER BY part_id ASC")
+        parts_query = "SELECT * FROM parts_supplies WHERE 1=1"
+        parts_params = []
+        search_clause, search_params = build_search_clause(
+            ["part_code", "name", "category", "stock", "min_stock", "unit", "status"],
+            search,
+        )
+        parts_query += search_clause
+        parts_params.extend(search_params)
+
+        status_clause, status_params = build_equals_clause("status", status_filter)
+        parts_query += status_clause
+        parts_params.extend(status_params)
+        parts_query += " ORDER BY part_id ASC"
+
+        cur.execute(parts_query, parts_params)
         parts = cur.fetchall()
 
         cur.execute("""
@@ -1097,7 +1298,10 @@ def parts_supplies():
         total=total,
         in_stock=in_stock,
         low_stock=low_stock,
-        out_stock=out_stock
+        out_stock=out_stock,
+        statuses=statuses,
+        search=search,
+        status_filter=status_filter,
     )
 
 
@@ -2693,7 +2897,7 @@ def forgot_password():
     session['reset_otp'] = otp
     session['otp_time'] = time.time()   # OTP timestamp added here
 
-    send_otp_email(email, otp)
+    send_otp_email_async(email, otp)
 
     return redirect(url_for("verify_reset_otp"))
 
@@ -2812,46 +3016,82 @@ def generate_otp():
     return str(random.randint(100000, 999999))
 
 def send_otp_email(receiver_email, otp):
+    sender_email = os.getenv("SMTP_EMAIL") or os.getenv("EMAIL_FROM")
+    subject = "PUP Motor Pool Account Verification"
+    body = f"""
+    
+    Good day.
+    
+    To complete your account registration or password reset request in the Electronic Inventory and Records Management System (e-IRMS), please enter the verification code below:
+    
+    Verification Code: {otp}
+    
+    This code is required to verify your identity and secure your account.
+    
+    If you did not request this verification, kindly ignore this email.
+    
+    Thank you.
+    
+    Transportation and Motor Pool Section
+    Polytechnic University of the Philippines"""
 
-    try:
-        sender_email = os.getenv("SMTP_EMAIL")
-        sender_password = os.getenv("SMTP_PASSWORD")
+    print("Brevo: Sending OTP email to", receiver_email)
 
-        subject = "PUP Motor Pool Account Verification"
-        body = f"Your OTP code is: {otp}"
+    provider = os.getenv("EMAIL_PROVIDER", "brevo").lower()
 
-        msg = MIMEMultipart()
-        msg['From'] = sender_email
-        msg['To'] = receiver_email
-        msg['Subject'] = subject
+    if provider == 'brevo':
+        api_key = os.getenv('BREVO_API_KEY')
+        if not api_key:
+            print("BREVO_API_KEY not configured")
+            return
+        payload = {
+            "sender": {"email": sender_email},
+            "to": [{"email": receiver_email}],
+            "subject": subject,
+            "textContent": body
+        }
+        try:
+            print("requests =", requests)
+            print("type =", type(requests))
+            resp = requests.post(
+                'https://api.brevo.com/v3/smtp/email',
+                headers={
+                    'api-key': api_key,
+                    'Content-Type': 'application/json'
+                },
+                json=payload,
+                timeout=10
+            )
+            print('Brevo response status:', resp.status_code)
+            print('Brevo response body:', resp.text)
+            if resp.status_code in (200, 201):
+                print("OTP EMAIL SENT via Brevo")
+            else:
+                print(f"Brevo error: {resp.status_code} {resp.text}")
+        except Exception as e:
+            print("Brevo send error:")
+            import traceback
+            traceback.print_exc()
+    # SendGrid support removed. Use Brevo (preferred) or SMTP fallback.
+    else:
+        try:
+            sender_password = os.getenv("SMTP_PASSWORD")
 
-        msg.attach(MIMEText(body, 'plain'))
+            msg = MIMEMultipart()
+            msg['From'] = sender_email
+            msg['To'] = receiver_email
+            msg['Subject'] = subject
+            msg.attach(MIMEText(body, 'plain'))
 
-        print("STEP 1: Creating SMTP connection")
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-
-        print("STEP 1.5: SMTP connection established")
-        print("STEP 2: Starting TLS")
-        server.starttls()
-
-        print("STEP 3: Logging in")
-        server.login(sender_email, sender_password)
-
-        print("STEP 4: Login successful")
-        server.sendmail(sender_email, receiver_email, msg.as_string())
-        server.quit()
-
-        print("STEP 6: SMTP connection closed")
-
-        print("OTP EMAIL SENT SUCCESSFULLY")
-        print("SMTP_EMAIL exists:", bool(os.getenv("SMTP_EMAIL")))
-        print("SMTP_PASSWORD exists:", bool(os.getenv("SMTP_PASSWORD")))
-
-    except Exception as e:
-        import traceback
-
-        print("EMAIL ERROR")
-        traceback.print_exc()
+            print("Creating SMTP connection")
+            server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, receiver_email, msg.as_string())
+            server.quit()
+            print("OTP EMAIL SENT SUCCESSFULLY via SMTP")
+        except Exception as e:
+            print("SMTP EMAIL ERROR", e)
 
 
 def send_otp_email_async(receiver_email, otp):
@@ -2874,7 +3114,7 @@ def resend_otp():
 
     session['otp'] = otp
 
-    send_otp_email(email, otp)
+    send_otp_email_async(email, otp)
 
     flash("A new OTP has been sent to your email.")
 
@@ -2911,7 +3151,7 @@ def req_dashboard():
 #============================ LIST OF REQUESTS ==============================
 @app.route('/admin-request/requests')
 @role_required('Admin', 'Staff')
-def requests():
+def admin_requests():
 
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -3497,73 +3737,84 @@ def mark_notification_read(notif_id):
 
 #============================ CREATE PENDING REQUEST NOTIFICATIONS =======================================================================
 def create_pending_request_notifications():
-    conn = get_db_connection()
-    if not conn:
-        return
+    """Create pending request notifications. Safe to run in background thread."""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            print("[NOTIF] No DB connection available")
+            return
 
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        
+        # Set timeout on queries (5 second max per query)
+        cur.execute("SET statement_timeout = 5000")
 
-    cur.execute("""
-        SELECT
-                vr.id,
-                vr.office,
-                u.full_name
-        FROM vehicle_requests vr
-        JOIN users u ON vr.user_id = u.id
-        WHERE vr.status = 'pending'
-        AND vr.created_at <= NOW() - INTERVAL '2 hours'
-    """)
-    requests = cur.fetchall()
+        cur.execute("""
+            SELECT
+                    vr.id,
+                    vr.office,
+                    u.full_name
+            FROM vehicle_requests vr
+            JOIN users u ON vr.user_id = u.id
+            WHERE vr.status = 'pending'
+            AND vr.created_at <= NOW() - INTERVAL '2 hours'
+        """)
+        requests = cur.fetchall()
 
-    if not requests:
+        if not requests:
+            cur.close()
+            conn.close()
+            return
+
+        cur.execute("""
+            SELECT id
+            FROM users
+            WHERE role IN ('Admin', 'Staff')
+        """)
+        admins = [row['id'] for row in cur.fetchall()]
+
+        if not admins:
+            cur.close()
+            conn.close()
+            return
+
+        request_ids = [str(req['id']) for req in requests]
+        cur.execute("""
+            SELECT CAST(request_id AS TEXT) AS request_id, user_id
+            FROM notifications
+            WHERE CAST(request_id AS TEXT) = ANY(%s)
+              AND user_id = ANY(%s)
+              AND notifications.created_at >= NOW() - INTERVAL '2 hours'
+        """, (request_ids, admins))
+
+        existing_notifications = {
+            (row['request_id'], row['user_id'])
+            for row in cur.fetchall()
+        }
+
+        insert_rows = []
+        for req in requests:
+            requester_name = req["full_name"] or "A requester"
+            message = f"{requester_name} from {req['office']} needs approval"
+            for admin_id in admins:
+                if (str(req['id']), admin_id) not in existing_notifications:
+                    insert_rows.append((admin_id, req['id'], message, 'pending_reminder'))
+
+        if insert_rows:
+            cur.executemany("""
+                INSERT INTO notifications (user_id, request_id, message, type)
+                VALUES (%s, %s, %s, %s)
+            """, insert_rows)
+            conn.commit()
+
         cur.close()
         conn.close()
-        return
-
-    cur.execute("""
-        SELECT id
-        FROM users
-        WHERE role IN ('Admin', 'Staff')
-    """)
-    admins = [row['id'] for row in cur.fetchall()]
-
-    if not admins:
-        cur.close()
-        conn.close()
-        return
-
-    request_ids = [str(req['id']) for req in requests]
-    cur.execute("""
-        SELECT CAST(request_id AS TEXT) AS request_id, user_id
-        FROM notifications
-        WHERE CAST(request_id AS TEXT) = ANY(%s)
-          AND user_id = ANY(%s)
-          AND notifications.created_at >= NOW() - INTERVAL '2 hours'
-    """, (request_ids, admins))
-
-    existing_notifications = {
-        (row['request_id'], row['user_id'])
-        for row in cur.fetchall()
-    }
-
-    insert_rows = []
-    for req in requests:
-        requester_name = req["full_name"] or "A requester"
-        message = f"{requester_name} from {req['office']} needs approval"
-        for admin_id in admins:
-            if (str(req['id']), admin_id) not in existing_notifications:
-                insert_rows.append((admin_id, req['id'], message, 'pending_reminder'))
-
-    if insert_rows:
-        cur.executemany("""
-            INSERT INTO notifications (user_id, request_id, message, type)
-            VALUES (%s, %s, %s, %s)
-        """, insert_rows)
-        conn.commit()
-
-    cur.close()
-    conn.close()
-#=============================================================================
+        print("[NOTIF] Notifications updated successfully")
+    except Exception as e:
+        print(f"[NOTIF] Error creating notifications: {e}")
+        import traceback
+        traceback.print_exc()
+#============================================================================="
 
 @app.route('/auth/user')
 def auth_user():
@@ -3855,4 +4106,9 @@ def logout():
 
 if __name__ == '__main__':
     #sync_assigned_user()
-    app.run(debug=True, port=5055)
+    app.run(debug=True, port=int(os.getenv('PORT', 5055)))
+
+
+@app.route('/health')
+def health_check():
+    return 'OK', 200
