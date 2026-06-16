@@ -22,6 +22,7 @@ import calendar
 from datetime import datetime, timedelta
 import time
 from datetime import datetime, timedelta, date
+from datetime import datetime
 
 
 
@@ -2626,6 +2627,8 @@ def insert_annex_b3_rows(doc, rows):
 @app.route("/generate_report", methods=["POST"])
 @role_required("Admin", "Staff")
 def generate_report():
+
+    
 
     report_type = request.form.get("report_type")
     month = request.form.get("month")
