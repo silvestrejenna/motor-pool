@@ -3230,7 +3230,15 @@ def user_new_request():
     
     if request.method == "POST":
         vehicle_type = request.form.get("vehicle_type")
-        destination = request.form.get("destination")
+
+        venue = request.form.get("venue_name", "").strip()
+        street = request.form.get("street_address", "").strip()
+        city = request.form.get("city", "").strip()
+        province = request.form.get("province", "").strip()
+        region = request.form.get("region", "").strip()
+
+        parts = [p for p in [venue, street, city, province, region] if p]
+        destination = ", ".join(parts) if parts else request.form.get("destination", "").strip()
         purpose = request.form.get("purpose")
         start_date = request.form.get("start_date")
         end_date = request.form.get("end_date")
@@ -3244,14 +3252,17 @@ def user_new_request():
         end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
 
         if start_date_obj < date.today():
+            print("FAILED AT CHECK 1: Start date is in the past! Start date was:", start_date_obj, "Today is:", date.today())
             flash("Travel date cannot be earlier than today.")
             return redirect(url_for("user_new_request"))
 
         if end_date_obj < start_date_obj:
+            print("FAILED AT CHECK 2: End date is earlier than start date! End date was:", end_date_obj, "Start date was:", start_date_obj)
             flash("End date cannot be earlier than the start date.")
             return redirect(url_for("user_new_request"))
 
         if not destination or not purpose:
+            print("FAILED AT CHECK 3: Destination or purpose is empty!")
             flash("Please fill in all required fields.")
             return redirect(url_for("user_new_request"))
 
@@ -4526,6 +4537,28 @@ def data_privacy():
     return render_template(
         'user-dashboard/data-privacy.html'
     )
+
+# =======================================================
+# TIME FORMAT FILTER
+# =======================================================
+@app.template_filter('format_time_filter')
+def format_time_filter(value):
+    if not value:
+        return ""
+    if isinstance(value, str):
+        for fmt in ("%H:%M:%S", "%H:%M", "%I:%M %p"):
+            try:
+                dt = datetime.strptime(value.strip(), fmt)
+                return dt.strftime("%I:%M %p")
+            except ValueError:
+                pass
+            return value
+    if isinstance(value, time):
+                return value.strftime("%I:%M %p")
+    if isinstance(value, datetime):
+                return value.strftime("%I:%M %p")
+    return str(value)
+
 # =======================================================
 # USER PROFILE
 # =======================================================
