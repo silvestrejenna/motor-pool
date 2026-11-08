@@ -138,7 +138,7 @@
             <h4>{{ r.destination }}</h4>
 
             <p>
-              {{ r.start_date }} | {{ r.time }} | {{
+              {{ r.start_date }} | {{ r.time | format_time_filter }} | {{
               r.office }}
             </p>
           </div>
