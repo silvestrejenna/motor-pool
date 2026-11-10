@@ -163,6 +163,12 @@
             <button class="view-reason-btn" onclick="openReasonModal('{{ r.rejection_reason | escape }}')">
               View Reason
             </button>
+
+            {% if r.cnav_file %}
+            <a href="{{ url_for('download_cnav', filename=r.cnav_file) }}" class="download-btn">
+              Download CNAV
+            </a>
+            {% endif %}
             {% endif %}
 
           </div>
