@@ -4075,6 +4075,28 @@ def admin_trip_tickets():
 
     return render_template("admin-request/trip_ticket.html", tickets=tickets)
 
+#============================ CNAV DOWNLOAD =======================================================================
+
+@app.route("/download-cnav/<path:filename>")
+def download_cnav(filename):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT 1 FROM vehicle_requests
+        WHERE cnav_file = %s AND user_id = %s
+    """, (filename, session.get("user_id")))
+    owned = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if not owned and session.get("user_role") not in ("Admin", "Staff"):
+        return "Not found", 404
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    return send_from_directory(
+        os.path.join(BASE_DIR, "reports_output"), filename, as_attachment=True
+    )
+
 
 @app.route("/download-trip/<path:filename>")
 def download_trip(filename):
@@ -4419,6 +4441,7 @@ def generate_cnav(request_id, reason):
     cur.close()
     conn.close()
     if not d:
+        print(f"generate_cnav: NO ROW for request_id={request_id!r}")
         raise ValueError(f"generate_cnav: no row for {request_id}")
         return None
 
@@ -4429,7 +4452,7 @@ def generate_cnav(request_id, reason):
         "{{purpose}}": d['purpose'] or "",
         "{{date_time}}": date_time,
         "{{destination}}": d['destination'] or "",
-        "{{passengers}}": str (d['passengers'] or ""),
+        "{{passengers}}": str(d['passengers'] or ""),
         "{{reason}}": reason or "",
         "{{day}}": str(today.day),
         "{{month}}": today.strftime("%B"),
@@ -4495,16 +4518,18 @@ def reject_request():
                 rejection_reason = %s,
                 cnav_file = %s
             WHERE id = %s::uuid
+            RETURNING user_id
         """, (reason, cnav_file,request_id))
         requester_id = cur.fetchone() [0]
 
         cur.execute("""
             INSERT INTO notifications (user_id, request_id, message, type)
             VALUES (%s, %s, %s, %s)
-            """, (requester_id, request_id, 
-              f"Your vehicle request has been rejected. Reason: {reason}", 
-              "A Certifcate of No Available Vehicle (CNAV) is attached.",
+        """, (requester_id, request_id,
+              f"Your vehicle request has been rejected. Reason: {reason}. "
+              "A Certificate of No Available Vehicle (CNAV) is attached.",
               "rejected"))
+
 
 
         cur.execute("""
