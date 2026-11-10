@@ -4406,6 +4406,56 @@ def auth_user():
         "position": session.get("user_position"),
         "role": session.get("user_role")
     }
+
+def generate_cnav(request_id, reason):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("""
+        SELECT vr.office, vr.purpose, vr.start_date, vr.end_date, vr.time, vr.destination, vr.passengers, vr.user_id
+        FROM vehicle_requests vr
+        WHERE vr.id = %s::uuid
+    """, (request_id,))
+    d = cur.fetchone()
+    cur.close()
+    conn.close()
+    if not d:
+        raise ValueError(f"generate_cnav: no row for {request_id}")
+        return None
+
+    today = date.today()
+    date_time = f"{d['start_date']} to {d['end_date']}, {d['time']}"
+    values = {
+        "{{office}}": d['office'] or "",
+        "{{purpose}}": d['purpose'] or "",
+        "{{date_time}}": date_time,
+        "{{destination}}": d['destination'] or "",
+        "{{passengers}}": str (d['passengers'] or ""),
+        "{{reason}}": reason or "",
+        "{{day}}": str(today.day),
+        "{{month}}": today.strftime("%B"),
+        "{{year}}": str(today.year)
+    }
+
+    def fill (paragraphs):
+        for p in paragraphs:
+            for k, v in values.items():
+                if k in p.text:
+                    p.text = p.text.replace(k, v)
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    doc = Document(os.path.join(BASE_DIR, "report_template", "cnav_temp.docx"))
+    fill(doc.paragraphs)
+    for t in doc.tables:
+        for row in t.rows:
+            for cell in row.cells:
+                fill(cell.paragraphs)
+
+    out_dir = os.path.join(BASE_DIR, "reports_output")
+    os.makedirs(out_dir, exist_ok=True)
+    filename = f"cnav_{request_id}.docx"
+    filepath = os.path.join(out_dir, filename)
+    doc.save(os.path.join(out_dir, filename))
+    return filename
 # =======================================================
 # REJECT REQUEST-admin side
 # =======================================================
@@ -4438,12 +4488,24 @@ def reject_request():
             })
 
         # ✅ ONLY IF PENDING
+        cnav_file = generate_cnav(request_id, reason)
         cur.execute("""
             UPDATE vehicle_requests
             SET status = 'rejected',
-                rejection_reason = %s
+                rejection_reason = %s,
+                cnav_file = %s
             WHERE id = %s::uuid
-        """, (reason, request_id))
+        """, (reason, cnav_file,request_id))
+        requester_id = cur.fetchone() [0]
+
+        cur.execute("""
+            INSERT INTO notifications (user_id, request_id, message, type)
+            VALUES (%s, %s, %s, %s)
+            """, (requester_id, request_id, 
+              f"Your vehicle request has been rejected. Reason: {reason}", 
+              "A Certifcate of No Available Vehicle (CNAV) is attached.",
+              "rejected"))
+
 
         cur.execute("""
             DELETE FROM notifications
@@ -4459,7 +4521,11 @@ def reject_request():
 
     except Exception as e:
         print("ERROR:", e)
-        return jsonify({"success": False, "error": str(e)})
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        return jsonify({"success": False, "error": f"{type(e).__name__}: {str(e)}"})
 
 # =======================================================
 # HOMEPAGE APPROVAL REMINDERS
