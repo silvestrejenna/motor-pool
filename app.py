@@ -3200,7 +3200,9 @@ def user_new_request():
             contact_number,
             emergency_contact_person,
             relationship,
-            emergency_contact_number
+            emergency_contact_number,
+            requesting_office,
+            company_position
         FROM users
         WHERE id = %s
     """, (user_id,))
@@ -3242,10 +3244,21 @@ def user_new_request():
         purpose = request.form.get("purpose")
         start_date = request.form.get("start_date")
         end_date = request.form.get("end_date")
-        time = request.form.get("time")
+        time_departure = request.form.get("time_departure")
+
         days = request.form.get("days")
         passengers = request.form.get("passengers")
         office = request.form.get("office")
+        on_behalf = request.form.get("on_behalf") == "on"
+        req_name = request.form.get("req_name", "").strip() if on_behalf else ""
+        req_position = request.form.get("req_position", "").strip() if on_behalf else ""
+        req_office = request.form.get("req_office", "").strip() if on_behalf else ""
+        req_contact = request.form.get("req_contact", "").strip() if on_behalf else ""
+        time_return = request.form.get("time_return") or None
+        time_return_na = request.form.get("time_return_na") == "on"
+        with_rata = request.form.get("with_rata") == "on"
+        certified = request.form.get("certified") == "on"
+
 
          # ===== DATE VALIDATION =====
         start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
@@ -3279,54 +3292,38 @@ def user_new_request():
             WHERE id = %s
         """, (user_id,))
 
-        profile = cur.fetchone()
+        contact_profile = cur.fetchone()
 
-        contact_number = profile[0]
-        emergency_contact_person = profile[1]
-        relationship = profile[2]
-        emergency_contact_number = profile[3]
+        contact_number = contact_profile[0]
+        emergency_contact_person = contact_profile[1]
+        relationship = contact_profile[2]
+        emergency_contact_number = contact_profile[3]
 
         cur.execute("""
             INSERT INTO vehicle_requests
             (
-                user_id,
-                vehicle_type,
-                destination,
-                purpose,
-                start_date,
-                end_date,
-                time,
-                days,
-                passengers,
-                office,
-                contact_number,
-                emergency_contact_person,
-                relationship,
+                user_id, vehicle_type, destination, purpose,
+                start_date, end_date, time, days, passengers, office,
+                contact_number, emergency_contact_person, relationship,
                 emergency_contact_number,
+                time_return, with_rata, certified, on_behalf,
+                req_name, req_position, req_office, req_contact,
                 status
             )
             VALUES (
                 %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                %s,%s,%s,%s,
+                %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                 'pending'
             )
             RETURNING id
         """,
         (
-            user_id,
-            vehicle_type,
-            destination,
-            purpose,
-            start_date,
-            end_date,
-            time,
-            days,
-            passengers,
-            office,
-            contact_number,
-            emergency_contact_person,
-            relationship,
-            emergency_contact_number
+            user_id, vehicle_type, destination, purpose,
+            start_date, end_date, time_departure, days, passengers, office,
+            contact_number, emergency_contact_person, relationship,
+            emergency_contact_number,
+            time_return, with_rata, certified, on_behalf,
+            req_name, req_position, req_office, req_contact
         ))
 
         new_request_id = cur.fetchone()[0]
@@ -3365,7 +3362,9 @@ def user_new_request():
         contact_number=profile[1],
         emergency_contact_person=profile[2],
         relationship=profile[3],
-        emergency_contact_number=profile[4]
+        emergency_contact_number=profile[4],
+        requesting_office=profile[5] or "",
+        company_position=profile[6] or ""
     )
 
 
@@ -3743,6 +3742,7 @@ def admin_requests():
             vr.destination,
             vr.created_at,
             vr.status,  
+            vr.vr_file,
             vr.contact_number,
             vr.emergency_contact_person,
             vr.relationship,
@@ -3803,6 +3803,9 @@ def req_details(req_id):
         driver_name = request.form["driver_name"]
         start_date = request.form["start_date"]
         end_date = request.form["end_date"]
+        vrvf_no = request.form.get("vrvf_no", "").strip()
+        date_filed = request.form.get("date_filed") or datetime.now()
+
 
         start = datetime.strptime(start_date, "%Y-%m-%d").date()
         end = datetime.strptime(end_date, "%Y-%m-%d").date()
@@ -3850,9 +3853,12 @@ def req_details(req_id):
         # =========================
         cur.execute("""
             UPDATE vehicle_requests
-            SET status = 'approved'
+            SET status = 'approved',
+                vrvf_no = %s,
+                date_filed = %s
             WHERE id = %s
-        """, (req_id,))
+        """, (vrvf_no, date_filed, req_id))
+
 
         # 🧹 remove pending reminders
         cur.execute("""
@@ -3886,6 +3892,12 @@ def req_details(req_id):
         conn.commit()
         cur.close()
         conn.close()
+
+        try:
+            generate_vr(req_id)
+        except Exception as e:
+            print("generate_vr failed:", e)
+
 
         # 🔄 Redirect after success
         return redirect(url_for("req_details", vehicle_name=vehicle_name, req_id=req_id))
@@ -4096,6 +4108,26 @@ def download_cnav(filename):
     return send_from_directory(
         os.path.join(BASE_DIR, "reports_output"), filename, as_attachment=True
     )
+
+@app.route("/download-vr/<path:filename>")
+def download_vr(filename):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT 1 FROM vehicle_requests WHERE vr_file = %s AND user_id = %s",
+                (filename, session.get("user_id")))
+    owned = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if not owned and session.get("user_role") not in ("Admin", "Staff"):
+        return "Not found", 404
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    directory = os.path.join(BASE_DIR, "reports_output")
+    if not os.path.exists(os.path.join(directory, filename)):
+        generate_vr(filename[len("vrvf_"):-len(".docx")])  # rebuild if the file was lost
+    return send_from_directory(directory, filename, as_attachment=True)
+
 
 
 @app.route("/download-trip/<path:filename>")
@@ -4479,6 +4511,107 @@ def generate_cnav(request_id, reason):
     filepath = os.path.join(out_dir, filename)
     doc.save(os.path.join(out_dir, filename))
     return filename
+
+# =======================================================
+# VRVF GENERATION
+# =======================================================
+
+def _fill_paragraph(p, values):
+    for key, val in values.items():
+        if key not in p.text:
+            continue
+        done = False
+        for run in p.runs:
+            if key in run.text:
+                run.text = run.text.replace(key, val)
+                done = True
+        if not done:  # placeholder was split across runs
+            full = p.text.replace(key, val)
+            for i, run in enumerate(p.runs):
+                run.text = full if i == 0 else ""
+
+
+def _fmt_time(t):
+    if not t:
+        return ""
+    return t.strftime("%I:%M %p") if hasattr(t, "strftime") else str(t)
+
+
+def generate_vr(request_id):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("""
+        SELECT vr.*, u.full_name, u.company_position, u.requesting_office,
+               u.contact_number AS profile_contact, u.email
+        FROM vehicle_requests vr
+        JOIN users u ON vr.user_id = u.id
+        WHERE vr.id = %s::uuid
+    """, (str(request_id),))
+    d = cur.fetchone()
+    cur.close()
+    conn.close()
+    if not d:
+        raise ValueError(f"generate_vr: no row for {request_id}")
+
+    on_behalf = d["on_behalf"]
+    name = d["req_name"] if on_behalf and d["req_name"] else d["full_name"]
+    position = d["req_position"] if on_behalf and d["req_position"] else (d["company_position"] or "")
+    office = d["req_office"] if on_behalf and d["req_office"] else (d["office"] or d["requesting_office"] or "")
+    contact = d["req_contact"] if on_behalf and d["req_contact"] else (d["profile_contact"] or "")
+    if not on_behalf and d["email"]:
+        contact = f"{contact} / {d['email']}"
+
+    start, end = d["start_date"], d["end_date"]
+    fmt = lambda x: x.strftime("%B %d, %Y")
+    date_activity = fmt(start) if start == end else f"{fmt(start)} to {fmt(end)}"
+
+    filed = d["date_filed"]
+    certified = d["certified"]
+
+    values = {
+        "{{vrvf_no}}": d["vrvf_no"] or "",
+        "{{date_filed}}": filed.strftime("%B %d, %Y %I:%M %p") if filed else "",
+        "{{office}}": office,
+        "{{full_name}}": name or "",
+        "{{position}}": position,
+        "{{contact}}": contact,
+        "{{purpose}}": d["purpose"] or "",
+        "{{date_activity}}": date_activity,
+        "{{time_departure}}": _fmt_time(d["time"]),
+        "{{time_return}}": _fmt_time(d["time_return"]) or "N/A",
+        "{{destination}}": d["destination"] or "",
+        "{{passengers}}": str(d["passengers"] or ""),
+        "{{with_rata}}": "☒" if d["with_rata"] else "☐",
+        "{{without_rata}}": "☐" if d["with_rata"] else "☒",
+        "{{cert_name}}": (name or "") if certified else "",
+        "{{cert_date}}": d["created_at"].strftime("%B %d, %Y %I:%M %p") if certified and d["created_at"] else "",
+    }
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    doc = Document(os.path.join(BASE_DIR, "report_template", "vrvf_temp.docx"))
+
+    for p in doc.paragraphs:
+        _fill_paragraph(p, values)
+    for t in doc.tables:
+        for row in t.rows:
+            for cell in row.cells:
+                for p in cell.paragraphs:
+                    _fill_paragraph(p, values)
+
+    out_dir = os.path.join(BASE_DIR, "reports_output")
+    os.makedirs(out_dir, exist_ok=True)
+    filename = f"vrvf_{d['id']}.docx"
+    doc.save(os.path.join(out_dir, filename))
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("UPDATE vehicle_requests SET vr_file = %s WHERE id = %s::uuid",
+                (filename, str(d["id"])))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return filename
+
 # =======================================================
 # REJECT REQUEST-admin side
 # =======================================================
@@ -4669,6 +4802,8 @@ def user_profile():
 
         address = request.form.get("address")
         contact_number = request.form.get("contact_number")
+        company_position = request.form.get("company_position", "").strip()
+        requesting_office = request.form.get("requesting_office", "").strip()
         emergency_contact_person = request.form.get("emergency_contact_person")
         relationship = request.form.get("relationship")
         emergency_contact_number = request.form.get("emergency_contact_number")
@@ -4697,7 +4832,9 @@ def user_profile():
                 contact_number = %s,
                 emergency_contact_person = %s,
                 relationship = %s,
-                emergency_contact_number = %s
+                emergency_contact_number = %s,
+                company_position = %s,
+                requesting_office = %s
             WHERE id = %s
         """, (
             address,
@@ -4705,8 +4842,11 @@ def user_profile():
             emergency_contact_person,
             relationship,
             emergency_contact_number,
+            company_position,
+            requesting_office,
             user_id
         ))
+
 
         conn.commit()
 
@@ -4725,10 +4865,13 @@ def user_profile():
             contact_number,
             emergency_contact_person,
             relationship,
-            emergency_contact_number
+            emergency_contact_number,
+            requesting_office,
+            company_position
         FROM users
         WHERE id = %s
     """, (user_id,))
+
 
     user = cursor.fetchone()
 

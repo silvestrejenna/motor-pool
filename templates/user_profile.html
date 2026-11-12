@@ -60,12 +60,23 @@
                         placeholder="09XXXXXXXXX" pattern="09[0-9]{9}" maxlength="11"
                         oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
                 </div>
+                <div class="profile-group">
+                    <label for="requesting_office">Requesting Office / Unit</label>
+                    <input type="text" id="requesting_office" name="requesting_office" maxlength="100"
+                        value="{{ user.requesting_office or '' }}" required>
+                </div>
+
+                <div class="profile-group">
+                    <label for="company_position">Position / Designation</label>
+                    <input type="text" id="company_position" name="company_position" maxlength="100"
+                        value="{{ user.company_position or '' }}" required>
+                </div>
 
                 <div class="profile-group">
                     <label for="emergency_contact_person">
                         Emergency Contact Person
                     </label>
-                    <input type="text" id="emergency_contact_person" maxlength="100" gname="emergency_contact_person"
+                    <input type="text" id="emergency_contact_person" maxlength="100" name="emergency_contact_person"
                         value="{{ user.emergency_contact_person or '' }}" placeholder="Full Name" required>
                 </div>
 

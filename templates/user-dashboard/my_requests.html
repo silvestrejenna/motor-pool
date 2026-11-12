@@ -157,6 +157,12 @@
             </a>
             {% endif %}
 
+            {% if r.vr_file %}
+            <a href="{{ url_for('download_vr', filename=r.vr_file) }}" class="download-btn">
+              Download Request Form
+            </a>
+            {% endif %}
+
             {% elif r.status == "rejected" %}
             <span class="status rejected">Rejected</span>
 
