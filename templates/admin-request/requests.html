@@ -129,6 +129,10 @@
                 <a href="/admin-request/req_details/{{ r.id }}" class="view-btn">
                   View Details
                 </a>
+                {% if r.vr_file %}
+                <br><a href="{{ url_for('download_vr', filename=r.vr_file) }}">Download Form</a>
+                {% endif %}
+
               </td>
             </tr>
             {% endfor %}

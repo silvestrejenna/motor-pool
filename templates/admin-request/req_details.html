@@ -231,6 +231,17 @@
                 </option>
                 {% endfor %}
               </select>
+
+              <div class="form-group">
+              <label>VRVF No.</label>
+              <input type="text" name="vrvf_no" id="vrvf_no" maxlength="50" placeholder="e.g. 2026-0001" required>
+            </div>
+
+            <div class="form-group">
+              <label>Date and Time Filed</label>
+              <input type="datetime-local" name="date_filed" id="date_filed" required>
+            </div>
+
             </div>
 
             <div class="form-group">
@@ -651,6 +662,15 @@
       alert("Error rejecting request: " + data.error);
     }
   }
+
+    (function () {
+    const el = document.getElementById("date_filed");
+    if (!el) return;
+    const n = new Date();
+    n.setMinutes(n.getMinutes() - n.getTimezoneOffset());
+    el.value = n.toISOString().slice(0, 16);
+  })();
+
 </script>
 </body>
 

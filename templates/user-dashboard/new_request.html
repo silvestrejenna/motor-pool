@@ -226,11 +226,19 @@
             <div>
               <label>Time of Departure *</label>
 
-              <input type="time" name="time" required />
-              <label>To</label>
-              <input type="time" name="time" required />
+              <input type="time" name="time_departure" required />
             </div>
+            <div>
+              <label>Time of Return</label>
 
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="time" id="time_return" name="time_return" />
+                <button type="button" class="btn-cancel" onclick="setReturnNA()">N/A</button>
+                <input type="hidden" id="time_return_na" name="time_return_na" />
+
+              </div>
+            </div>
+            
             <div>
               <label>Number of Days *</label>
 
@@ -252,15 +260,16 @@
           <div class="form-row two">
             <div>
               <label>Requestor Name *</label>
-
               <input type="text" value="{{ session['user_fullname'] }}" readonly />
             </div>
 
             <div>
               <label>Office / Department *</label>
-              <input type="text" name="office" maxlength="100" placeholder="Enter Office/Department Name" required />
+              <input type="text" name="office" maxlength="100"
+                value="{{ requesting_office or '' }}" placeholder="Enter Office/Department Name" required />
             </div>
           </div>
+
           <div>
             <label>Contact Number</label>
             <p>{{ contact_number }}</p>
@@ -280,18 +289,66 @@
             <label>Emergency Contact Number</label>
             <p>{{ emergency_contact_number }}</p>
           </div>
+
+          <!-- ON BEHALF OF -->
+          <div class="checkbox-container">
+            <input type="checkbox" id="onBehalfCheck" name="on_behalf"
+              onchange="toggleOnBehalf()" />
+            <label for="onBehalfCheck">
+              I am filing this request on behalf of another person or office
+            </label>
+          </div>
+
+          <div id="onBehalfFields" style="display: none;">
+            <div class="form-row two">
+              <div>
+                <label>Name of Requesting Official/Employee *</label>
+                <input type="text" id="req_name" name="req_name" maxlength="100" disabled />
+              </div>
+              <div>
+                <label>Position / Designation *</label>
+                <input type="text" id="req_position" name="req_position" maxlength="100" disabled />
+              </div>
+            </div>
+
+            <div class="form-row two">
+              <div>
+                <label>Requesting Office / Unit *</label>
+                <input type="text" id="req_office" name="req_office" maxlength="100" disabled />
+              </div>
+              <div>
+                <label>Contact Number *</label>
+                <input type="tel" id="req_contact" name="req_contact" maxlength="11"
+                  pattern="09[0-9]{9}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" disabled />
+              </div>
+            </div>
+          </div>
         </div>
 
+
         <!-- CONFIRM -->
+        <!-- RATA -->
+        <div class="form-card">
+          <h3>RATA</h3>
+          <div class="checkbox-container">
+            <input type="checkbox" id="withRata" name="with_rata" />
+            <label for="withRata">With RATA</label>
+          </div>
+          <p class="subtitle">Leave unticked if Without RATA.</p>
+        </div>
+
+        <!-- CERTIFICATION -->
         <div class="form-card">
           <div class="checkbox-container">
-            <input type="checkbox" id="confirmCheck" required />
-
-            <label for="confirmCheck">
-              I confirm that all details provided are accurate and complete
+            <input type="checkbox" id="certified" name="certified" required />
+            <label for="certified">
+              I certify that the information above is true and correct, and I am
+              responsible for the use of the vehicle and the passengers included
+              in this request. This serves as my approval of this request.
             </label>
           </div>
         </div>
+
 
         <!-- BUTTONS -->
         <div class="form-actions">
@@ -701,6 +758,39 @@
         passengerInput.setCustomValidity("");
       }
     });
+
+    function toggleOnBehalf() {
+    const checked = document.getElementById("onBehalfCheck").checked;
+    const fields = document.getElementById("onBehalfFields");
+
+    fields.style.display = checked ? "block" : "none";
+
+    ["req_name", "req_position", "req_office", "req_contact"].forEach((id) => {
+      const el = document.getElementById(id);
+      el.disabled = !checked;
+      el.required = checked;
+      if (!checked) el.value = "";
+    });
+  }
+
+    function setReturnNA() {
+    const el = document.getElementById("time_return");
+    el.value = "";
+    el.disabled = true;
+    document.getElementById("time_return_na").value = "on";
+  }
+
+  function clearReturnNA() {
+    const el = document.getElementById("time_return");
+    el.disabled = false;
+    document.getElementById("time_return_na").value = "";
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const el = document.getElementById("time_return");
+    if (el) el.addEventListener("input", clearReturnNA);
+  });
+
 
 
   </script>
