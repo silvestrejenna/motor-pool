@@ -145,7 +145,7 @@
             </div>
 
             <p class="calendar-note">
-              This calendar shows vehicles that are occupied, booked, or otherwise unavailable.
+              Click a day to show occupied and available vehicles.
             </p>
 
             <div>
@@ -163,6 +163,16 @@
           </div>
           <div id="calendar"></div>
         </div>
+
+        <div id="dayModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="dayModalTitle">Available Vehicles</h3>
+      <div id="dayModalList"></div>
+      <div class="modal-actions">
+        <button type="button" onclick="closeDayModal()" class="btn-cancel">Close</button>
+      </div>
+    </div>
+  </div>
       </div>
     </div>
   </div>
@@ -324,48 +334,83 @@
         dayNumber.textContent = day;
         cell.appendChild(dayNumber);
 
-        if (scheduleData[selected]) {
-          cell.classList.add("booked-day");
+        const dayData = scheduleData[selected] || { available: [], booked: [] };
 
-          scheduleData[selected].forEach((item) => {
-            const booking = document.createElement("div");
-            booking.classList.add("booking-item");
-            booking.textContent = `${item.vehicle_name} - ${item.plate_number}`;
-            cell.appendChild(booking);
-          });
-        }
+        const avail = document.createElement("div");
+        avail.classList.add("avail-count");
+        avail.textContent = `${dayData.available.length} available`;
+        avail.style.pointerEvents = "auto";
+        cell.appendChild(avail);
+
+        const bookedCount = document.createElement("div");
+        bookedCount.classList.add("booked-count");
+        bookedCount.textContent = `${dayData.booked.length} booked`;
+        bookedCount.style.pointerEvents = "auto";
+        cell.appendChild(bookedCount);
+
+        cell.style.cursor = "pointer";
+        cell.dataset.available = dayData.available.length;
+        cell.dataset.booked = dayData.booked.length;
+
+        cell.dataset.date = selected;
+
 
         cell.onclick = function () {
-          if (!startDate) {
-            startDate = selected;
-            document.getElementById("start_date").value = startDate;
-            cell.classList.add("start-date");
-          } else if (!endDate) {
-            endDate = selected;
-            document.getElementById("end_date").value = endDate;
-            cell.classList.add("end-date");
-
-            highlightRange(year, month);
-          } else {
-            startDate = selected;
-            endDate = null;
-
-            document.getElementById("start_date").value = startDate;
-            document.getElementById("end_date").value = "";
-
-            document
-              .querySelectorAll(".calendar-day")
-              .forEach((d) =>
-                d.classList.remove("start-date", "end-date", "range"),
-              );
-
-            cell.classList.add("start-date");
-          }
+          openDayModal(selected);
         };
+
 
         calendar.appendChild(cell);
       }
     }
+
+  const dayModal = document.getElementById("dayModal");
+  const dayModalTitle = document.getElementById("dayModalTitle");
+  const dayModalList = document.getElementById("dayModalList");
+
+  function openDayModal(dateKey) {
+    const day = scheduleData[dateKey] || { available: [], booked: [] };
+
+    dayModalTitle.textContent = `Vehicles — ${dateKey}`;
+    dayModalList.innerHTML = "";
+
+    const availHead = document.createElement("h4");
+    availHead.textContent = `Available (${day.available.length})`;
+    dayModalList.appendChild(availHead);
+
+    day.available.forEach((v) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "vehicle-link";
+      btn.textContent = `${v.vehicle_name} — ${v.plate_number} (${v.passengers || "—"} seats)`;
+      btn.onclick = () => askToRequest(v.plate_number);
+      dayModalList.appendChild(btn);
+    });
+
+    const bookedHead = document.createElement("h4");
+    bookedHead.textContent = `Booked (${day.booked.length})`;
+    dayModalList.appendChild(bookedHead);
+
+    day.booked.forEach((v) => {
+      const row = document.createElement("p");
+      row.className = "vehicle-booked";
+      row.textContent = `${v.vehicle_name} — ${v.plate_number}`;
+      dayModalList.appendChild(row);
+    });
+
+    dayModal.classList.remove("hidden");
+  }
+
+  function closeDayModal() {
+    dayModal.classList.add("hidden");
+  }
+
+  function askToRequest(plate) {
+    if (confirm(`Do you want to request this vehicle (${plate})?`)) {
+      window.location.href = `/user/new-request?vehicle=${encodeURIComponent(plate)}`;
+    }
+  }
+
 
     function highlightRange(year, month) {
       const cells = document.querySelectorAll(".calendar-day");
@@ -478,6 +523,7 @@
 
     loadUnreadCount();
   </script>
+
 </body>
 
 </html>

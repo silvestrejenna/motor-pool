@@ -3371,6 +3371,7 @@ def user_new_request():
     firstname = (session.get("full_name") or "users").split()[0]
 
     vehicle_list = get_vehicle_list()
+    preselected = request.args.get("vehicle", "").strip()
 
     return render_template(
         "user-dashboard/new_request.html",
@@ -3381,7 +3382,9 @@ def user_new_request():
         emergency_contact_number=profile[4],
         requesting_office=profile[5] or "",
         company_position=profile[6] or "",
-        vehicle_list=vehicle_list
+        vehicle_list=vehicle_list,
+        preselected=preselected
+
     )
 
 
@@ -4272,55 +4275,62 @@ def get_vehicle_schedule():
 
     if not year or not month:
         return jsonify({"error": "Missing year or month"}), 400
-    
+
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cur.execute("""
-        SELECT
-            d.schedule_date,
-            v.vehicle_id,
-            v.name AS vehicle_name,
-            v.plate_number,
-            v.passengers,
-            (b.vehicle_id IS NOT NULL) AS is_booked
-        FROM (
-            SELECT DISTINCT schedule_date
-            FROM vehicle_schedule
-            WHERE EXTRACT(YEAR FROM schedule_date) = %s
-              AND EXTRACT(MONTH FROM schedule_date) = %s
-              AND schedule_date >= CURRENT_DATE
-        ) d
-        CROSS JOIN (
-            SELECT vehicle_id, name, plate_number, passengers
-            FROM vehicle
-            WHERE COALESCE(is_deleted, FALSE) = FALSE
-        ) v
-        LEFT JOIN (
-            SELECT DISTINCT vehicle_id, schedule_date
-            FROM vehicle_schedule
-        ) b
-            ON b.vehicle_id = v.vehicle_id
-           AND b.schedule_date = d.schedule_date
-        ORDER BY d.schedule_date, v.name
-    """, (year, month))
+        SELECT vehicle_id, name, plate_number, passengers
+        FROM vehicle
+        WHERE COALESCE(is_deleted, FALSE) = FALSE
+        ORDER BY name, plate_number
+    """)
+    fleet = cur.fetchall()
 
-    rows = cur.fetchall()
+    cur.execute("""
+        SELECT vs.schedule_date, vs.vehicle_id
+        FROM vehicle_schedule vs
+        WHERE EXTRACT(YEAR FROM vs.schedule_date) = %s
+          AND EXTRACT(MONTH FROM vs.schedule_date) = %s
+    """, (year, month))
+    booked_rows = cur.fetchall()
+
     cur.close()
     conn.close()
 
+    # which vehicle_ids are booked on which date
+    booked_on = {}
+    for row in booked_rows:
+        key = row["schedule_date"].strftime("%Y-%m-%d")
+        booked_on.setdefault(key, set()).add(row["vehicle_id"])
+
+    today = date.today()
+    days_in_month = calendar.monthrange(year, month)[1]
+
     grouped = {}
+    for day in range(1, days_in_month + 1):
+        this_date = date(year, month, day)
+        if this_date < today:
+            continue
 
-    for row in rows:
-        date_key = row["schedule_date"].strftime("%Y-%m-%d")
+        key = this_date.strftime("%Y-%m-%d")
+        booked_ids = booked_on.get(key, set())
 
-        if date_key not in grouped:
-            grouped[date_key] = []
+        available = []
+        booked = []
+        for v in fleet:
+            item = {
+                "vehicle_id": str(v["vehicle_id"]),
+                "vehicle_name": v["name"],
+                "plate_number": v["plate_number"],
+                "passengers": v["passengers"],
+            }
+            if v["vehicle_id"] in booked_ids:
+                booked.append(item)
+            else:
+                available.append(item)
 
-        grouped[date_key].append({
-            "vehicle_name": row["vehicle_name"],
-            "plate_number": row["plate_number"]
-        })
+        grouped[key] = {"available": available, "booked": booked}
 
     return jsonify(grouped)
 

@@ -135,16 +135,18 @@
               <input type="text" name="vehicle_type" placeholder="Please provide us the type of vehicle" required />
 -->
           <select name="vehicle_type" id="vehicle_type" required>
-            <option value="" disabled selected>Select Type of Vehicle</option>
+            <option value="" disabled {% if not preselected %}selected{% endif %}>Select Type of Vehicle</option>
             {% for v in vehicle_list %}
-            <option value="{{ v[2] }}" data-seats="{{ v[3] or 0 }}">
-              {{ v[1] }}{% if v[2] %} — {{ v[3] or '—'}} seats{% endif %}
+            <option value="{{ v[2] }}" data-seats="{{ v[3] or 0 }}"
+              {% if v[2] == preselected %}selected{% endif %}>
+              {{ v[1] }} ({{ v[2] }}){% if v[3] %} — {{ v[3] }} seats{% endif %}
             </option>
             {% endfor %}
             <option value="No Specific Vehicle Preference">
               No Specific Vehicle Preference
             </option>
           </select>
+
 
         </div>
 
@@ -812,6 +814,10 @@
       seatHint.style.color = "";
     }
   }
+    if ("{{ preselected }}") {
+    updateSeatHint();
+  }
+
 
 
 
