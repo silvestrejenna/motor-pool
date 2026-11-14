@@ -135,24 +135,17 @@
               <input type="text" name="vehicle_type" placeholder="Please provide us the type of vehicle" required />
 -->
           <select name="vehicle_type" id="vehicle_type" required>
-            <option value="" disabled selected>
-              Select Type of Vehicle
+            <option value="" disabled selected>Select Type of Vehicle</option>
+            {% for v in vehicle_list %}
+            <option value="{{ v[2] }}" data-seats="{{ v[3] or 0 }}">
+              {{ v[1] }}{% if v[2] %} — {{ v[3] or '—'}} seats{% endif %}
             </option>
-
-
-            <option value="SUV">SUV</option>
-            <option value="Van">Van</option>
-            <option value="Passenger Bus">Passenger Bus</option>
-            <option value="Mini Bus">Mini Bus</option>
-            <option value="Pickup Truck">Pickup Truck</option>
-            <option value="Utility Vehicle">Utility Vehicle</option>
-            <option value="Service Vehicle">Service Vehicle</option>
-
-
+            {% endfor %}
             <option value="No Specific Vehicle Preference">
               No Specific Vehicle Preference
             </option>
           </select>
+
         </div>
 
         <!-- TRIP DETAILS -->
@@ -238,7 +231,7 @@
 
               </div>
             </div>
-            
+
             <div>
               <label>Number of Days *</label>
 
@@ -249,6 +242,7 @@
               <label>Number of Passengers *</label>
 
               <input type="number" id="passengers" name="passengers" min="1" required>
+              <p id="seatHint" class="seat-hint"></p>
             </div>
           </div>
         </div>
@@ -790,6 +784,36 @@
     const el = document.getElementById("time_return");
     if (el) el.addEventListener("input", clearReturnNA);
   });
+
+  const typeSelect = document.getElementById("vehicle_type");
+  const passengersInput = document.getElementById("passengers");
+  const seatHint = document.getElementById("seatHint");
+
+  function updateSeatHint() {
+    const opt = typeSelect.options[typeSelect.selectedIndex];
+    const seats = opt && opt.dataset ? parseInt(opt.dataset.seats, 10) || 0 : 0;
+    const typed = parseInt(passengersInput.value, 10) || 0;
+
+    if (!seats || opt.value === "No Specific Vehicle Preference") {
+      passengersInput.removeAttribute("max");
+      passengersInput.placeholder = "Enter number of passengers";
+      seatHint.textContent = "";
+      return;
+    }
+
+    passengersInput.max = seats;
+    passengersInput.placeholder = `Maximum of ${seats}`;
+
+    if (typed > seats) {
+      seatHint.textContent = `This vehicle seats ${seats}. ${typed} exceeds that.`;
+      seatHint.style.color = "#b00";
+    } else {
+      seatHint.textContent = "";
+      seatHint.style.color = "";
+    }
+  }
+
+
 
 
 

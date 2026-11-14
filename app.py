@@ -243,6 +243,22 @@ def build_search_clause(columns, search_value):
     return f" AND ({clause})", [f"%{search_value}%"] * len(columns)
 
 
+def get_vehicle_list():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT vehicle_id, name, plate_number, passengers
+        FROM vehicle
+        WHERE is_deleted = FALSE
+          AND plate_number IS NOT NULL AND plate_number <> ''
+        ORDER BY plate_number
+    """)
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+
 def build_equals_clause(column, filter_value):  
     filter_value = (filter_value or "").strip()
     if not filter_value:
@@ -450,13 +466,13 @@ def inventory():
         vehicle_statuses = [row[0] for row in cur.fetchall()]
 
         vehicle_query = """
-            SELECT vehicle_id, name, plate_number, color, type, status, mileage
+            SELECT vehicle_id, name, plate_number, passengers, type, status, mileage
             FROM vehicle
             WHERE is_deleted = FALSE
         """
         vehicle_params = []
         search_clause, search_params = build_search_clause(
-            ["name", "plate_number", "color", "type", "status", "mileage"],
+            ["name", "plate_number", "passengers", "type", "status", "mileage"],
             vehicle_search,
         )
         vehicle_query += search_clause
@@ -584,7 +600,7 @@ def inventory():
 def add_vehicle():
     name = request.form['name']
     plate_number = request.form['plate_number']
-    color = request.form.get('color')
+    passengers = request.form.get('passengers')
     type = request.form['type']
     status = request.form['status']
     mileage = request.form['mileage']
@@ -593,9 +609,9 @@ def add_vehicle():
     if conn:
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO vehicle (name, plate_number, color, type, status, mileage)
+            INSERT INTO vehicle (name, plate_number, passengers, type, status, mileage)
             VALUES (%s, %s, %s, %s, %s, %s)
-        """, (name, plate_number, color, type, status, mileage))
+        """, (name, plate_number, passengers, type, status, mileage))
         conn.commit()
         cur.close()
         conn.close()
@@ -610,7 +626,7 @@ def add_vehicle():
             new_data={
                 'name': name,
                 'plate_number': plate_number,
-                'color': color,
+                'passengers': passengers,
                 'type': type,
                 'status': status,
                 'mileage': mileage,
@@ -661,7 +677,7 @@ def delete_vehicle(id):
 def update_vehicle(id):
     name = request.form.get('name')
     plate = request.form.get('plate')
-    color = request.form.get('color')
+    passengers = request.form.get('passengers')
     v_type = request.form.get('type')
     status = request.form.get('status')
     
@@ -680,9 +696,9 @@ def update_vehicle(id):
             old_data = fetch_one_as_dict(cur)
             cur.execute("""
                 UPDATE vehicle 
-                SET name=%s, plate_number=%s, color=%s, type=%s, status=%s, mileage=%s 
+                SET name=%s, plate_number=%s, passengers=%s, type=%s, status=%s, mileage=%s 
                 WHERE vehicle_id=%s
-            """, (name, plate, color, v_type, status, mileage, id))
+            """, (name, plate, passengers, v_type, status, mileage, id))
             conn.commit()
             log_action(
                 session.get('user_id'),
@@ -694,7 +710,7 @@ def update_vehicle(id):
                 new_data={
                     'name': name,
                     'plate_number': plate,
-                    'color': color,
+                    'passengers': passengers,
                     'type': v_type,
                     'status': status,
                     'mileage': mileage,
@@ -3354,7 +3370,7 @@ def user_new_request():
 
     firstname = (session.get("full_name") or "users").split()[0]
 
-
+    vehicle_list = get_vehicle_list()
 
     return render_template(
         "user-dashboard/new_request.html",
@@ -3364,7 +3380,8 @@ def user_new_request():
         relationship=profile[3],
         emergency_contact_number=profile[4],
         requesting_office=profile[5] or "",
-        company_position=profile[6] or ""
+        company_position=profile[6] or "",
+        vehicle_list=vehicle_list
     )
 
 
@@ -4260,17 +4277,34 @@ def get_vehicle_schedule():
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cur.execute("""
-            SELECT 
-                vs.schedule_date,
-                v.name AS vehicle_name,
-                v.plate_number
-            FROM vehicle_schedule vs
-            JOIN vehicle v ON vs.vehicle_id = v.vehicle_id
-            WHERE EXTRACT(YEAR FROM vs.schedule_date) = %s
-                AND EXTRACT(MONTH FROM vs.schedule_date) = %s
-                AND vs.schedule_date >= CURRENT_DATE
-            ORDER BY vs.schedule_date ASC, v.name ASC
-                """, (year, month))
+        SELECT
+            d.schedule_date,
+            v.vehicle_id,
+            v.name AS vehicle_name,
+            v.plate_number,
+            v.passengers,
+            (b.vehicle_id IS NOT NULL) AS is_booked
+        FROM (
+            SELECT DISTINCT schedule_date
+            FROM vehicle_schedule
+            WHERE EXTRACT(YEAR FROM schedule_date) = %s
+              AND EXTRACT(MONTH FROM schedule_date) = %s
+              AND schedule_date >= CURRENT_DATE
+        ) d
+        CROSS JOIN (
+            SELECT vehicle_id, name, plate_number, passengers
+            FROM vehicle
+            WHERE COALESCE(is_deleted, FALSE) = FALSE
+        ) v
+        LEFT JOIN (
+            SELECT DISTINCT vehicle_id, schedule_date
+            FROM vehicle_schedule
+        ) b
+            ON b.vehicle_id = v.vehicle_id
+           AND b.schedule_date = d.schedule_date
+        ORDER BY d.schedule_date, v.name
+    """, (year, month))
+
     rows = cur.fetchall()
     cur.close()
     conn.close()
