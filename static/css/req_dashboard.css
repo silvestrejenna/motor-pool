@@ -511,3 +511,117 @@ body {
   font-size: 13px;
   color: #555;
 }
+
+
+/* ---- calendar day cells ---- */
+.calendar-day {
+  cursor: pointer;
+}
+
+/* ---- availability / booking pills ---- */
+.avail-count,
+.booked-count {
+  display: inline-block;
+  margin: 4px 0 0 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1.5px solid;
+  background: transparent;
+  pointer-events: auto;
+}
+
+.avail-count {
+  color: #1b7a34;
+  border-color: #1b7a34;
+  background: #eaf7ee;
+}
+
+.booked-count {
+  color: #a11b1b;
+  border-color: #a11b1b;
+  background: #fdecec;
+}
+
+/* a fully free day reads green, a fully booked one reads red */
+.calendar-day[data-booked="0"] .booked-count {
+  opacity: 0.45;
+}
+
+.calendar-day[data-available="0"] .avail-count {
+  opacity: 0.45;
+}
+
+/* hover so they feel clickable */
+.calendar-day:hover .avail-count,
+.calendar-day:hover .booked-count {
+  filter: brightness(0.95);
+}
+
+/* ---- day modal ---- */
+.modal.hidden {
+  display: none;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px 24px;
+  width: min(560px, 90vw);
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.modal-content h3 {
+  margin: 0 0 12px;
+}
+
+.modal-content h4 {
+  margin: 16px 0 6px;
+  color: #7a1414;
+}
+
+.vehicle-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fafafa;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.vehicle-link:hover {
+  background: #eaf7ee;
+  border-color: #1b7a34;
+}
+
+.vehicle-booked {
+  margin: 0 0 6px;
+  padding: 8px 10px;
+  color: #a11b1b;
+  background: #fdecec;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.modal-actions {
+  margin-top: 16px;
+  text-align: right;
+}
+
