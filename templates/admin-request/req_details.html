@@ -209,11 +209,17 @@
             <button id="prevMonth">&lt;</button>
             <span id="monthYear"></span>
             <button id="nextMonth">&gt;</button>
+            
           </div>
           <div class="calendar-grid" id="calendar">
 
           </div>
+                    <p class="calendar-note">
+            Requested: {{ request.start_date }} to {{ request.end_date }}
+          </p>
+
         </div>
+        
 
         <div class="assignment-right">
           <div class="availability-status">
@@ -373,6 +379,10 @@
       calendar.appendChild(empty);
     }
 
+    const reqStart = "{{ request.start_date }}";
+    const reqEnd = "{{ request.end_date }}";
+
+
     const today = new Date();
     today.setHours(0, 0, 0, 0); // normalize time
 
@@ -395,16 +405,21 @@
       dayNumber.textContent = day;
       cell.appendChild(dayNumber);
 
-      if (scheduleData[selected]) {
-        cell.classList.add("booked-day");
+      const dayData = scheduleData[selected] || { available: [], booked: [] };
 
-        scheduleData[selected].forEach(item => {
-          const booking = document.createElement("div");
-          booking.classList.add("booking-item");
-          booking.textContent = `${item.vehicle_name} - ${item.plate_number}`;
-          cell.appendChild(booking);
-        });
-      }
+      const avail = document.createElement("div");
+      avail.classList.add("avail-count");
+      avail.textContent = `${dayData.available.length} available`;
+      cell.appendChild(avail);
+
+      const bookedCount = document.createElement("div");
+      bookedCount.classList.add("booked-count");
+      bookedCount.textContent = `${dayData.booked.length} booked`;
+      cell.appendChild(bookedCount);
+
+      cell.dataset.available = dayData.available.length;
+      cell.dataset.booked = dayData.booked.length;
+
 
       if (cellDate < today) {
         cell.classList.add("disabled-day");
@@ -446,6 +461,18 @@
           cell.classList.add("start-date");
         }
       };
+
+      if (selected === reqStart) {
+        cell.classList.add("start-date");
+        startDate = reqStart;
+        document.getElementById("start_date").value = reqStart;
+      }
+      if (selected === reqEnd) {
+        cell.classList.add("end-date");
+        endDate = reqEnd;
+        document.getElementById("end_date").value = reqEnd;
+      }
+
 
       calendar.appendChild(cell);
     }
