@@ -118,7 +118,7 @@
               <td>{{ r.full_name }}</td>
               <td>{{ r.office }}</td>
               <td>{{ r.destination }}</td>
-              <td>{{ r.created_at }}</td>
+              <td>{{ r.created_at | format_datetime | safe }}</td>
               <td>
                 <span class="status-badge status-{{ r.status|lower }}">
                   {{ r.status }}

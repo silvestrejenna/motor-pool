@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 import time
 from datetime import datetime, timedelta, date
 from datetime import datetime
+import re
 
 
 
@@ -3256,7 +3257,10 @@ def user_new_request():
         region = request.form.get("region", "").strip()
 
         parts = [p for p in [venue, street, city, province, region] if p]
-        destination = ", ".join(parts) if parts else request.form.get("destination", "").strip()
+        raw_destination = ", ".join(parts) if parts else request.form.get("destination", "").strip()
+        dest_parts = [p.strip() for p in raw_destination.split(",")]
+        cleaned_dest_parts = [p for p in dest_parts if p and not re.fullmatch(r'\d+', p)]
+        destination = ", ".join(cleaned_dest_parts)
         purpose = request.form.get("purpose")
         start_date = request.form.get("start_date")
         end_date = request.form.get("end_date")
@@ -3386,6 +3390,14 @@ def user_new_request():
         preselected=preselected
 
     )
+
+def clean_address_string(addr_str):
+    if not addr_str:
+        return ""
+    # Split by comma, strip spaces, and filter out any part that is entirely digits
+    parts = [p.strip() for p in addr_str.split(",")]
+    cleaned_parts = [p for p in parts if p and not re.fullmatch(r'\d+', p)]
+    return ", ".join(cleaned_parts)
 
 
 # ================= MY REQUESTS =================
@@ -3781,6 +3793,27 @@ def admin_requests():
         "admin-request/requests.html",
         vehicle_requests=vehicle_requests
     )
+
+@app.template_filter('format_datetime')
+def format_datetime(value):
+    if not value:
+        return ""
+    if isinstance(value, str):
+        for fmt in ("%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+            try:
+                dt_obj = datetime.strptime(value.strip(), fmt)
+                date_str = dt_obj.strftime("%b %d, %Y")
+                time_str = dt_obj.strftime("%I:%M %p")
+                # white-space: nowrap prevents the date from breaking into multiple lines
+                return f"<span style='white-space: nowrap;'>{date_str}</span><br><span style='white-space: nowrap; color: #666;'>{time_str}</span>"
+            except ValueError:
+                continue
+        return value
+    elif hasattr(value, 'strftime'):
+        date_str = value.strftime("%b %d, %Y")
+        time_str = value.strftime("%I:%M %p")
+        return f"<span style='white-space: nowrap;'>{date_str}</span><br><span style='white-space: nowrap; color: #666;'>{time_str}</span>"
+    return str(value)
 # =========================
 # request details 
 # =========================
@@ -4820,11 +4853,11 @@ def format_time_filter(value):
                 return dt.strftime("%I:%M %p")
             except ValueError:
                 pass
-            return value
+        return value
     if isinstance(value, time):
-                return value.strftime("%I:%M %p")
+        return value.strftime("%I:%M %p")
     if isinstance(value, datetime):
-                return value.strftime("%I:%M %p")
+        return value.strftime("%I:%M %p")
     return str(value)
 
 # =======================================================
