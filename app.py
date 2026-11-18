@@ -3962,9 +3962,10 @@ def req_details(req_id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cur.execute("""
-        SELECT vr.*, u.full_name
+        SELECT vr.*, u.full_name, v.name AS vehicle_model_name, v.plate_number
         FROM vehicle_requests vr
         JOIN users u ON vr.user_id = u.id
+        LEFT JOIN vehicle v ON vr.vehicle_type = v.plate_number OR vr.vehicle_type = v.name
         WHERE vr.id = %s
     """, (req_id,))
     
