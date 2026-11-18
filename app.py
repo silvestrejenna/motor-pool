@@ -4166,21 +4166,40 @@ def download_cnav(filename):
 @app.route("/download-vr/<path:filename>")
 def download_vr(filename):
     conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT 1 FROM vehicle_requests WHERE vr_file = %s AND user_id = %s",
-                (filename, session.get("user_id")))
-    owned = cur.fetchone()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    
+    # Query to check ownership/permission AND get the requester's name
+    cur.execute("""
+        SELECT vr.*, u.full_name 
+        FROM vehicle_requests vr
+        JOIN users u ON vr.user_id = u.id
+        WHERE vr.vr_file = %s
+    """, (filename,))
+    
+    request_record = cur.fetchone()
     cur.close()
     conn.close()
 
-    if not owned and session.get("user_role") not in ("Admin", "Staff"):
+    if not request_record:
+        return "Not found", 404
+
+    # Security check: ensure user owns it or is Admin/Staff
+    if request_record['user_id'] != session.get("user_id") and session.get("user_role") not in ("Admin", "Staff"):
         return "Not found", 404
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     directory = os.path.join(BASE_DIR, "reports_output")
+    
     if not os.path.exists(os.path.join(directory, filename)):
-        generate_vr(filename[len("vrvf_"):-len(".docx")])  # rebuild if the file was lost
-    return send_from_directory(directory, filename, as_attachment=True)
+        # Rebuild if the file was lost
+        req_id_str = filename[len("vrvf_"):-len(".docx")] if filename.startswith("vrvf_") else request_record['id']
+        generate_vr(req_id_str)
+
+    # Clean the full name for safe file usage (remove special characters if any)
+    safe_name = "".join(c for c in request_record['full_name'] if c.isalnum() or c.isspace()).strip().replace(" ", "_")
+    download_filename = f"Vehicle_Request_Form - {safe_name}.docx"
+
+    return send_from_directory(directory, filename, as_attachment=True, download_name=download_filename)
 
 
 
@@ -4598,15 +4617,23 @@ def _fill_paragraph(p, values):
     for key, val in values.items():
         if key not in p.text:
             continue
+        
+        # Don't underline checkboxes
+        should_underline = "rata" not in key
+        
         done = False
         for run in p.runs:
             if key in run.text:
                 run.text = run.text.replace(key, val)
+                if should_underline:
+                    run.underline = True
                 done = True
         if not done:  # placeholder was split across runs
             full = p.text.replace(key, val)
             for i, run in enumerate(p.runs):
                 run.text = full if i == 0 else ""
+                if i == 0 and should_underline:
+                    run.underline = True
 
 
 def _fmt_time(t):
