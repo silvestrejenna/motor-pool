@@ -86,19 +86,7 @@
           <h3>Request Information</h3>
 
           <label>Type of Vehicle</label>
-          <!--               <select name="vehicles">
-                <option value="" disabled selected>
-                  Select Vehicle
-                </option>
-
-                {% for vehicle in vehicles %}
-                  <option value="{{ vehicle[1]}}">
-                    {{ vehicle [1] }}
-                  </option>
-                {% endfor %}
-              </select>
--->
-          <p> {{ request.vehicle_type }}</p>
+          <p>{{ request.vehicle_model_name if request.vehicle_model_name else request.vehicle_type }}</p>
         </div>
 
         <!-- TRIP DETAILS -->
