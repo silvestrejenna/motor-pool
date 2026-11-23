@@ -682,6 +682,12 @@ def update_vehicle(id):
     v_type = request.form.get('type')
     status = request.form.get('status')
     
+    passengers_raw = request.form.get('passengers')
+    try:
+        passengers = int(passengers_raw) if passengers_raw not in (None, '') else None
+    except (ValueError, TypeError):
+        passengers = None
+
     # Ensure mileage is an integer
     mileage_raw = request.form.get('mileage', '0')
     try:

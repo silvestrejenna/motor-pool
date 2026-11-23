@@ -188,7 +188,7 @@
               <input type="hidden" name="tab" value="vehicle" />
 
               <div class="search-grid">
-                <input type="text" name="vehicle_search" placeholder="Search by name, plate, color, or type"
+                <input type="text" name="vehicle_search" placeholder="Search by name, plate, passenger, or type"
                   value="{{ vehicle_search }}" />
 
                 <select name="vehicle_status">
@@ -211,7 +211,7 @@
               <tr>
                 <th>Vehicle Name</th>
                 <th>Plate Number</th>
-                <th>Color</th>
+                <th>Passenger</th>
                 <th>Type</th>
                 <th>Status</th>
                 <th>Mileage</th>
@@ -233,7 +233,7 @@
                 </td>
 
                 <td class="v-plate">{{ vehicle[2] }}</td>
-                <td class="v-color">{{ vehicle[3] }}</td>
+                <td class="v-passenger">{{ vehicle[3] }}</td>
                 <td class="v-type">{{ vehicle[4] }}</td>
 
                 <td>
@@ -416,8 +416,8 @@
           <label>Plate Number</label>
           <input type="text" name="plate_number" required />
 
-          <label>Color</label>
-          <input type="text" name="color" />
+          <label>Passenger</label>
+          <input type="text" name="passenger" />
 
           <label>Type</label>
           <input type="text" name="type" />
