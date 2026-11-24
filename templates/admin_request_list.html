@@ -27,7 +27,7 @@
                 {% if requests %}
                 {% for req in requests %}
                 <tr onclick="window.location='/admin-request/req_details/{{ req.id }}'">
-                    <td>{{ req.id }}</td>
+                    <td>{{ req.requester_name }}</td>
                     <td>{{ req.office }}</td>
                     <td><span class="status">pending</span></td>
                 </tr>
