@@ -6,7 +6,7 @@ function editRow(id) {
 
   const nameCell = row.querySelector(".v-name");
   const plate = row.querySelector(".v-plate");
-  const color = row.querySelector(".v-color");
+  const passenger = row.querySelector(".v-passenger");
   const type = row.querySelector(".v-type");
   const status = row.querySelector(".v-status");
   const mileage = row.querySelector(".v-mileage");
@@ -15,7 +15,7 @@ function editRow(id) {
   // We use .trim() to ensure no accidental whitespace is carried over
   nameCell.innerHTML = `<input type="text" id="edit-name-${id}" value="${nameCell.textContent.trim()}" style="width:100%">`;
   plate.innerHTML = `<input type="text" id="edit-plate-${id}" value="${plate.textContent.trim()}" style="width:80px">`;
-  color.innerHTML = `<input type="text" id="edit-color-${id}" value="${color.textContent.trim()}" style="width:70px">`;
+  passenger.innerHTML = `<input type="number" id="edit-passenger-${id}" value="${passenger.textContent.trim()}" style="width:70px">`;
   type.innerHTML = `<input type="text" id="edit-type-${id}" value="${type.textContent.trim()}" style="width:80px">`;
 
   // Status handling
@@ -39,14 +39,14 @@ function updateRow(id) {
   form.action = `/update_vehicle/${id}`;
 
   // List of fields to collect from the inputs we created in editRow
-  const fields = ["name", "plate", "color", "type", "status", "mileage"];
+  const fields = ["name", "plate", "passenger", "type", "status", "mileage"];
 
   fields.forEach((field) => {
     const inputElement = document.getElementById(`edit-${field}-${id}`);
     if (inputElement) {
       const input = document.createElement("input");
       input.type = "hidden";
-      input.name = field;
+      input.name = field === "passenger" ? "passengers" : field;
       input.value = inputElement.value;
       form.appendChild(input);
     }

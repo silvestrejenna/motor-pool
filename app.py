@@ -24,6 +24,8 @@ import time
 from datetime import datetime, timedelta, date
 from datetime import datetime
 import re
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 
 
@@ -682,6 +684,12 @@ def update_vehicle(id):
     v_type = request.form.get('type')
     status = request.form.get('status')
     
+    passengers_raw = request.form.get('passengers')
+    try:
+        passengers = int(passengers_raw) if passengers_raw not in (None, '') else None
+    except (ValueError, TypeError):
+        passengers = None
+
     # Ensure mileage is an integer
     mileage_raw = request.form.get('mileage', '0')
     try:
@@ -3794,6 +3802,14 @@ def admin_requests():
         vehicle_requests=vehicle_requests
     )
 
+MANILA_TZ = ZoneInfo("Asia/Manila")
+def _to_manila(dt_obj):
+    if dt_obj.tzinfo is None:
+        # Assume naive timestamps from DB/server are UTC; change to MANILA_TZ
+        # if your DB/app already saves naive datetimes in PH time.
+        dt_obj = dt_obj.replace(tzinfo=timezone.utc)
+    return dt_obj.astimezone(MANILA_TZ)
+
 @app.template_filter('format_datetime')
 def format_datetime(value):
     if not value:
@@ -3801,17 +3817,26 @@ def format_datetime(value):
     if isinstance(value, str):
         for fmt in ("%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
             try:
-                dt_obj = datetime.strptime(value.strip(), fmt)
+                dt_obj = _to_manila(datetime.fromisoformat(value.strip()))
                 date_str = dt_obj.strftime("%b %d, %Y")
                 time_str = dt_obj.strftime("%I:%M %p")
                 # white-space: nowrap prevents the date from breaking into multiple lines
                 return f"<span style='white-space: nowrap;'>{date_str}</span><br><span style='white-space: nowrap; color: #666;'>{time_str}</span>"
             except ValueError:
+                pass
+        for fmt in ("%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+            try:
+                dt_obj = _to_manila(datetime.strptime(value.strip(), fmt))
+                date_str = dt_obj.strftime("%b %d, %Y")
+                time_str = dt_obj.strftime("%I:%M %p")
+                return f"<span style='white-space: nowrap;'>{date_str}</span><br><span style='white-space: nowrap; color: #666;'>{time_str}</span>"
+            except ValueError:
                 continue
         return value
     elif hasattr(value, 'strftime'):
-        date_str = value.strftime("%b %d, %Y")
-        time_str = value.strftime("%I:%M %p")
+        dt_obj = _to_manila(value) if hasattr(value, 'tzinfo') else value
+        date_str = dt_obj.strftime("%b %d, %Y")
+        time_str = dt_obj.strftime("%I:%M %p")
         return f"<span style='white-space: nowrap;'>{date_str}</span><br><span style='white-space: nowrap; color: #666;'>{time_str}</span>"
     return str(value)
 # =========================
@@ -3860,8 +3885,19 @@ def req_details(req_id):
         date_filed = request.form.get("date_filed") or datetime.now()
 
 
-        start = datetime.strptime(start_date, "%Y-%m-%d").date()
-        end = datetime.strptime(end_date, "%Y-%m-%d").date()
+        start = datetime.strptime(start_date.strip(), "%Y-%m-%d").date() if start_date else None
+
+        end = None
+        if end_date:
+            try:
+                end = datetime.strptime(str(end_date).strip(), "%Y-%m-%d").date()
+            except ValueError:
+                end = None
+        elif start:
+            end = start
+
+        if not start and end:
+            start = end
 
         # =========================
         # CHECK SCHEDULE CONFLICT
@@ -3887,7 +3923,7 @@ def req_details(req_id):
             INSERT INTO trip_tickets
             (request_id, vehicle_id, driver_name, start_date, end_date)
             VALUES (%s, %s, %s, %s, %s)
-        """, (req_id, vehicle_id, driver_name, start_date, end_date))
+        """, (req_id, vehicle_id, driver_name, start, end))
 
         # =========================
         # INSERT VEHICLE SCHEDULE
