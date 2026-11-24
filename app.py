@@ -4855,11 +4855,20 @@ def admin_request_list():
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cur.execute("""
-        SELECT *
-        FROM vehicle_requests
-        WHERE status = 'pending'
-        ORDER BY created_at DESC
-    """)
+    SELECT
+        vr.*,
+        COALESCE(
+            NULLIF(TRIM(vr.req_name), ''),
+            NULLIF(TRIM(vr.req_name), 'EMPTY'),
+            u.full_name,
+            u.email,
+            vr.id::text
+        ) AS requester_name
+    FROM vehicle_requests vr
+    LEFT JOIN users u ON vr.user_id = u.id
+    WHERE vr.status = 'pending'
+    ORDER BY vr.created_at DESC
+""")
 
     requests = cur.fetchall()
 
