@@ -131,8 +131,9 @@
                 </a>
                 {% if r.vr_file %}
                 <br><a href="{{ url_for('download_vr', filename=r.vr_file) }}">Download Form</a>
+                {% elif r.status|lower == 'rejected' and r.cnav_file %}
+                <br><a href="{{ url_for('download_cnav', filename=r.cnav_file) }}">Download CNAV</a>
                 {% endif %}
-
               </td>
             </tr>
             {% endfor %}

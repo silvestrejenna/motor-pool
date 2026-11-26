@@ -3783,6 +3783,7 @@ def admin_requests():
             vr.created_at,
             vr.status,  
             vr.vr_file,
+            vr.cnav_file,
             vr.contact_number,
             vr.emergency_contact_person,
             vr.relationship,
@@ -4182,21 +4183,27 @@ def admin_trip_tickets():
 @app.route("/download-cnav/<path:filename>")
 def download_cnav(filename):
     conn = get_db_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute("""
-        SELECT 1 FROM vehicle_requests
-        WHERE cnav_file = %s AND user_id = %s
-    """, (filename, session.get("user_id")))
-    owned = cur.fetchone()
+        SELECT user_id, cnav_file
+        FROM vehicle_requests
+        WHERE cnav_file = %s
+    """, (filename,))
+    req_record = cur.fetchone()
     cur.close()
     conn.close()
 
-    if not owned and session.get("user_role") not in ("Admin", "Staff"):
+    if not req_record:
+        return "Not found", 404
+
+    if req_record["user_id"] != session.get("user_id") and session.get("user_role") not in ("Admin", "Staff"):
         return "Not found", 404
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     return send_from_directory(
-        os.path.join(BASE_DIR, "reports_output"), filename, as_attachment=True
+        os.path.join(BASE_DIR, "reports_output"),
+        filename,
+        as_attachment=True,
     )
 
 @app.route("/download-vr/<path:filename>")
@@ -4858,10 +4865,8 @@ def admin_request_list():
     SELECT
         vr.*,
         COALESCE(
-            NULLIF(TRIM(vr.req_name), ''),
-            NULLIF(TRIM(vr.req_name), 'EMPTY'),
-            u.full_name,
-            u.email,
+            NULLIF(TRIM(u.full_name), ''),
+            NULLIF(TRIM(u.email), ''),
             vr.id::text
         ) AS requester_name
     FROM vehicle_requests vr
