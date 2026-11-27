@@ -933,7 +933,7 @@ def gas_rfid():
         try:
             cur = conn.cursor()
             # Fetch vehicles for dropdown
-            cur.execute("SELECT name FROM vehicle ORDER BY name ASC")
+            cur.execute("SELECT name, plate_number FROM vehicle ORDER BY name ASC")
             vehicles = cur.fetchall()
 
             # FIX: Added double quotes to "gasRfid_id" and fixed plate_number
@@ -1333,7 +1333,7 @@ def maintenance_pms():
     try:
         # 1. Fetch Vehicles for the dropdown selectors in your modals
         # Note: Your table is named 'vehicle' (singular) based on your sidebar screenshot
-        cur.execute('SELECT vehicle_id, name FROM vehicle')
+        cur.execute('SELECT vehicle_id, name, plate_number FROM vehicle')
         vehicles = cur.fetchall()
         
         # 2. Fetch Maintenance Logs (Matches your 'maintenance_log' Supabase table)

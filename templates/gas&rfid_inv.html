@@ -115,7 +115,7 @@
                 <option value="">All Vehicles</option>
                 {% for vehicle in vehicles %}
                 <option value="{{ vehicle[0] }}" {% if vehicle_filter==vehicle[0] %}selected{% endif %}>
-                  {{ vehicle[0] }}
+                  {{ vehicle[0] }} {{ vehicle[1] }}
                 </option>
                 {% endfor %}
               </select>
@@ -266,7 +266,7 @@
           <select name="v_name" required>
             <option value="" disabled selected>Select Vehicle</option>
             {% for v in vehicles %}
-            <option value="{{ v[0] }}">{{ v[0] }}</option>
+            <option value="{{ v[0] }}">{{ v[0] }} {{ v[1] }}</option>
             {% endfor %}
           </select>
 

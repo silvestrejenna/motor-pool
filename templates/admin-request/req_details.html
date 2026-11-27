@@ -221,7 +221,7 @@
                 <option value="" disabled selected>Select Vehicle</option>
                 {% for vehicle in vehicles %}
                 <option value="{{ vehicle['vehicle_id'] }}">
-                  {{ vehicle['name'] }}
+                  {{ vehicle['name'] }} {{ vehicle['plate_number'] }}
                 </option>
                 {% endfor %}
               </select>

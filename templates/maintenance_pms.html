@@ -121,7 +121,7 @@
                 <select name="m_vehicle">
                   <option value="">All Vehicles</option>
                   {% for vehicle in vehicles %}
-                  <option value="{{ vehicle[1] }}" {% if m_vehicle==vehicle[1] %}selected{% endif %}>{{ vehicle[1] }}
+                  <option value="{{ vehicle[1] }}" {% if m_vehicle==vehicle[1] %}selected{% endif %}>{{ vehicle[1] }} {{ vehicle[2] }}
                   </option>
                   {% endfor %}
                 </select>
@@ -182,7 +182,7 @@
                 <select name="p_vehicle">
                   <option value="">All Vehicles</option>
                   {% for vehicle in vehicles %}
-                  <option value="{{ vehicle[1] }}" {% if p_vehicle==vehicle[1] %}selected{% endif %}>{{ vehicle[1] }}
+                  <option value="{{ vehicle[1] }}" {% if p_vehicle==vehicle[1] %}selected{% endif %}>{{ vehicle[1] }} {{ vehicle[2] }}
                   </option>
                   {% endfor %}
                 </select>
@@ -228,9 +228,10 @@
           <h2>New Maintenance Record</h2>
           <form action="/add_maintenance" method="POST">
             <input type="date" name="date" required />
-            <select name="vehicle_name">
+            <select name="vehicle_name" required>
+              <option value="" disabled selected>Select Vehicle</option>
               {% for v in vehicles %}
-              <option value="{{ v[1] }}">{{ v[1] }}</option>
+              <option value="{{ v[1] }}">{{ v[1] }} ({{ v[2] }})</option>
               {% endfor %}
             </select>
             <input type="text" name="problem" placeholder="Problem" />
@@ -250,7 +251,7 @@
             <select name="vehicle_name" required>
               <option value="" disabled selected>Select Vehicle</option>
               {% for v in vehicles %}
-              <option value="{{ v[1] }}">{{ v[1] }}</option>
+              <option value="{{ v[1] }}">{{ v[1] }} ({{ v[2] }})</option>
               {% endfor %}
             </select>
             <label>Last PMS Date</label>
